@@ -27058,4 +27058,49 @@ if ('serviceWorker' in navigator) {
     }).catch(() => {});
   });
 }
+</script><script>
+// ---------------- keep screen on while reading ----------------
+// Holds a Screen Wake Lock while the reader is active: any touch / key /
+// wheel within the last 5 minutes, or the auto-scroll running (reading
+// hands-free). After 5 idle minutes the lock is released and the phone's
+// own screen-timeout turns the display off; recitation audio keeps playing
+// because it does not depend on the screen. Any touch brings it back.
+(function () {
+  if (!('wakeLock' in navigator)) return;
+  const IDLE_MS = 5 * 60 * 1000;
+  let lastActivity = Date.now();
+  let lock = null;
+  let requesting = false;
+  function autoScrollRunning() {
+    try { return (typeof autoPlaying !== 'undefined' && autoPlaying) || (typeof freeAutoScrolling !== 'undefined' && freeAutoScrolling); }
+    catch (e) { return false; }
+  }
+  function shouldHold() {
+    return document.visibilityState === 'visible' && (Date.now() - lastActivity < IDLE_MS || autoScrollRunning());
+  }
+  async function acquire() {
+    if (lock || requesting) return;
+    requesting = true;
+    try {
+      lock = await navigator.wakeLock.request('screen');
+      lock.addEventListener('release', () => { lock = null; });
+    } catch (e) { lock = null; }
+    requesting = false;
+  }
+  function release() {
+    if (!lock) return;
+    const l = lock; lock = null;
+    l.release().catch(() => {});
+  }
+  function update() { if (shouldHold()) acquire(); else release(); }
+  function onActivity() { lastActivity = Date.now(); if (!lock) acquire(); }
+  ['pointerdown', 'touchstart', 'keydown', 'wheel'].forEach((ev) =>
+    document.addEventListener(ev, onActivity, { capture: true, passive: true }));
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') lastActivity = Date.now();
+    update();
+  });
+  setInterval(update, 10000);
+  update();
+})();
 </script></body></html>
