@@ -27235,6 +27235,7 @@ let deferredInstallPrompt = null;
   window.isIOSDevice = isIOS;
 })();
 
+const INSTALL_NOTE_HTML = '<p class="it-note">إذا فُتح الرابط داخل تطبيق آخر (مثل تيليجرام أو فيسبوك) ولم يظهر خيار التثبيت، فافتحه في المتصفح: في أندرويد اضغط <b>⋮</b> أعلى الصفحة واختر <b>«فتح في Chrome»</b>، وفي آيفون اضغط رمز <b>البوصلة</b> أسفل الصفحة أو <b>⋯</b> ثم <b>«فتح في Safari»</b>. أو انسخ الرابط والصقه في المتصفح مباشرة.</p>';
 const SHARE_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M5 11v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8"/></svg>';
 const ADD_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></svg>';
 
@@ -27270,7 +27271,7 @@ function renderInstallTab() {
       '<li>اختر <b>إضافة صفحة إلى</b> ثم <b>الشاشة الرئيسية</b>.</li>' +
       '</ol>';
   }
-  html += '<p class="it-note">إذا فتحت الرابط من داخل واتساب أو تيليجرام فلن يظهر خيار التثبيت؛ افتحه أولاً في المتصفح (Chrome أو Safari) من قائمة «فتح في المتصفح».</p>';
+  html += INSTALL_NOTE_HTML;
   wrap.innerHTML = html;
   sidebarBody.appendChild(wrap);
   const btn = document.getElementById('installNowBtn');
@@ -27289,7 +27290,7 @@ const APP_SHARE_MESSAGE =
   'افتح الرابط في متصفح Chrome ← اضغط ⋮ أعلى الشاشة ← «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».\n\n' +
   '🍎 آيفون:\n' +
   'افتح الرابط في متصفح Safari ← اضغط زر المشاركة (مربع فيه سهم للأعلى، في أسفل الشاشة أو أعلاها) ← «إضافة إلى الشاشة الرئيسية» ← «إضافة».\n\n' +
-  'ملاحظة: إذا فتحت الرابط من داخل واتساب فاختر أولاً «فتح في المتصفح».';
+  'ملاحظة: إذا فُتح الرابط داخل تطبيق آخر ولم يظهر خيار التثبيت، فاضغط ⋮ أو ⋯ أعلى الصفحة واختر «فتح في Chrome» أو «فتح في Safari»، أو انسخ الرابط والصقه في المتصفح.';
 
 async function copyTextToClipboard(text) {
   try {
@@ -27324,7 +27325,7 @@ function renderShareTab() {
     '<h3>طريقة التثبيت (تُرسَل مع الرسالة)</h3>' +
     '<p><b>أندرويد:</b> افتح الرابط في متصفح <b>Chrome</b> ← اضغط <span class="it-key">⋮</span> أعلى الشاشة ← <b>تثبيت التطبيق</b> أو <b>إضافة إلى الشاشة الرئيسية</b>.</p>' +
     '<p><b>آيفون:</b> افتح الرابط في متصفح <b>Safari</b> ← اضغط زر المشاركة <span class="it-ico">' + SHARE_ICON_SVG + '</span> (في أسفل الشاشة أو أعلاها) ← <b>إضافة إلى الشاشة الرئيسية</b> <span class="it-ico">' + ADD_ICON_SVG + '</span> ← <b>إضافة</b>.</p>' +
-    '<p class="it-note">إذا فُتح الرابط من داخل واتساب أو تيليجرام فلن يظهر خيار التثبيت؛ يُفتح أولاً في المتصفح من قائمة «فتح في المتصفح».</p>';
+    INSTALL_NOTE_HTML;
   sidebarBody.appendChild(wrap);
 
   const copied = (ok, what) => toast(ok ? ('تم نسخ ' + what) : 'تعذّر النسخ، اضغط على الرابط مطوّلاً لنسخه');
