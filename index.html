@@ -575,6 +575,28 @@ body.dark-mode .fbBookmarkSlot{filter:drop-shadow(0 0 1.5px #000) drop-shadow(0 
 .dl-surah-btn{flex-shrink:0;font-family:sans-serif;font-size:17px;font-weight:800;padding:5px 12px;border-radius:12px;cursor:pointer;min-width:88px;}
 body.dark-mode .dl-surah-row{border-color:#3A3F38;}
 body.dark-mode .dl-surah-label{color:#FFFFFF;}
+.install-only{display:none;}
+body.can-install .install-only{display:block;}
+#installBanner{position:fixed;left:8px;right:8px;z-index:34;display:none;align-items:center;gap:8px;background:#0E4433;color:#F6EFDC;border:2px solid #B98A2A;border-radius:14px;padding:9px 10px;box-shadow:0 6px 18px rgba(0,0,0,.3);font-family:sans-serif;}
+#installBanner.show{display:flex;}
+#installBanner .ib-icon{font-size:26px;line-height:1;flex-shrink:0;}
+#installBanner .ib-text{flex:1;min-width:0;font-size:15px;font-weight:700;line-height:1.5;}
+#installBanner .ib-go{flex-shrink:0;background:#E7C766;color:#0E4433;border:none;border-radius:10px;padding:8px 14px;font-size:16px;font-weight:800;font-family:sans-serif;cursor:pointer;}
+#installBanner .ib-close{flex-shrink:0;background:transparent;color:#F6EFDC;border:none;font-size:20px;padding:4px 6px;cursor:pointer;line-height:1;}
+body.dark-mode #installBanner{background:#08251C;}
+.install-tab h3{font-family:sans-serif;font-size:19px;color:#0E4433;margin:6px 0 8px;}
+.install-tab p,.install-tab li{font-family:sans-serif;font-size:16px;line-height:1.8;color:#211C14;}
+.install-tab ol{padding-right:22px;margin:6px 0 14px;}
+.install-tab .it-note{background:#F3E9D1;border-right:4px solid #B98A2A;border-radius:8px;padding:8px 10px;font-size:14.5px;}
+.install-tab .it-btn{width:100%;background:#0E4433;color:#F6EFDC;border:none;border-radius:12px;padding:12px;font-family:sans-serif;font-size:18px;font-weight:800;cursor:pointer;margin:8px 0 14px;}
+.install-tab .it-ico{display:inline-flex;vertical-align:middle;margin:0 3px;color:#0E7AFF;}
+.install-tab .it-ico svg{width:22px;height:22px;}
+.install-tab .it-key{display:inline-block;border:1.5px solid #B98A2A;border-radius:6px;padding:0 6px;font-weight:800;}
+body.dark-mode .install-tab h3{color:#E8B84B;}
+body.dark-mode .install-tab p,body.dark-mode .install-tab li{color:#EFE8D6;}
+body.dark-mode .install-tab .it-note{background:#232922;}
+body.dark-mode .install-tab .it-btn{background:#1F5C3B;}
+body.dark-mode .install-tab .it-ico{color:#5BA8FF;}
 body.dark-mode #sidebar,body.dark-mode #searchPage{background:#171C18;color:#EFE8D6;}
 body.dark-mode .sidebar-header,body.dark-mode .tabs,body.dark-mode .surah-row,body.dark-mode .search-result,body.dark-mode .font-opt{border-color:#3A3F38;}
 body.dark-mode .tab.active{background:#232922;}
@@ -678,6 +700,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
       <button class="tab" data-tab="bookmarks">المرجعيات</button>
       <button class="tab" data-tab="hijri">تعديل هجري</button>
       <button class="tab" data-tab="guide">دليل القارئ</button>
+      <button class="tab install-only" data-tab="install">تثبيت التطبيق</button>
     </div>
     <div class="sidebar-body" id="sidebarBody"></div>
   </div>
@@ -24815,6 +24838,7 @@ function renderTabContent() {
   else if (currentTab === 'duas') renderDuasTab();
   else if (currentTab === 'hijri') renderHijriAdjustTab();
   else if (currentTab === 'guide') renderGuideTab();
+  else if (currentTab === 'install') renderInstallTab();
 }
 
 function renderGuideTab() {
@@ -27103,4 +27127,129 @@ if ('serviceWorker' in navigator) {
   setInterval(update, 10000);
   update();
 })();
+</script><script>
+// ---------------- install the app (browser visitors only) ----------------
+// Shown only when the mushaf is opened as a plain web page (not the
+// installed app / APK): a one-time banner above the bottom toolbar plus a
+// permanent "تثبيت التطبيق" entry in the sidebar. On Android/Chrome the
+// button opens the real install dialog; on iPhone (where Apple allows no
+// install button) it shows the Safari "Add to Home Screen" steps.
+let deferredInstallPrompt = null;
+(function () {
+  const isStandalone = () =>
+    (window.matchMedia && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches)) ||
+    window.navigator.standalone === true ||
+    (document.referrer || '').startsWith('android-app://');
+  if (isStandalone()) return;
+  document.body.classList.add('can-install');
+  const ua = navigator.userAgent || '';
+  const isIOS = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  const KEY = 'installBannerDismissed';
+  const store = {
+    get() { try { return localStorage.getItem(KEY); } catch (e) { return null; } },
+    set() { try { localStorage.setItem(KEY, '1'); } catch (e) {} },
+  };
+
+  const banner = document.createElement('div');
+  banner.id = 'installBanner';
+  banner.innerHTML =
+    '<span class="ib-icon">📖</span>' +
+    '<span class="ib-text">ثبّت المصحف على جهازك ليفتح كتطبيق مستقل ويعمل دون أنترنت</span>' +
+    '<button class="ib-go">تثبيت</button>' +
+    '<button class="ib-close" aria-label="إغلاق">✕</button>';
+  document.body.appendChild(banner);
+
+  function placeBanner() {
+    const free = document.getElementById('freeAutoFab');
+    const bar = free && free.style.display !== 'none' ? free : document.getElementById('autoFab');
+    const h = bar && bar.style.display !== 'none' ? bar.offsetHeight : 0;
+    banner.style.bottom = (h + 8) + 'px';
+  }
+  function hideBanner() { banner.classList.remove('show'); }
+  function showBanner() {
+    if (store.get() || !document.body.classList.contains('can-install')) return;
+    placeBanner();
+    banner.classList.add('show');
+  }
+  window.addEventListener('resize', placeBanner);
+
+  async function startInstall() {
+    if (deferredInstallPrompt) {
+      const p = deferredInstallPrompt;
+      deferredInstallPrompt = null;
+      try {
+        p.prompt();
+        const choice = await p.userChoice;
+        if (choice && choice.outcome === 'accepted') { hideBanner(); store.set(); }
+      } catch (e) {}
+      return;
+    }
+    hideBanner();
+    if (typeof openSidebar === 'function') openSidebar('install');
+  }
+  window.startAppInstall = startInstall;
+
+  banner.querySelector('.ib-go').addEventListener('click', startInstall);
+  banner.querySelector('.ib-close').addEventListener('click', () => { hideBanner(); store.set(); });
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    if (typeof currentTab !== 'undefined' && currentTab === 'install' && sidebar.classList.contains('open')) renderInstallTab();
+  });
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    hideBanner(); store.set();
+    document.body.classList.remove('can-install');
+    if (typeof toast === 'function') toast('تم تثبيت المصحف على جهازك');
+  });
+
+  // iPhone never fires beforeinstallprompt, so the banner shows on its own;
+  // elsewhere a short delay lets the page settle first.
+  setTimeout(showBanner, isIOS ? 2500 : 3500);
+
+  window.isIOSDevice = isIOS;
+})();
+
+const SHARE_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M5 11v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8"/></svg>';
+const ADD_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></svg>';
+
+function renderInstallTab() {
+  sidebarBody.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'install-tab';
+  const ico = (svg) => '<span class="it-ico">' + svg + '</span>';
+  let html = '<h3>تثبيت المصحف على جهازك</h3>' +
+    '<p>بعد التثبيت يظهر المصحف بأيقونته بين تطبيقاتك، ويفتح بملء الشاشة، ويعمل دون أنترنت، وتصله التحديثات تلقائياً.</p>';
+  if (window.isIOSDevice) {
+    html +=
+      '<h3>على iPhone و iPad</h3>' +
+      '<ol>' +
+      '<li>افتح هذه الصفحة في متصفح <b>Safari</b>.</li>' +
+      '<li>اضغط زر <b>المشاركة</b> ' + ico(SHARE_ICON_SVG) + ' — تجده في <b>أسفل</b> الشاشة، وفي بعض الأجهزة في <b>أعلاها</b> بجانب شريط العنوان.</li>' +
+      '<li>مرّر القائمة للأسفل قليلاً واختر <b>إضافة إلى الشاشة الرئيسية</b> ' + ico(ADD_ICON_SVG) + '.</li>' +
+      '<li>اضغط <b>إضافة</b> في أعلى الشاشة.</li>' +
+      '</ol>';
+  } else if (deferredInstallPrompt) {
+    html += '<button class="it-btn" id="installNowBtn">تثبيت الآن</button>';
+  } else {
+    html +=
+      '<h3>على Android — متصفح Chrome</h3>' +
+      '<ol>' +
+      '<li>اضغط القائمة <span class="it-key">⋮</span> أعلى الشاشة.</li>' +
+      '<li>اختر <b>تثبيت التطبيق</b> أو <b>إضافة إلى الشاشة الرئيسية</b>.</li>' +
+      '<li>اضغط <b>تثبيت</b>.</li>' +
+      '</ol>' +
+      '<h3>متصفح Samsung Internet</h3>' +
+      '<ol>' +
+      '<li>اضغط القائمة <span class="it-key">≡</span> أسفل الشاشة.</li>' +
+      '<li>اختر <b>إضافة صفحة إلى</b> ثم <b>الشاشة الرئيسية</b>.</li>' +
+      '</ol>';
+  }
+  html += '<p class="it-note">إذا فتحت الرابط من داخل واتساب أو تيليجرام فلن يظهر خيار التثبيت؛ افتحه أولاً في المتصفح (Chrome أو Safari) من قائمة «فتح في المتصفح».</p>';
+  wrap.innerHTML = html;
+  sidebarBody.appendChild(wrap);
+  const btn = document.getElementById('installNowBtn');
+  if (btn) btn.addEventListener('click', () => window.startAppInstall && window.startAppInstall());
+}
 </script></body></html>
