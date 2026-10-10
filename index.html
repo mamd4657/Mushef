@@ -597,6 +597,18 @@ body.dark-mode .install-tab p,body.dark-mode .install-tab li{color:#EFE8D6;}
 body.dark-mode .install-tab .it-note{background:#232922;}
 body.dark-mode .install-tab .it-btn{background:#1F5C3B;}
 body.dark-mode .install-tab .it-ico{color:#5BA8FF;}
+.share-link{display:flex;align-items:center;gap:6px;background:#fff;border:2px solid #B98A2A;border-radius:12px;padding:6px 6px 6px 10px;margin:6px 0 10px;}
+.share-link code{flex:1;min-width:0;direction:ltr;text-align:left;font-family:sans-serif;font-size:15px;font-weight:700;color:#0E4433;word-break:break-all;user-select:all;-webkit-user-select:all;}
+.share-link button{flex-shrink:0;background:#0E4433;color:#F6EFDC;border:none;border-radius:9px;padding:8px 12px;font-family:sans-serif;font-size:15px;font-weight:800;cursor:pointer;}
+.share-btns{display:flex;flex-direction:column;gap:8px;margin:4px 0 16px;}
+.share-btns button{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:none;border-radius:12px;padding:12px;font-family:sans-serif;font-size:17px;font-weight:800;cursor:pointer;}
+.share-btns .sb-main{background:#0E4433;color:#F6EFDC;}
+.share-btns .sb-wa{background:#1FA855;color:#fff;}
+.share-btns .sb-copy{background:transparent;color:#0E4433;border:2px solid #0E4433;}
+body.dark-mode .share-link{background:#232922;}
+body.dark-mode .share-link code{color:#8FD9B0;}
+body.dark-mode .share-btns .sb-main{background:#1F5C3B;}
+body.dark-mode .share-btns .sb-copy{color:#8FD9B0;border-color:#8FD9B0;}
 body.dark-mode #sidebar,body.dark-mode #searchPage{background:#171C18;color:#EFE8D6;}
 body.dark-mode .sidebar-header,body.dark-mode .tabs,body.dark-mode .surah-row,body.dark-mode .search-result,body.dark-mode .font-opt{border-color:#3A3F38;}
 body.dark-mode .tab.active{background:#232922;}
@@ -700,6 +712,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
       <button class="tab" data-tab="bookmarks">المرجعيات</button>
       <button class="tab" data-tab="hijri">تعديل هجري</button>
       <button class="tab" data-tab="guide">دليل القارئ</button>
+      <button class="tab" data-tab="share">مشاركة التطبيق</button>
       <button class="tab install-only" data-tab="install">تثبيت التطبيق</button>
     </div>
     <div class="sidebar-body" id="sidebarBody"></div>
@@ -5143,7 +5156,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
 43|55|فَلَمَّآ ءَاسَفُونَا ٱنتَقَمْنَا مِنْهُمْ فَأَغْرَقْنَـٰهُمْ أَجْمَعِينَ
 43|56|فَجَعَلْنَـٰهُمْ سَلَفًۭا وَمَثَلًۭا لِّلْـَٔاخِرِينَ
 43|57|۞ وَلَمَّا ضُرِبَ ٱبْنُ مَرْيَمَ مَثَلًا إِذَا قَوْمُكَ مِنْهُ يَصِدُّونَ
-43|58|وَقَالُوٓا۟ ءَأَـٰلِهَتُنَا خَيْرٌ أَمْ هُوَ ۚ مَا ضَرَبُوهُ لَكَ إِلَّا جَدَلًۢا ۚ بَلْ هُمْ قَوْمٌ خَصِمُونَ
+43|58|وَقَالُوٓا۟ ءَأَٰلِهَتُنَا خَيْرٌ أَمْ هُوَ ۚ مَا ضَرَبُوهُ لَكَ إِلَّا جَدَلًۢا ۚ بَلْ هُمْ قَوْمٌ خَصِمُونَ
 43|59|إِنْ هُوَ إِلَّا عَبْدٌ أَنْعَمْنَا عَلَيْهِ وَجَعَلْنَـٰهُ مَثَلًۭا لِّبَنِىٓ إِسْرَٰٓءِيلَ
 43|60|وَلَوْ نَشَآءُ لَجَعَلْنَا مِنكُم مَّلَـٰٓئِكَةًۭ فِى ٱلْأَرْضِ يَخْلُفُونَ
 43|61|وَإِنَّهُۥ لَعِلْمٌۭ لِّلسَّاعَةِ فَلَا تَمْتَرُنَّ بِهَا وَٱتَّبِعُونِ ۚ هَـٰذَا صِرَٰطٌۭ مُّسْتَقِيمٌۭ
@@ -19888,7 +19901,13 @@ function hafsDisplayForm(s) {
     // Every remaining hamza-on-tatweel-seat + fatha + alef is the majority,
     // root-initial case (\u0622\u064A\u0629\u060C \u0622\u062E\u0631\u0629\u060C \u0622\u062F\u0645\u060C \u0622\u0645\u0646...) -> single ALEF_MADDA.
     .replace(/\u0640\u0654\u064E\u0627/g, '\u0622')
-    .replace(HAFS_DISPLAY_SUBST_RE, (ch) => HAFS_DISPLAY_SUBST[ch]);
+    .replace(HAFS_DISPLAY_SUBST_RE, (ch) => HAFS_DISPLAY_SUBST[ch])
+    // No kashida anywhere in the displayed text (by request): the tatweel
+    // Tanzil uses only as a carrier for the small dagger alef (ٱلرَّحْمَـٰنِ,
+    // ٱلْعَـٰلَمِينَ) is dropped so the alef sits on its letter as in print
+    // (ٱلرَّحْمَٰنِ). The few tatweels that seat a small yeh/noon
+    // (إِبْرَٰهِـۧمَ, نُـۨجِى) are part of the printed rasm and stay.
+    .replace(/\u0640\u0670/g, '\u0670');
   return out;
 }
 
@@ -20912,7 +20931,7 @@ function buildPageContent(n) {
       // stroke into it, so the line keeps its natural width instead and the
       // mark gets clear, even room on both sides.
       const lineStartsWithRubMark = needsRubStart || lineText.includes('۞');
-      const totalKashida = lineStartsWithRubMark ? 0 : estimateKashidaCountForLine(lineText, globalFontPx, availW);
+      const totalKashida = 0; // kashida justification removed by request - justifySpan() fills each line with word spacing instead
       const totalWords = Math.max(1, lineText.trim().split(/\s+/).length);
       let assigned = 0;
       segs.forEach((seg, i) => {
@@ -22479,7 +22498,9 @@ const JALALA_FORMS = new Set(['\u0671\u0644\u0644\u0647', '\u0648\u0671\u0644\u0
 // \u0644\u0650\u0644\u0631\u064E\u0651\u062D\u0652\u0645\u064E\u0640\u0670\u0646 (sun-letter \u0644 assimilation: the law of "\u0627\u0644" drops its own
 // alef in writing once a \u0644 prefix precedes it, same as \u0644\u0650\u0644\u064E\u0651\u0647 above) was
 // missing outright as a third, separate written form.
-const RAHMAN_FORMS = new Set(['\u0671\u0644\u0631\u062D\u0645\u0670\u0646', '\u0628\u0671\u0644\u0631\u062D\u0645\u0670\u0646', '\u0644\u0644\u0631\u062D\u0645\u0670\u0646'].map(unifyAlefForms));
+const RAHMAN_FORMS = new Set(['\u0671\u0644\u0631\u062D\u0645\u0670\u0646', '\u0628\u0671\u0644\u0631\u062D\u0645\u0670\u0646', '\u0644\u0644\u0631\u062D\u0645\u0670\u0646',
+  // the bare (مجرَّد) text spells it without the dagger alef
+  '\u0627\u0644\u0631\u062D\u0645\u0646', '\u0628\u0627\u0644\u0631\u062D\u0645\u0646', '\u0644\u0644\u0631\u062D\u0645\u0646'].map(unifyAlefForms));
 
 // ٱ/آ/أ/إ -> ا, so one set of forms matches every text variant (Uthmani
 // uses alef wasla, the imla'i and reduced-tashkeel texts a plain alef).
@@ -22499,6 +22520,8 @@ function highlightDivineNamesIn(rootEl) {
   textNodes.forEach((tn) => {
     const text = tn.nodeValue;
     if (!text || !text.trim()) return;
+    // surah-name headers (سورة الرحمن) are titles, not the divine name
+    if (tn.parentElement && tn.parentElement.closest('.qheader, .frame-bar, .qcombo .cname')) return;
     const words = text.split(' ');
     let changed = false;
     const parts = [];
@@ -24839,6 +24862,7 @@ function renderTabContent() {
   else if (currentTab === 'hijri') renderHijriAdjustTab();
   else if (currentTab === 'guide') renderGuideTab();
   else if (currentTab === 'install') renderInstallTab();
+  else if (currentTab === 'share') renderShareTab();
 }
 
 function renderGuideTab() {
@@ -27251,5 +27275,70 @@ function renderInstallTab() {
   sidebarBody.appendChild(wrap);
   const btn = document.getElementById('installNowBtn');
   if (btn) btn.addEventListener('click', () => window.startAppInstall && window.startAppInstall());
+}
+</script><script>
+// ---------------- share the app ----------------
+// Link + ready-made message (link and short install steps for Android and
+// iPhone) that can be shared, sent on WhatsApp or copied in one tap.
+const APP_SHARE_URL = 'https://mamd4657.github.io/Mushef/';
+const APP_SHARE_MESSAGE =
+  '📖 تطبيق المصحف الشريف\n' +
+  'يعمل دون أنترنت، وتصله التحديثات تلقائياً.\n\n' +
+  '🔗 رابط التثبيت:\n' + APP_SHARE_URL + '\n\n' +
+  '📱 أندرويد:\n' +
+  'افتح الرابط في متصفح Chrome ← اضغط ⋮ أعلى الشاشة ← «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».\n\n' +
+  '🍎 آيفون:\n' +
+  'افتح الرابط في متصفح Safari ← اضغط زر المشاركة (مربع فيه سهم للأعلى، في أسفل الشاشة أو أعلاها) ← «إضافة إلى الشاشة الرئيسية» ← «إضافة».\n\n' +
+  'ملاحظة: إذا فتحت الرابط من داخل واتساب فاختر أولاً «فتح في المتصفح».';
+
+async function copyTextToClipboard(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return true; }
+  } catch (e) {}
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
+    document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, text.length);
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch (e) { return false; }
+}
+
+function renderShareTab() {
+  sidebarBody.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'install-tab';
+  const esc = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  wrap.innerHTML =
+    '<h3>مشاركة المصحف</h3>' +
+    '<p>أرسل الرابط مع طريقة التثبيت لمن تحب، بضغطة واحدة:</p>' +
+    '<div class="share-btns">' +
+      '<button class="sb-main" id="shareAppBtn">📤 مشاركة</button>' +
+      '<button class="sb-wa" id="shareWaBtn">💬 إرسال عبر واتساب</button>' +
+      '<button class="sb-copy" id="shareCopyMsgBtn">📋 نسخ الرسالة كاملة</button>' +
+    '</div>' +
+    '<h3>رابط التثبيت</h3>' +
+    '<div class="share-link"><code>' + esc(APP_SHARE_URL) + '</code><button id="shareCopyLinkBtn">نسخ</button></div>' +
+    '<h3>طريقة التثبيت (تُرسَل مع الرسالة)</h3>' +
+    '<p><b>أندرويد:</b> افتح الرابط في متصفح <b>Chrome</b> ← اضغط <span class="it-key">⋮</span> أعلى الشاشة ← <b>تثبيت التطبيق</b> أو <b>إضافة إلى الشاشة الرئيسية</b>.</p>' +
+    '<p><b>آيفون:</b> افتح الرابط في متصفح <b>Safari</b> ← اضغط زر المشاركة <span class="it-ico">' + SHARE_ICON_SVG + '</span> (في أسفل الشاشة أو أعلاها) ← <b>إضافة إلى الشاشة الرئيسية</b> <span class="it-ico">' + ADD_ICON_SVG + '</span> ← <b>إضافة</b>.</p>' +
+    '<p class="it-note">إذا فُتح الرابط من داخل واتساب أو تيليجرام فلن يظهر خيار التثبيت؛ يُفتح أولاً في المتصفح من قائمة «فتح في المتصفح».</p>';
+  sidebarBody.appendChild(wrap);
+
+  const copied = (ok, what) => toast(ok ? ('تم نسخ ' + what) : 'تعذّر النسخ، اضغط على الرابط مطوّلاً لنسخه');
+  document.getElementById('shareCopyLinkBtn').addEventListener('click', async () => copied(await copyTextToClipboard(APP_SHARE_URL), 'الرابط'));
+  document.getElementById('shareCopyMsgBtn').addEventListener('click', async () => copied(await copyTextToClipboard(APP_SHARE_MESSAGE), 'الرسالة'));
+  document.getElementById('shareWaBtn').addEventListener('click', () => {
+    window.open('https://wa.me/?text=' + encodeURIComponent(APP_SHARE_MESSAGE), '_blank');
+  });
+  document.getElementById('shareAppBtn').addEventListener('click', async () => {
+    if (navigator.share) {
+      try { await navigator.share({ title: 'المصحف الشريف', text: APP_SHARE_MESSAGE }); return; }
+      catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    copied(await copyTextToClipboard(APP_SHARE_MESSAGE), 'الرسالة، الصقها حيث تريد');
+  });
 }
 </script></body></html>
