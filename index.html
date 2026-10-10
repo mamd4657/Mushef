@@ -713,7 +713,6 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
       <button class="tab" data-tab="hijri">تعديل هجري</button>
       <button class="tab" data-tab="guide">دليل القارئ</button>
       <button class="tab" data-tab="share">مشاركة التطبيق</button>
-      <button class="tab install-only" data-tab="install">تثبيت التطبيق</button>
     </div>
     <div class="sidebar-body" id="sidebarBody"></div>
   </div>
@@ -24861,7 +24860,6 @@ function renderTabContent() {
   else if (currentTab === 'duas') renderDuasTab();
   else if (currentTab === 'hijri') renderHijriAdjustTab();
   else if (currentTab === 'guide') renderGuideTab();
-  else if (currentTab === 'install') renderInstallTab();
   else if (currentTab === 'share') renderShareTab();
 }
 
@@ -27209,7 +27207,7 @@ let deferredInstallPrompt = null;
       return;
     }
     hideBanner();
-    if (typeof openSidebar === 'function') openSidebar('install');
+    if (typeof openSidebar === 'function') openSidebar('share');
   }
   window.startAppInstall = startInstall;
 
@@ -27219,7 +27217,7 @@ let deferredInstallPrompt = null;
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredInstallPrompt = e;
-    if (typeof currentTab !== 'undefined' && currentTab === 'install' && sidebar.classList.contains('open')) renderInstallTab();
+    if (typeof currentTab !== 'undefined' && currentTab === 'share' && sidebar.classList.contains('open')) renderShareTab();
   });
   window.addEventListener('appinstalled', () => {
     deferredInstallPrompt = null;
@@ -27235,7 +27233,8 @@ let deferredInstallPrompt = null;
   window.isIOSDevice = isIOS;
 })();
 
-const INSTALL_NOTE_HTML = '<p class="it-note">إذا فُتح الرابط داخل تطبيق آخر (مثل تيليجرام أو فيسبوك) ولم يظهر خيار التثبيت، فافتحه في المتصفح: في أندرويد اضغط <b>⋮</b> أعلى الصفحة واختر <b>«فتح في Chrome»</b>، وفي آيفون اضغط رمز <b>البوصلة</b> أسفل الصفحة أو <b>⋯</b> ثم <b>«فتح في Safari»</b>. أو انسخ الرابط والصقه في المتصفح مباشرة.</p>';
+const INSTALL_NOTE_TEXT = 'إذا فتحت رابط التطبيق في تطبيقات أخرى غير المتصفح Chrome والمتصفح Safari، (مثل واتساب أو تليگرام أو فيسبوك)، فإن وجدت فيها خيار "تثبيت" فثبته، وإن لم تجد فيها هذا الخيار فابحث فيها عن خيار "فتح في المتصفح" فإن وجدته فاختر Chrome لأجهزة الأندرويد، واختر Safari لأجهزة iOS (الآيفون وغيره)، وثبت التطبيق، فإن لم تجد خيار "فتح في المتصفح" فانسخ رابط التطبيق والصقه في المتصفح المناسب لجهازك، وافتحه وثبته.';
+const INSTALL_NOTE_HTML = '<p class="it-note">' + INSTALL_NOTE_TEXT + '</p>';
 const SHARE_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M5 11v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8"/></svg>';
 const ADD_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></svg>';
 
@@ -27284,13 +27283,13 @@ function renderInstallTab() {
 const APP_SHARE_URL = 'https://mamd4657.github.io/Mushef/';
 const APP_SHARE_MESSAGE =
   '📖 تطبيق المصحف الشريف\n' +
-  'يعمل دون أنترنت، وتصله التحديثات تلقائياً.\n\n' +
+  'بعد التثبيت يظهر بأيقونته بين التطبيقات، ويعمل دون أنترنت، وتصله التحديثات تلقائياً.\n\n' +
   '🔗 رابط التثبيت:\n' + APP_SHARE_URL + '\n\n' +
   '📱 أندرويد:\n' +
   'افتح الرابط في متصفح Chrome ← اضغط ⋮ أعلى الشاشة ← «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».\n\n' +
   '🍎 آيفون:\n' +
   'افتح الرابط في متصفح Safari ← اضغط زر المشاركة (مربع فيه سهم للأعلى، في أسفل الشاشة أو أعلاها) ← «إضافة إلى الشاشة الرئيسية» ← «إضافة».\n\n' +
-  'ملاحظة: إذا فُتح الرابط داخل تطبيق آخر ولم يظهر خيار التثبيت، فاضغط ⋮ أو ⋯ أعلى الصفحة واختر «فتح في Chrome» أو «فتح في Safari»، أو انسخ الرابط والصقه في المتصفح.';
+  'ملاحظة: ' + INSTALL_NOTE_TEXT;
 
 async function copyTextToClipboard(text) {
   try {
@@ -27314,6 +27313,8 @@ function renderShareTab() {
   const esc = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
   wrap.innerHTML =
     '<h3>مشاركة المصحف</h3>' +
+    '<p>بعد التثبيت يظهر المصحف بأيقونته بين التطبيقات، ويفتح بملء الشاشة، ويعمل دون أنترنت، وتصله التحديثات تلقائياً.</p>' +
+    (deferredInstallPrompt ? '<button class="it-btn" id="installNowBtn">تثبيت المصحف على هذا الجهاز</button>' : '') +
     '<p>أرسل الرابط مع طريقة التثبيت لمن تحب، بضغطة واحدة:</p>' +
     '<div class="share-btns">' +
       '<button class="sb-main" id="shareAppBtn">📤 مشاركة</button>' +
@@ -27328,6 +27329,8 @@ function renderShareTab() {
     INSTALL_NOTE_HTML;
   sidebarBody.appendChild(wrap);
 
+  const installNow = document.getElementById('installNowBtn');
+  if (installNow) installNow.addEventListener('click', () => window.startAppInstall && window.startAppInstall());
   const copied = (ok, what) => toast(ok ? ('تم نسخ ' + what) : 'تعذّر النسخ، اضغط على الرابط مطوّلاً لنسخه');
   document.getElementById('shareCopyLinkBtn').addEventListener('click', async () => copied(await copyTextToClipboard(APP_SHARE_URL), 'الرابط'));
   document.getElementById('shareCopyMsgBtn').addEventListener('click', async () => copied(await copyTextToClipboard(APP_SHARE_MESSAGE), 'الرسالة'));
