@@ -19907,7 +19907,13 @@ function hafsDisplayForm(s) {
     // ٱلْعَـٰلَمِينَ) is dropped so the alef sits on its letter as in print
     // (ٱلرَّحْمَٰنِ). The few tatweels that seat a small yeh/noon
     // (إِبْرَٰهِـۧمَ, نُـۨجِى) are part of the printed rasm and stay.
-    .replace(/\u0640\u0670/g, '\u0670');
+    .replace(/\u0640\u0670/g, '\u0670')
+    // Lam joined to the letter before it, carrying shadda+fatha, then alef +
+    // madda (كَلَّآ, ٱلْأَخِلَّآءُ): the font has no lam-alef ligature for that
+    // exact mark combination and draws the alef hanging off the lam (the
+    // wrong "third shape"). An invisible combining grapheme joiner between
+    // the alef and its madda lets the ligature form, madda still on the alef.
+    .replace(/([\u0626\u0628\u062A-\u062E\u0633-\u063A\u0640-\u0647\u064A][\u064B-\u065F\u0670\u06D6-\u06ED]*\u0644\u0651\u064E\u0627)\u0653/g, '$1\u034F\u0653');
   return out;
 }
 
