@@ -20440,7 +20440,7 @@ function fitBoundLines(lineDivs, isCoverPage) {
   const tw = Math.max(1, textWidth('\u0640', cap));
   L.forEach((o) => {                                         // write
     if (o.w > avail) { o.f = Math.max(4, cap * avail / o.w * 0.997); o.el.style.fontSize = o.f + 'px'; }
-    else if (!o.centered && !o.el.querySelector('.rubgrid8, .rubmark')) {
+    else if (!o.centered) {
       const k = Math.floor((avail - o.w - cap * 0.35) / tw);
       if (k > 0) o.k = applyKashidaCount(o.span, k);
     }
@@ -20499,9 +20499,9 @@ function fitLinesInSlot(linesRootEl, pageNumForSlot) {
       if (el.classList.contains('cover-blank-line')) el.style.fontSize = (boundRowH ? boundRowH * BOUND_FONT_TO_ROW : globalFontPx) + 'px';
       return;
     }
+    if (boundRowH) return; // bound rows were already fitted above (fitBoundLines) - don't undo their spacing
     span.style.wordSpacing = 'normal';
     span.style.letterSpacing = 'normal';
-    if (boundRowH) return; // bound rows are fitted together below (fitBoundLines)
     el.style.fontSize = globalFontPx + 'px';
     const avail = linesAvail;
     if (span.offsetWidth > avail) {
