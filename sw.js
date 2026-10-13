@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mushaf-cache-v27';
+const CACHE_NAME = 'mushaf-cache-v28';
 const APP_SHELL = ['./', './index.html', './manifest.json'];
 // Recitation audio downloaded via the "⬇" download manager in the app is
 // stored in this separate cache (page JS writes to it directly through the
@@ -28,15 +28,27 @@ self.addEventListener('fetch', (event) => {
     );
     return;
   }
-  // Network-first: an update published to the site shows up on the very next
-  // open (the old "answer from cache, refresh in the background" scheme only
-  // showed it one open later, and could keep serving the browser's own
-  // 10-minute HTTP cache copy). Offline, the saved copy is used instead.
+  // Network-first with a time limit: an update published to the site still
+  // shows up on the very next open whenever the connection is reasonably
+  // quick, but on a slow connection (3G) the app no longer sits waiting for
+  // the ~5 MB page - after NETWORK_WAIT_MS the saved copy is shown at once,
+  // while the download carries on in the background and refreshes the saved
+  // copy for the next open. Offline, the saved copy is used straight away.
+  const NETWORK_WAIT_MS = 1800;
   const sameOrigin = new URL(event.request.url).origin === self.location.origin;
-  event.respondWith(
-    fetch(event.request, sameOrigin ? { cache: 'no-cache' } : undefined).then((resp) => {
-      if (resp && resp.ok) { const clone = resp.clone(); caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone)); }
-      return resp;
-    }).catch(() => caches.match(event.request).then((cached) => cached || (event.request.mode === 'navigate' ? caches.match('./index.html') : undefined)))
-  );
+  const network = fetch(event.request, sameOrigin ? { cache: 'no-cache' } : undefined).then((resp) => {
+    if (resp && resp.ok) {
+      const clone = resp.clone();
+      return caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone)).then(() => resp, () => resp);
+    }
+    return resp;
+  });
+  event.waitUntil(network.catch(() => {}));
+  const cachedCopy = () => caches.match(event.request).then((cached) => cached || (event.request.mode === 'navigate' ? caches.match('./index.html') : undefined));
+  event.respondWith(new Promise((resolve) => {
+    let done = false;
+    const finish = (r) => { if (!done && r) { done = true; resolve(r); } };
+    network.then(finish, () => cachedCopy().then((c) => { if (!done) { done = true; resolve(c || Response.error()); } }));
+    setTimeout(() => { if (!done) cachedCopy().then(finish); }, NETWORK_WAIT_MS);
+  }));
 });

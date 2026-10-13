@@ -229,7 +229,7 @@ body.dark-mode .strong-note{color:#D8CBAE;}
 .bookmark-section-title{color:#7B2E2E;border-bottom:2px solid #7B2E2E;}
 body.dark-mode .bookmark-section-title{color:#E8B84B;border-bottom-color:#E8B84B;}
 main{max-width:760px;margin:0 auto;padding:0 8px;}
-#vScrollWrap{position:fixed;left:0;right:0;max-width:760px;margin:0 auto;box-sizing:border-box;padding:8px 0;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y pinch-zoom;overflow-anchor:none;}
+#vScrollWrap{position:fixed;left:0;right:0;max-width:760px;margin:0 auto;box-sizing:border-box;padding:0;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y pinch-zoom;overflow-anchor:none;}
 #vScrollWrap *{overflow-anchor:none;}
 .vSlot{box-sizing:border-box;padding:0 7px 6px;}
 body.landscape-lock .vSlot{padding:0 26px 14px;}
@@ -610,6 +610,22 @@ body.dark-mode .share-link{background:#232922;}
 body.dark-mode .share-link code{color:#8FD9B0;}
 body.dark-mode .share-btns .sb-main{background:#1F5C3B;}
 body.dark-mode .share-btns .sb-copy{color:#8FD9B0;border-color:#8FD9B0;}
+/* Standard (bound) layout: every page is exactly one screen tall - from just
+   under the floating bar to just above the bottom toolbar - and is split
+   into 15 equal rows (text lines, surah headers, basmalas), sized by JS
+   (applyBoundGeometry) through --slotH / --rowH. */
+body.bound-fit #boundPagesContainer .vSlot{height:var(--slotH,auto);padding:3px 7px;box-sizing:border-box;}
+body.bound-fit #boundPagesContainer .page-frame,body.bound-fit #swipeOverlay .page-frame{box-sizing:border-box;height:100%;min-height:0;padding:4px !important;}
+body.bound-fit #boundPagesContainer .pageLinesX,body.bound-fit #swipeOverlay .pageLinesX{height:100%;display:flex;flex-direction:column;}
+body.bound-fit #boundPagesContainer .pageLinesX>*,body.bound-fit #swipeOverlay .pageLinesX>*{flex:0 0 var(--rowH);height:var(--rowH);min-height:0;margin:0;box-sizing:border-box;}
+body.bound-fit #boundPagesContainer .pageLinesX>.qline,body.bound-fit #swipeOverlay .pageLinesX>.qline{line-height:var(--rowH);}
+body.bound-fit #boundPagesContainer .pageLinesX>.qbsm,body.bound-fit #swipeOverlay .pageLinesX>.qbsm{line-height:var(--rowH);}
+body.bound-fit #boundPagesContainer .pageLinesX>.qheader,body.bound-fit #swipeOverlay .pageLinesX>.qheader{flex-basis:calc(var(--rowH) - 6px);height:calc(var(--rowH) - 6px);margin:3px 0;}
+#swipeOverlay{position:fixed;left:0;right:0;max-width:760px;margin:0 auto;overflow:hidden;z-index:28;pointer-events:none;}
+#swipeOverlay .vSlot{position:absolute;left:0;right:0;}
+body.bound-fit #swipeOverlay .vSlot{height:var(--slotH);padding:3px 7px;box-sizing:border-box;}
+
+#swipeOverlay .swipe-top .page-frame{box-shadow:0 0 24px rgba(0,0,0,.35);}
 body.dark-mode #sidebar,body.dark-mode #searchPage{background:#171C18;color:#EFE8D6;}
 body.dark-mode .sidebar-header,body.dark-mode .tabs,body.dark-mode .surah-row,body.dark-mode .search-result,body.dark-mode .font-opt{border-color:#3A3F38;}
 body.dark-mode .tab.active{background:#232922;}
@@ -19669,6 +19685,10 @@ const MAX_GLOBAL_PX = 80;
 
 let maxLineRatio = 0;   // widest line's (naturalWidth / refFontSize) across the whole book
 let globalFontPx = 22;  // single font size applied to every recitation line
+let boundRowH = 0;      // height of one of a bound page's 15 rows (see applyBoundGeometry)
+// Largest reading font for a bound row, as a fraction of the row height -
+// leaves room above/below the letters for the stacked Quranic marks.
+const BOUND_FONT_TO_ROW = 0.5;
 // Whether this browser tells us definitively when scrolling (including any
 // momentum/inertial coasting after a touch flick) has fully stopped, rather
 // than us having to guess with a fixed timeout - used by free mode's
@@ -19876,6 +19896,18 @@ const HAFS_HAMZA_SEAT_FIXES = [
   [/(?<=\u064F)\u0640\u0654(?=\u0652)/g, '\u0624'],        // damma + own-sukun -> waw-hamza (\u062A\u064F\u0640\u0652\u0654\u0648\u0650\u064A\u0647\u0650)
 ];
 function hafsDisplayForm(s) {
+  // يا النداء is a word of its own. Before a word that opens with a hamza:
+  //  - Uthmani, written with the small dagger alef (يَـٰٓأَيُّهَا): keep the
+  //    dagger alef WITH its madda, joined, as printed - يَٰٓأَيُّهَا;
+  //  - Uthmani with a hamza seat (يَـٰٓـَٔادَمُ), which this font can't draw
+  //    joined: a full alef carrying the madda, then a space - يَآ ءَادَمُ;
+  //  - imla'i / bare texts (full alef, already a separate word): add the
+  //    madda - يَآ أَيُّهَا / يآ أيها.
+  s = s
+    .replace(/(^|\s)(\u0648\u064E)?\u064A\u064E\u0640\u0670\u0653\u0640\u0654\u064E\u0627/g, '$1$2\u064A\u064E\u0627\u0653 \u0621\u064E\u0627')
+    .replace(/(^|\s)(\u0648\u064E)?\u064A\u064E\u0640\u0670\u0653(?=[\u0623\u0625])/g, '$1$2\u064A\u064E\u0670\u0653')
+    .replace(/(^|\s)\u064A\u064E\u0627(?=\s[\u0623\u0625\u0622])/g, '$1\u064A\u064E\u0627\u0653')
+    .replace(/(^|\s)\u064A\u0627(?=\s[\u0623\u0625\u0622])/g, '$1\u064A\u0622');
   let out = s
     .replace(/\u064B\u06E2/g, '\u064E\u06E2')
     .replace(/\u064C\u06E2/g, '\u064F\u06E2')
@@ -19940,8 +19972,16 @@ function buildPagesForText(id) {
     // an ayah whose last word closes the line keeps its number on it only if
     // the printed page does; otherwise the number opens the next line (handled
     // above by the per-line token counts).
-    return hafsDisplayForm(toks.join(' '));
+    return { raw: toks.join(' ') };
   }));
+  // Display form for the whole book in ONE pass (lines joined by newlines,
+  // which every rule treats as an ordinary word break) instead of ~9,000
+  // separate passes - the slowest step of opening the mushaf.
+  const rawLines = [];
+  pages.forEach((page) => page.forEach((cell) => { if (cell && typeof cell === 'object') rawLines.push(cell.raw); }));
+  const shown = hafsDisplayForm(rawLines.join('\n')).split('\n');
+  let si = 0;
+  pages.forEach((page) => page.forEach((cell, ci) => { if (cell && typeof cell === 'object') page[ci] = shown[si++]; }));
   PAGES = pages;
   BSM_TEXT = hafsDisplayForm(bsm);
   quranText = opt.id;
@@ -20166,6 +20206,9 @@ function refreshPageHeights() {
 }
 
 function applyUniformPageHeight(frameEl, linesRootEl, n) {
+  // Bound pages are now a fixed one-screen grid of 15 equal rows (see
+  // applyBoundGeometry), so no per-page padding is needed to equalize them.
+  if (boundRowH) { frameEl.style.paddingTop = ''; frameEl.style.paddingBottom = ''; return; }
   if (!PAGE_HEIGHTS) return;
   const natural = PAGE_HEIGHTS[n - 1];
   const extra = Math.max(0, MAX_PAGE_HEIGHT - natural);
@@ -20257,9 +20300,172 @@ function justifySpan(el, span) {
   }
 }
 
+// ---------------- kashida (tatweel) to fill a line ----------------
+// Used only after the line's font has grown as far as its row allows. Rules
+// (per the reader): only between two letters of the SAME word that are
+// actually joined; never inside لفظ الجلالة; never between lam and the alef
+// after it, nor right before such a lam (either breaks the لا ligature).
+// Inserted tatweels are told apart from the text's own few authentic ones
+// (which always carry a small yeh/noon: إِبْرَٰهِـۧمَ, نُـۨجِى) so they can be
+// removed again on every re-fit.
+const KASHIDA_EXCLUDE_SEL = '.ayahnum, .ayahnum-badge, .wq, .rubmark, .rubgrid8, .sajdah-mark, .divine-name, svg';
+const KASHIDA_LETTER_RE = /[ؠ-يٱ-ۓ]/;
+const KASHIDA_MARK_RE = /[ؐ-ًؚ-ٰٟۖ-ۭ͏]/;
+const KASHIDA_ALEFS = new Set(['ا', 'أ', 'إ', 'آ', 'ٱ']);
+function kashidaTextNodes(root) {
+  const out = [];
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let n;
+  while ((n = walker.nextNode())) {
+    if (n.parentElement && n.parentElement.closest(KASHIDA_EXCLUDE_SEL)) continue;
+    out.push(n);
+  }
+  return out;
+}
+function removeInsertedKashida(root) {
+  kashidaTextNodes(root).forEach((n) => {
+    if (n.nodeValue.indexOf('ـ') === -1) return;
+    const v = n.nodeValue.replace(/ـ(?![ۧۨ])/g, '');
+    if (v !== n.nodeValue) n.nodeValue = v;
+  });
+}
+// Candidate points, grouped per word, each word's list ordered from its
+// last joint backwards (the traditional place to stretch first).
+function kashidaPointsByWord(root) {
+  const words = [];
+  kashidaTextNodes(root).forEach((node) => {
+    const chars = [...node.nodeValue];
+    let i = 0;
+    while (i < chars.length) {
+      while (i < chars.length && /\s/.test(chars[i])) i++;
+      const start = i;
+      while (i < chars.length && !/\s/.test(chars[i])) i++;
+      if (i <= start) continue;
+      const word = chars.slice(start, i).join('');
+      if (JALALA_FORMS.has(stripForDivineMatch(word))) continue;
+      const base = [];
+      for (let k = start; k < i; k++) if (KASHIDA_LETTER_RE.test(chars[k])) base.push(k);
+      const pts = [];
+      for (let b = 1; b < base.length; b++) {
+        const pc = chars[base[b - 1]], cc = chars[base[b]];
+        if (NON_CONNECTORS.has(pc) || pc === 'ـ' || cc === 'ء') continue;
+        if (pc === 'ل' && KASHIDA_ALEFS.has(cc)) continue;
+        if (cc === 'ل' && b + 1 < base.length && KASHIDA_ALEFS.has(chars[base[b + 1]])) continue;
+        // not after a letter carrying a dagger alef or madda (يَٰٓأَيُّهَا) - it already stands for an elongation
+        if (/[ٰٓ]/.test(chars.slice(base[b - 1] + 1, base[b]).join(''))) continue;
+        pts.push({ node, cp: base[b] }); // insert right before this letter (after the previous letter's marks)
+      }
+      if (pts.length) words.push(pts.reverse());
+    }
+  });
+  return words;
+}
+function applyKashidaCount(root, count) {
+  removeInsertedKashida(root);
+  if (count <= 0) return 0;
+  const words = kashidaPointsByWord(root);
+  if (!words.length) return 0;
+  // round-robin over words, then over each word's joints, at most 3 per joint
+  const plan = new Map();
+  let left = count, round = 0;
+  while (left > 0 && round < 9) {
+    let placed = false;
+    for (const pts of words) {
+      if (left <= 0) break;
+      const pt = pts[round % pts.length];
+      if (round >= pts.length * 3) continue;
+      const key = pt;
+      plan.set(key, (plan.get(key) || 0) + 1);
+      left--; placed = true;
+    }
+    if (!placed) break;
+    round++;
+  }
+  const byNode = new Map();
+  plan.forEach((c, pt) => {
+    if (!byNode.has(pt.node)) byNode.set(pt.node, []);
+    byNode.get(pt.node).push({ cp: pt.cp, c });
+  });
+  byNode.forEach((list, node) => {
+    const chars = [...node.nodeValue];
+    list.sort((a, b) => b.cp - a.cp).forEach(({ cp, c }) => { chars.splice(cp, 0, 'ـ'.repeat(c)); });
+    node.nodeValue = chars.join('');
+  });
+  return count - left;
+}
+function fillLineWithKashida(span, avail, fontPx) {
+  const natural = span.offsetWidth;
+  const gap = avail - natural;
+  if (gap < fontPx * 0.35) return;
+  const tw = Math.max(1, textWidth('ـ', fontPx));
+  let k = Math.floor(gap / tw);
+  if (k <= 0) return;
+  applyKashidaCount(span, k);
+  let guard = 0;
+  while (span.offsetWidth > avail && k > 0 && guard < 12) {
+    k = Math.max(0, k - Math.max(1, Math.ceil((span.offsetWidth - avail) / tw)));
+    applyKashidaCount(span, k);
+    guard++;
+  }
+}
+
+// Each line of a fixed-row bound page gets its own size: as large as its row
+// allows, grown or shrunk so the words alone fill the width; what is still
+// left is closed with kashida, and only the last sliver with word spacing.
+// Done in batched read/write passes over the whole page (a handful of
+// layouts per page instead of several per line) to keep opening fast.
+function fitBoundLines(lineDivs, isCoverPage) {
+  const cap = boundRowH * BOUND_FONT_TO_ROW;
+  const L = [];
+  lineDivs.forEach((el) => {
+    const span = el.firstElementChild;
+    if (!span) { if (el.classList.contains('cover-blank-line')) el.style.fontSize = cap + 'px'; return; }
+    removeInsertedKashida(span);
+    span.style.wordSpacing = 'normal';
+    span.style.letterSpacing = 'normal';
+    el.style.fontSize = cap + 'px';
+    L.push({ el, span, f: cap, centered: isCoverPage || el.classList.contains('centered-line') });
+  });
+  if (!L.length) return;
+  const avail = L[0].el.clientWidth - 1;                    // read
+  L.forEach((o) => { o.w = o.span.offsetWidth; });           // read
+  const tw = Math.max(1, textWidth('\u0640', cap));
+  L.forEach((o) => {                                         // write
+    if (o.w > avail) { o.f = Math.max(4, cap * avail / o.w * 0.997); o.el.style.fontSize = o.f + 'px'; }
+    else if (!o.centered && !o.el.querySelector('.rubgrid8, .rubmark')) {
+      const k = Math.floor((avail - o.w - cap * 0.35) / tw);
+      if (k > 0) o.k = applyKashidaCount(o.span, k);
+    }
+  });
+  L.forEach((o) => { o.w = o.span.offsetWidth; });           // read
+  L.forEach((o) => {                                         // rare corrections, one line at a time
+    let g = 0;
+    while (o.k > 0 && o.w > avail && g < 8) { o.k = Math.max(0, o.k - Math.max(1, Math.ceil((o.w - avail) / tw))); applyKashidaCount(o.span, o.k); o.w = o.span.offsetWidth; g++; }
+    g = 0;
+    while (o.w > avail && o.f > 4 && g < 40) { o.f -= 0.25; o.el.style.fontSize = o.f + 'px'; o.w = o.span.offsetWidth; g++; }
+  });
+  L.forEach((o) => {                                         // write: spread the last sliver between words
+    if (o.centered) return;
+    const gaps = (o.span.textContent.trim().match(/\s+/g) || []).length;
+    const left = avail - o.w;
+    if (left > 1 && gaps > 0) o.span.style.wordSpacing = (left / gaps) + 'px';
+  });
+  L.forEach((o) => {                                         // final guarantee against clipping
+    if (o.centered) return;
+    let g = 0;
+    while (o.span.offsetWidth > avail + 1 && g < 6) {
+      const ws = parseFloat(o.span.style.wordSpacing) || 0;
+      const gaps = Math.max(1, (o.span.textContent.trim().match(/\s+/g) || []).length);
+      o.span.style.wordSpacing = Math.max(0, ws - (o.span.offsetWidth - avail) / gaps - 0.3) + 'px';
+      g++;
+    }
+  });
+}
+
 function fitLinesInSlot(linesRootEl, pageNumForSlot) {
   const isCoverPage = (pageNumForSlot === 1 || pageNumForSlot === 2);
   const lineDivs = linesRootEl.querySelectorAll('.qline');
+  if (boundRowH) fitBoundLines(lineDivs, isCoverPage);
   // Measured from an actual .qline directly rather than linesRootEl itself:
   // .pageLinesX has its own horizontal padding that a .qline child never
   // gets any of, so using the parent's clientWidth here overstated how much
@@ -20276,11 +20482,12 @@ function fitLinesInSlot(linesRootEl, pageNumForSlot) {
       // were first built with, throwing off the "each gap line is exactly
       // one real text line tall" assumption the very next time the font size
       // changes without a full page rebuild.
-      if (el.classList.contains('cover-blank-line')) el.style.fontSize = globalFontPx + 'px';
+      if (el.classList.contains('cover-blank-line')) el.style.fontSize = (boundRowH ? boundRowH * BOUND_FONT_TO_ROW : globalFontPx) + 'px';
       return;
     }
     span.style.wordSpacing = 'normal';
     span.style.letterSpacing = 'normal';
+    if (boundRowH) return; // bound rows are fitted together below (fitBoundLines)
     el.style.fontSize = globalFontPx + 'px';
     const avail = linesAvail;
     if (span.offsetWidth > avail) {
@@ -20356,7 +20563,8 @@ function reflowRenderedBoundPages() {
     const linesRootEl = vSlotEl.querySelector('.pageLinesX');
     if (!frameEl || !linesRootEl || !n) return;
     applyUniformPageHeight(frameEl, linesRootEl, n);
-    fitLinesInSlot(linesRootEl, n);
+    if (!boundRowH || Math.abs(n - pageNum) <= 1) fitLinesInSlot(linesRootEl, n);
+    else fitBoundSlotLater(vSlotEl);
   });
 }
 
@@ -20376,7 +20584,8 @@ function reflowBoundLayout() {
     if (frameEl) break;
   }
   if (!frameEl) frameEl = boundPagesContainer.querySelector('.vSlot[data-page="' + pageNum + '"]');
-  if (frameEl) boundSlotH = frameEl.offsetHeight;
+  applyBoundGeometry();
+  if (!boundRowH && frameEl) boundSlotH = frameEl.offsetHeight;
   updateBoundSpacers();
   if (vScrollWrap && boundSlotH) {
     setBoundScrollTop((pageNum - 1) * boundSlotH);
@@ -21230,6 +21439,9 @@ function updateFloatingFrameBar(n, surahOverride, rubIndexOverride) {
 // without any hardcoded pixel constant.
 function fixFirstLineRubClearance() {
   if (layoutMode !== 'bound') return;
+  // fixed-row pages start below the floating bar already; a margin here would
+  // push the whole 15-row grid out of shape
+  if (boundRowH) { boundPagesContainer.querySelectorAll('.qline.firstqline').forEach((l) => { l.style.marginTop = ''; }); return; }
   // Only the page currently scrolled to the top - "pageNum" - ever has its
   // first line anywhere near the badge; every other mounted page's first
   // line sits well below (not yet scrolled up) or well above (already
@@ -23743,6 +23955,39 @@ function setBoundScrollTop(value) {
 // back from free mode). Every other change to the mounted window (see
 // reconcileBoundWindow) only ever touches a spacer's height, so it never
 // needs to touch scrollTop at all.
+// Pages away from the reader are fitted a moment later (nearest first), so
+// opening the mushaf or jumping to a page only waits for the page on screen.
+const boundFitPending = new Set();
+let boundFitScheduled = false;
+function fitBoundSlotNow(slotEl) {
+  if (!slotEl || !slotEl.dataset.fitPending) return;
+  delete slotEl.dataset.fitPending;
+  boundFitPending.delete(slotEl);
+  fitLinesInSlot(slotEl.querySelector('.pageLinesX'), parseInt(slotEl.dataset.page, 10));
+}
+function fitBoundSlotLater(slotEl) {
+  if (!boundRowH) { fitLinesInSlot(slotEl.querySelector('.pageLinesX'), parseInt(slotEl.dataset.page, 10)); return; }
+  slotEl.dataset.fitPending = '1';
+  boundFitPending.add(slotEl);
+  if (boundFitScheduled) return;
+  boundFitScheduled = true;
+  const run = () => {
+    boundFitScheduled = false;
+    const cur = pageNum;
+    const list = [...boundFitPending].filter((e) => e.isConnected)
+      .sort((a, b) => Math.abs(a.dataset.page - cur) - Math.abs(b.dataset.page - cur));
+    boundFitPending.forEach((e) => { if (!e.isConnected) boundFitPending.delete(e); });
+    list.slice(0, 2).forEach(fitBoundSlotNow);
+    if (boundFitPending.size) { boundFitScheduled = true; setTimeout(run, 16); }
+  };
+  setTimeout(run, 30);
+}
+function ensureVisibleBoundPagesFitted() {
+  if (!boundFitPending.size) return;
+  const cur = boundSlotH ? Math.floor(vScrollWrap.scrollTop / boundSlotH) + 1 : pageNum;
+  [cur - 1, cur, cur + 1].forEach((p) => fitBoundSlotNow(boundPagesContainer.querySelector('.vSlot[data-page="' + p + '"]')));
+}
+
 function renderBoundWindow(centerPage, scrollToCenter) {
   centerPage = Math.max(1, Math.min(604, centerPage));
   const start = Math.max(1, centerPage - BOUND_WINDOW_RADIUS);
@@ -23757,19 +24002,23 @@ function renderBoundWindow(centerPage, scrollToCenter) {
                      // that can under-measure by a few px, so prefer a normal
                      // page as the representative slot-height sample when one
                      // is available in this window.
+  boundFitPending.clear();
+  applyBoundGeometry();
   for (let p = start; p <= end; p++) {
     const el = buildBoundPageFrameElement(p);
     if (!firstEl) firstEl = el;
     if (!refEl && p > 2) refEl = el;
     boundPagesContainer.appendChild(el);
-    fitLinesInSlot(el.querySelector('.pageLinesX'), p);
+    if (Math.abs(p - centerPage) <= 1) fitLinesInSlot(el.querySelector('.pageLinesX'), p);
+    else fitBoundSlotLater(el);
   }
   boundPagesContainer.appendChild(boundBottomSpacer);
   // Real, current measurement of one full slot's height - the frame's own
   // uniform-height padding (applyUniformPageHeight, called from inside
   // buildBoundPageFrameElement above) is already final by this point.
   const slotRefEl = refEl || firstEl;
-  if (slotRefEl) boundSlotH = slotRefEl.offsetHeight;
+  applyBoundGeometry();
+  if (!boundRowH && slotRefEl) boundSlotH = slotRefEl.offsetHeight;
   updateBoundSpacers();
   pageNum = centerPage;
   updateFloatingFrameBar(centerPage);
@@ -23790,7 +24039,7 @@ function growBoundWindowStart(newStart) {
     newPages.push({ el, p });
   }
   boundPagesContainer.insertBefore(frag, boundTopSpacer.nextSibling);
-  newPages.forEach(({ el, p }) => fitLinesInSlot(el.querySelector('.pageLinesX'), p));
+  newPages.forEach(({ el }) => fitBoundSlotLater(el));
   boundWindowStart = newStart;
 }
 
@@ -23803,7 +24052,7 @@ function growBoundWindowEnd(newEnd) {
     newPages.push({ el, p });
   }
   boundPagesContainer.insertBefore(frag, boundBottomSpacer);
-  newPages.forEach(({ el, p }) => fitLinesInSlot(el.querySelector('.pageLinesX'), p));
+  newPages.forEach(({ el }) => fitBoundSlotLater(el));
   boundWindowEnd = newEnd;
 }
 
@@ -23844,6 +24093,7 @@ function reconcileBoundWindow() {
   if (trimStart > boundWindowStart) trimBoundWindowStart(Math.min(trimStart, boundWindowEnd));
   if (trimEnd < boundWindowEnd) trimBoundWindowEnd(Math.max(trimEnd, boundWindowStart));
   updateBoundSpacers();
+  ensureVisibleBoundPagesFitted();
   schedulePrefetch();
 }
 
@@ -23859,7 +24109,10 @@ function updateBoundCurrentPage() {
   const wrap = vScrollWrap;
   const container = boundPagesContainer;
   if (!wrap || !container) return;
-  const floatBarBottomLocalY = floatingBarBottomLocalY();
+  // Probe a little below the floating bar: the bar's own bottom edge sits in
+  // the previous page's bottom gap, which made the page counter lag one page
+  // behind (a forward swipe then needed two pushes, a back swipe went two).
+  const floatBarBottomLocalY = floatingBarBottomLocalY() + 12;
   let { bestPage, bestSurah } = computeFloatingBarTargets(container, floatBarBottomLocalY);
   // Same last-page fallback as free mode - see updateFreeCurrentPage for why
   // this is needed only once there's no more room left to scroll. Unlike
@@ -23933,6 +24186,33 @@ function initBoundScrollTracking() {
   }, { passive: true });
 }
 
+// Sizes every bound page to exactly the visible height of the scroll area
+// (header + floating bar above, bottom toolbar below), split into 15 rows.
+function applyBoundGeometry() {
+  const wrap = vScrollWrap;
+  if (!wrap) return false;
+  // Landscape's screen is far too short for a whole 15-line page at a
+  // readable size, so it keeps the earlier width-sized pages that scroll.
+  if (landscapeMode) {
+    if (!boundRowH) return false;
+    boundRowH = 0;
+    document.body.classList.remove('bound-fit');
+    return true;
+  }
+  document.body.classList.add('bound-fit');
+  const V = Math.floor(wrap.clientHeight);
+  if (!V) return false;
+  const rowH = (V - 6 - 12) / 15; // slot padding 3+3, frame border 2+2 + padding 4+4
+  const changed = Math.abs(V - boundSlotH) > 0.5 || Math.abs(rowH - boundRowH) > 0.05;
+  boundPagesContainer.style.setProperty('--slotH', V + 'px');
+  boundPagesContainer.style.setProperty('--rowH', rowH + 'px');
+  document.documentElement.style.setProperty('--slotH', V + 'px');
+  document.documentElement.style.setProperty('--rowH', rowH + 'px');
+  boundRowH = rowH;
+  if (changed) boundSlotH = V;
+  return changed;
+}
+
 function positionBoundScrollWrap() {
   const wrap = vScrollWrap;
   if (!wrap) return;
@@ -23948,6 +24228,9 @@ function positionBoundScrollWrap() {
   const bodyHeight = landscapeMode ? vp.w : vp.h;
   wrap.style.bottom = 'auto';
   wrap.style.height = Math.max(0, bodyHeight - top - 4 - fabH) + 'px';
+  if (applyBoundGeometry() && boundPagesContainer.querySelector('.vSlot') && typeof reflowBoundLayout === 'function') {
+    reflowBoundLayout();
+  }
 }
 
 function centerOn(n) {
@@ -24037,6 +24320,145 @@ function isNativelyZoomed() {
   return window.visualViewport && window.visualViewport.scale > 1.02;
 }
 
+// ---------------- bound page turn that follows the finger ----------------
+// While a horizontal drag is in progress the current page (a copy of it) moves
+// with the finger and the page being turned to is shown underneath. Released
+// before the middle -> it slides back; past the middle, or flicked in the
+// direction of travel -> the turn completes. Dragging right turns forward
+// (towards the next page), as in a printed mushaf.
+let swipeState = null;
+function boundCurrentPageFromScroll() {
+  if (!boundSlotH) return pageNum;
+  return Math.min(604, Math.max(1, Math.round(vScrollWrap.scrollTop / boundSlotH) + 1));
+}
+function swipeEnsureUnder(dir) {
+  const st = swipeState;
+  if (st.dir === dir) return;
+  st.dir = dir;
+  if (st.under) { st.under.remove(); st.under = null; }
+  const target = st.page + dir;
+  st.target = (target >= 1 && target <= 604) ? target : null;
+  if (!st.target) return;
+  let el = boundPagesContainer.querySelector('.vSlot[data-page="' + st.target + '"]');
+  if (el) { fitBoundSlotNow(el); el = el.cloneNode(true); }
+  else {
+    el = buildBoundPageFrameElement(st.target);
+    st.overlay.insertBefore(el, st.top);
+    fitLinesInSlot(el.querySelector('.pageLinesX'), st.target);
+  }
+  el.style.top = '0px';
+  st.overlay.insertBefore(el, st.top);
+  st.under = el;
+}
+function swipeBegin() {
+  const wrap = vScrollWrap;
+  const page = boundCurrentPageFromScroll();
+  const slot = boundPagesContainer.querySelector('.vSlot[data-page="' + page + '"]');
+  if (!slot || !boundSlotH) return false;
+  fitBoundSlotNow(slot);
+  const ov = document.createElement('div');
+  ov.id = 'swipeOverlay';
+  ov.style.top = wrap.style.top;
+  ov.style.height = wrap.clientHeight + 'px';
+  const top = slot.cloneNode(true);
+  top.classList.add('swipe-top');
+  top.style.top = (slot.offsetTop - wrap.scrollTop) + 'px';
+  ov.appendChild(top);
+  document.body.appendChild(ov);
+  wrap.style.visibility = 'hidden';
+  swipeState = { overlay: ov, top, under: null, page, dir: 0, target: null, width: ov.clientWidth || wrap.clientWidth, samples: [] };
+  return true;
+}
+function swipeMove(dx) {
+  const st = swipeState;
+  if (!st) return;
+  const dir = dx > 0 ? 1 : (dx < 0 ? -1 : st.dir);
+  if (dir) swipeEnsureUnder(dir);
+  const shown = st.target ? dx : dx * 0.25; // resist past the first / last page
+  st.top.style.transform = 'translateX(' + shown + 'px)';
+  st.samples.push({ t: performance.now(), x: dx });
+  if (st.samples.length > 6) st.samples.shift();
+}
+function swipeEnd(dx) {
+  const st = swipeState;
+  if (!st) return;
+  swipeState = null;
+  let v = 0;
+  if (st.samples.length >= 2) {
+    const a = st.samples[0], b = st.samples[st.samples.length - 1];
+    if (b.t > a.t) v = (b.x - a.x) / (b.t - a.t);
+  }
+  const complete = st.target && (Math.abs(dx) > st.width * 0.5 || (Math.abs(v) > 0.45 && Math.sign(v) === Math.sign(dx) && Math.abs(dx) > 24));
+  const endX = complete ? Math.sign(dx) * (st.width + 30) : 0;
+  const shown = st.target ? dx : dx * 0.25;
+  const dist = Math.abs(endX - shown);
+  const ms = Math.max(120, Math.min(280, dist * 0.9));
+  st.top.style.transition = 'transform ' + ms + 'ms ease-out';
+  requestAnimationFrame(() => { st.top.style.transform = 'translateX(' + endX + 'px)'; });
+  setTimeout(() => {
+    if (complete) {
+      setBoundScrollTop((st.target - 1) * boundSlotH);
+      reconcileBoundWindow();
+      updateBoundCurrentPage();
+    }
+    vScrollWrap.style.visibility = '';
+    st.overlay.remove();
+  }, ms + 20);
+}
+
+// ---------------- settle on a page after scrolling ----------------
+// When scrolling stops close to a page's edge (its frame lowered so that up to
+// half of the previous page's last line shows above it, or raised so that up
+// to half of its own first line is hidden under the floating bar - and the
+// same for its bottom edge), the page eases into its full position. Further
+// away than that, the reader evidently means to stay mid-page, so nothing moves.
+let snapTimer = null;
+let snapping = false;
+function boundSnapThreshold() { return (boundRowH || 40) * 0.5 + 12; }
+function maybeSnapBound() {
+  if (layoutMode !== 'bound' || autoPlaying || boundFingerDown || swipeState || !boundSlotH) return;
+  const wrap = vScrollWrap;
+  const st = wrap.scrollTop;
+  const k = Math.floor(st / boundSlotH);
+  const d = st - k * boundSlotH;
+  const T = boundSnapThreshold();
+  let target = null;
+  if (d > 0.5 && d <= T) target = k * boundSlotH;
+  else if (boundSlotH - d > 0.5 && boundSlotH - d <= T) target = (k + 1) * boundSlotH;
+  if (target === null) return;
+  target = Math.max(0, Math.min(target, wrap.scrollHeight - wrap.clientHeight));
+  snapping = true;
+  wrap.scrollTo({ top: target, behavior: 'smooth' });
+  setTimeout(() => { snapping = false; }, 450);
+}
+function freeSnapThreshold() { return (typeof freeFontPx === 'number' ? freeFontPx * 1.0 : 24) + 16; }
+function maybeSnapFree() {
+  if (layoutMode !== 'free' || (typeof freeAutoScrolling !== 'undefined' && freeAutoScrolling) || swipeState) return;
+  const wrap = document.getElementById('freeScrollWrap');
+  const cont = document.getElementById('freePagesContainer');
+  if (!wrap || !cont) return;
+  const T = freeSnapThreshold();
+  const top = wrap.scrollTop, bottom = top + wrap.clientHeight;
+  let best = null;
+  for (const fr of cont.querySelectorAll('.page-frame')) {
+    const fTop = fr.offsetTop - 4, fBot = fr.offsetTop + fr.offsetHeight + 4;
+    if (fBot < top - T || fTop > bottom + T) continue;
+    const dTop = fTop - top;     // page start near the top edge
+    const dBot = fBot - bottom;  // page end near the bottom edge
+    if (Math.abs(dTop) > 0.5 && Math.abs(dTop) <= T && (!best || Math.abs(dTop) < Math.abs(best))) best = dTop;
+    if (Math.abs(dBot) > 0.5 && Math.abs(dBot) <= T && (!best || Math.abs(dBot) < Math.abs(best))) best = dBot;
+  }
+  if (best === null) return;
+  snapping = true;
+  wrap.scrollTo({ top: Math.max(0, top + best), behavior: 'smooth' });
+  setTimeout(() => { snapping = false; }, 450);
+}
+function scheduleSnap(fn) {
+  if (snapping) return;
+  clearTimeout(snapTimer);
+  snapTimer = setTimeout(fn, SUPPORTS_SCROLLEND ? 0 : 160);
+}
+
 function initBoundSwipe() {
   const wrap = vScrollWrap;
   if (!wrap) return;
@@ -24084,6 +24506,8 @@ function initBoundSwipe() {
     }
     if (boundSwipeAxis === 'x') {
       e.preventDefault(); // horizontal page-turn - don't also let it scroll vertically
+      if (!swipeState && !swipeBegin()) return;
+      swipeMove(dx);
     } else if (boundSwipeAxis === 'y' && landscapeMode) {
       e.preventDefault();
       boundSuppressScrollTracking = false;
@@ -24104,8 +24528,7 @@ function initBoundSwipe() {
     if (boundSwipeAxis === 'x') {
       const p = e.changedTouches.length ? localPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY) : null;
       const dx = p ? p.x - boundTouchStartX : 0;
-      if (dx > 60 && pageNum < 604) centerOn(pageNum + 1);
-      else if (dx < -60 && pageNum > 1) centerOn(pageNum - 1);
+      if (swipeState) swipeEnd(dx);
     } else if (boundSwipeAxis === 'y' && landscapeMode) {
       // hand off to a simple momentum coast, computed from the last few
       // manually-tracked drag samples, mirroring what native scrolling would
@@ -24159,6 +24582,7 @@ function initBoundSwipe() {
 
   wrap.addEventListener('touchcancel', () => {
     boundFingerDown = false;
+    if (swipeState) swipeEnd(0);
     touchOnControl = false;
     clearTimeout(longPressTimer);
     boundTouchStartX = null;
@@ -24660,6 +25084,7 @@ function stopAutoScroll() {
   autoPlaying = false;
   playPauseBtn.innerHTML = PLAY_ARROW_SVG;
   pauseAutoScroll();
+  setTimeout(maybeSnapBound, 60);
 }
 
 playPauseBtn.addEventListener('click', () => {
@@ -27352,4 +27777,146 @@ function renderShareTab() {
     copied(await copyTextToClipboard(APP_SHARE_MESSAGE), 'الرسالة، الصقها حيث تريد');
   });
 }
+</script><script>
+// settle on the page's full position once scrolling stops (both layouts)
+(function () {
+  const hook = (wrap, fn) => {
+    if (!wrap) return;
+    if (SUPPORTS_SCROLLEND) wrap.addEventListener('scrollend', () => { if (!snapping) fn(); });
+    else wrap.addEventListener('scroll', () => scheduleSnap(fn), { passive: true });
+  };
+  hook(vScrollWrap, maybeSnapBound);
+  hook(document.getElementById('freeScrollWrap'), maybeSnapFree);
+})();
+</script><script>
+// ---------------- free layout: close each justified line's gaps with kashida ----------------
+// The browser decides where a free-layout line breaks; once it has, each
+// line's leftover width (everything but the paragraph's last line) is
+// measured with plain right alignment and filled with kashida under the same
+// rules as the standard layout, leaving only a sliver for justification.
+// If that ever changes where any line breaks, the kashida is taken back out.
+(function () {
+  const cont = document.getElementById('freePagesContainer');
+  if (!cont) return;
+  function toLocalFactory() {
+    if (!landscapeMode) return (r) => r;
+    const inv = new DOMMatrixReadOnly(getComputedStyle(document.body).transform).inverse();
+    return (r) => {
+      const a = new DOMPoint(r.left, r.top).matrixTransform(inv), b = new DOMPoint(r.right, r.bottom).matrixTransform(inv);
+      const left = Math.min(a.x, b.x), right = Math.max(a.x, b.x), top = Math.min(a.y, b.y), bottom = Math.max(a.y, b.y);
+      return { left, right, top, bottom, width: right - left, height: bottom - top };
+    };
+  }
+  function processPara(para) {
+    removeInsertedKashida(para);
+    const cs = getComputedStyle(para);
+    const fontPx = parseFloat(cs.fontSize) || 24;
+    const avail = para.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0);
+    if (!avail) return;
+    const heightBefore = para.offsetHeight;
+    para.style.textAlign = 'right';
+    para.style.textAlignLast = 'right';
+    const toLocal = toLocalFactory();
+    const range = document.createRange();
+    const items = []; // {words?, rect}
+    kashidaTextNodes(para).forEach((node) => {
+      const v = node.nodeValue;
+      const re = /\S+/g; let m;
+      while ((m = re.exec(v))) {
+        range.setStart(node, m.index); range.setEnd(node, m.index + m[0].length);
+        const rs = range.getClientRects();
+        if (!rs.length) continue;
+        items.push({ node, start: m.index, word: m[0], rect: toLocal(rs[0]), wrapped: rs.length > 1 });
+      }
+    });
+    para.querySelectorAll('.ayahnum, .ayahnum-badge, .rubgrid8, .rubmark, .sajdah-mark, .divine-name').forEach((el) => {
+      const r = el.getBoundingClientRect(); if (r.width || r.height) items.push({ rect: toLocal(r) });
+    });
+    if (!items.length) { para.style.textAlign = ''; para.style.textAlignLast = ''; return; }
+    // group into lines by vertical centre
+    items.sort((a, b) => (a.rect.top + a.rect.bottom) - (b.rect.top + b.rect.bottom));
+    const lines = [];
+    const tol = fontPx * 0.6;
+    items.forEach((it) => {
+      const cy = (it.rect.top + it.rect.bottom) / 2;
+      const L = lines.length ? lines[lines.length - 1] : null;
+      if (L && Math.abs(cy - L.cy) < tol) { L.items.push(it); L.left = Math.min(L.left, it.rect.left); L.right = Math.max(L.right, it.rect.right); }
+      else lines.push({ cy, items: [it], left: it.rect.left, right: it.rect.right });
+    });
+    const tw = Math.max(1, textWidth('ـ', fontPx));
+    const inserts = new Map(); // node -> [{idx, c}]
+    lines.slice(0, -1).forEach((L) => {
+      const gap = avail - (L.right - L.left);
+      let k = Math.floor((gap - fontPx * 0.3) / tw);
+      if (k <= 0) return;
+      // candidate joints per word on this line, last joint first
+      const words = [];
+      L.items.forEach((it) => {
+        if (!it.node || it.wrapped || JALALA_FORMS.has(stripForDivineMatch(it.word))) return;
+        const w = it.word, base = [];
+        for (let i = 0; i < w.length; i++) if (KASHIDA_LETTER_RE.test(w[i])) base.push(i);
+        const pts = [];
+        for (let b = 1; b < base.length; b++) {
+          const pc = w[base[b - 1]], cc = w[base[b]];
+          if (NON_CONNECTORS.has(pc) || pc === 'ـ' || cc === 'ء') continue;
+          if (pc === 'ل' && KASHIDA_ALEFS.has(cc)) continue;
+          if (cc === 'ل' && b + 1 < base.length && KASHIDA_ALEFS.has(w[base[b + 1]])) continue;
+          if (/[ٰٓ]/.test(w.slice(base[b - 1] + 1, base[b]))) continue;
+          pts.push({ node: it.node, idx: it.start + base[b] });
+        }
+        if (pts.length) words.push(pts.reverse());
+      });
+      if (!words.length) return;
+      const plan = new Map();
+      let round = 0;
+      while (k > 0 && round < 9) {
+        let placed = false;
+        for (const pts of words) {
+          if (k <= 0) break;
+          if (round >= pts.length * 3) continue;
+          const pt = pts[round % pts.length];
+          plan.set(pt, (plan.get(pt) || 0) + 1); k--; placed = true;
+        }
+        if (!placed) break;
+        round++;
+      }
+      plan.forEach((c, pt) => {
+        if (!inserts.has(pt.node)) inserts.set(pt.node, []);
+        inserts.get(pt.node).push({ idx: pt.idx, c });
+      });
+    });
+    inserts.forEach((list, node) => {
+      let v = node.nodeValue;
+      list.sort((a, b) => b.idx - a.idx).forEach(({ idx, c }) => { v = v.slice(0, idx) + 'ـ'.repeat(c) + v.slice(idx); });
+      node.nodeValue = v;
+    });
+    para.style.textAlign = '';
+    para.style.textAlignLast = '';
+    if (Math.abs(para.offsetHeight - heightBefore) > 1) removeInsertedKashida(para); // a line re-broke: take it back out
+    para.dataset.kx = Math.round(avail) + '|' + fontPx;
+  }
+  const pending = new Set();
+  let raf = 0;
+  function flush() {
+    raf = 0;
+    pending.forEach((block) => {
+      if (!block.isConnected) return;
+      block.querySelectorAll('.freePara').forEach((para) => {
+        const cs = getComputedStyle(para);
+        const key = Math.round(para.clientWidth) + '|' + (parseFloat(cs.fontSize) || 0);
+        if (para.dataset.kx === key) return;
+        try { processPara(para); } catch (e) { removeInsertedKashida(para); }
+      });
+    });
+    pending.clear();
+  }
+  function queue(block) { pending.add(block); if (!raf) raf = requestAnimationFrame(flush); }
+  const ro = new ResizeObserver((entries) => entries.forEach((e) => queue(e.target)));
+  const watch = (root) => root.querySelectorAll && root.querySelectorAll('.freePageTextBlock').forEach((b) => { ro.observe(b); queue(b); });
+  new MutationObserver((muts) => muts.forEach((m) => m.addedNodes.forEach((n) => {
+    if (n.nodeType !== 1) return;
+    if (n.classList && n.classList.contains('freePageTextBlock')) { ro.observe(n); queue(n); } else watch(n);
+  }))).observe(cont, { childList: true, subtree: true });
+  watch(cont);
+})();
 </script></body></html>
