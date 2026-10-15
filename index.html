@@ -88,6 +88,7 @@ header{background:#0E4433;color:#F6EFDC;padding:8px 16px;display:flex;align-item
    spans the device's height, not its width), so the compact spacing
    built for portrait's tight ~390px budget can relax considerably; none
    of this touches portrait, which keeps exactly what was tuned above. */
+@media (max-width:340px){body:not(.landscape-lock) #headerSearch{flex-basis:1.35cm !important;width:1.35cm !important;}}
 body.landscape-lock #headerSearch{flex:0 1 4cm !important;width:4cm !important;}
 body.landscape-lock #headerClockDate{padding-right:0.6cm !important;gap:1.2cm !important;}
 header input[type=search]{padding:8px 12px;color:#F6EFDC;font-size:16px;font-weight:700;}
@@ -564,6 +565,15 @@ body.dark-mode .search-load-more:hover{background:#2B322A;}
 .banner{background:#0E4433;color:#F6EFDC;font-size:12.5px;padding:6px 14px;text-align:center;}
 ::-webkit-scrollbar{width:10px;}
 ::-webkit-scrollbar-thumb{background:#D9C79C;border-radius:8px;}
+/* Computers (mouse/touchpad): the side menu's two columns show a visible
+   scroll bar, so tabs/rows that don't fit the window height can be reached
+   (by dragging the bar or the mouse wheel) - phones keep them hidden. */
+@media (hover:hover) and (pointer:fine){
+  .tabs,#sidebarBody{scrollbar-width:thin;scrollbar-color:#B98A2A transparent;}
+  .tabs::-webkit-scrollbar,#sidebarBody::-webkit-scrollbar{display:block;width:9px;}
+  .tabs::-webkit-scrollbar-thumb,#sidebarBody::-webkit-scrollbar-thumb{background:#B98A2A;border-radius:6px;}
+  .tabs::-webkit-scrollbar-track,#sidebarBody::-webkit-scrollbar-track{background:transparent;}
+}
 
 body.dark-mode{background:radial-gradient(1200px 800px at 50% -10%,#1B211D 0%,#141814 55%,#0D0F0D 100%);color:#E7E0CE;}
 body.dark-mode header,body.dark-mode #autoFab,body.dark-mode #freeAutoFab{background:#08251C;}
@@ -654,7 +664,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
 </head>
 <body>
 <header>
-  <button class="iconbtn" id="menuBtn" aria-label="فتح الفهرس">☰</button>
+  <button class="iconbtn" id="menuBtn" aria-label="فتح الفهرس"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 6.5h16M4 12h16M4 17.5h16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
   <div id="headerClockDate">
     <div id="headerClockCol">
       <span id="headerClock"></span>
@@ -704,7 +714,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
 
 <div id="autoFab" style="position:fixed;bottom:0;left:0;right:0;z-index:50;background:#0E4433;display:flex;align-items:center;justify-content:center;gap:8px;padding:7px 8px;box-shadow:0 -2px 10px rgba(0,0,0,.2);flex-wrap:wrap;height:var(--floatBarH);box-sizing:border-box;">
   <div class="fab-frame" id="rotateFrameBound">
-    <button class="fab-btn" id="rotateBtn" aria-label="تبديل العرض الأفقي/العمودي" title="تبديل العرض">🔄</button>
+    <button class="fab-btn" id="rotateBtn" aria-label="تبديل العرض الأفقي/العمودي" title="تبديل العرض"><svg class="fab-icon" viewBox="0 0 24 24" width="1.2em" height="1.2em" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="5" fill="#4C8FDB"/><g fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.6 10.2A6 6 0 0 0 7.3 7.6"/><path d="M6.4 13.8a6 6 0 0 0 10.3 2.6"/><path d="M6.8 4.4v3.8h3.8"/><path d="M17.2 19.6v-3.8h-3.8"/></g></svg></button>
   </div>
   <div class="fab-frame fab-frame-scroll">
     <button id="speedDownBtn" class="fab-btn fab-btn-round" aria-label="أبطئ التمرير">−</button>
@@ -715,7 +725,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
     <button id="speedUpBtn" class="fab-btn fab-btn-round" aria-label="أسرع التمرير">+</button>
   </div>
   <div class="fab-frame" id="backFrameBound">
-    <button class="fab-btn" id="backBtn" aria-label="رجوع" title="رجوع">⬅️</button>
+    <button class="fab-btn" id="backBtn" aria-label="رجوع" title="رجوع"><svg class="fab-icon" viewBox="0 0 24 24" width="1.2em" height="1.2em" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="5" fill="#4C8FDB"/><path d="M18 12H6.8M11.2 7.2 6.4 12l4.8 4.8" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   </div>
 </div>
 
@@ -754,7 +764,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
   </div>
   <div id="freeAutoFab" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;background:#0E4433;align-items:center;justify-content:center;gap:8px;padding:7px 8px;box-shadow:0 -2px 10px rgba(0,0,0,.2);flex-wrap:wrap;height:var(--floatBarH);box-sizing:border-box;">
     <div class="fab-frame" id="rotateFrameFree">
-      <button class="fab-btn" id="rotateBtnFree" aria-label="تبديل العرض الأفقي/العمودي" title="تبديل العرض">🔄</button>
+      <button class="fab-btn" id="rotateBtnFree" aria-label="تبديل العرض الأفقي/العمودي" title="تبديل العرض"><svg class="fab-icon" viewBox="0 0 24 24" width="1.2em" height="1.2em" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="5" fill="#4C8FDB"/><g fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.6 10.2A6 6 0 0 0 7.3 7.6"/><path d="M6.4 13.8a6 6 0 0 0 10.3 2.6"/><path d="M6.8 4.4v3.8h3.8"/><path d="M17.2 19.6v-3.8h-3.8"/></g></svg></button>
     </div>
     <div class="fab-frame fab-frame-scroll">
       <button id="freeSpeedDownBtn" class="fab-btn fab-btn-round" aria-label="أبطئ التمرير">−</button>
@@ -769,7 +779,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
       <button id="freeSizeUpBtn" class="fab-btn fab-btn-round" aria-label="تكبير حجم الخط" title="تكبير حجم الخط"><span style="font-family:sans-serif;font-size:19px;line-height:1;font-weight:700;">A</span></button>
     </div>
     <div class="fab-frame" id="backFrameFree">
-      <button class="fab-btn" id="backBtnFree" aria-label="رجوع" title="رجوع">⬅️</button>
+      <button class="fab-btn" id="backBtnFree" aria-label="رجوع" title="رجوع"><svg class="fab-icon" viewBox="0 0 24 24" width="1.2em" height="1.2em" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="5" fill="#4C8FDB"/><path d="M18 12H6.8M11.2 7.2 6.4 12l4.8 4.8" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
   </div>
   <div style="text-align:center;color:#7A7360;font-size:12px;margin-top:10px;">مرّر بإصبعك لأعلى للصفحة التالية، ولأسفل للصفحة السابقة</div>
@@ -26126,20 +26136,36 @@ window.addEventListener('resize', () => { if (gharibOpen()) hideGharib(); });
 // tap behaviour - so while auto-scrolling, tap 1 on a green word stops the
 // scroll and shows its meaning, tap 2 hides it, and tap 3 (no card open any
 // more) is an ordinary tap again, which resumes the scrolling.
-function gharibHandleTap(target) {
+// scrollMode: auto-scroll is on (running or tap-paused) - taps there only
+// pause/resume, so a tap on a black word just closes the card. Otherwise the
+// card and the ayah window replace each other directly: a black word while
+// the card shows opens the ayah window, a green word while the ayah window
+// shows opens the card.
+function gharibHandleTap(target, scrollMode) {
   const w = target && target.closest ? target.closest('.gharib') : null;
   const usable = !!w && gharibOn && !w.closest('#swipeOverlay');
   if (gharibOpen()) {
-    if (usable && w.dataset.gk !== ghPopKey) showGharib(w);
-    else hideGharib();
+    if (usable && w.dataset.gk !== ghPopKey) { showGharib(w); return true; }
+    hideGharib();
+    if (!usable && !scrollMode && target && target.closest && target.closest('.ayah-seg')) return false; // -> ayah window
     return true;
   }
   if (!usable) return false;
-  // an open ayah card is closed by the tap first, as before
-  if (typeof getTapSelectedAyah === 'function' && getTapSelectedAyah()) return false;
+  if (typeof getTapSelectedAyah === 'function' && getTapSelectedAyah()) {
+    clearAyahTapSelection();
+    hideAyahPopup();
+  }
   showGharib(w);
   return true;
 }
+// Any touch/click outside the text (a toolbar button, the header, the side
+// menu...) means the reader moved on - the card goes away.
+document.addEventListener('pointerdown', (e) => {
+  if (!gharibOpen()) return;
+  const t = e.target;
+  if (t && t.closest && t.closest('#vScrollWrap, #freeScrollWrap, #gharibPop')) return;
+  hideGharib();
+}, true);
 function setGharibOn(on) {
   gharibOn = !!on;
   store.set('gharib', gharibOn ? 'on' : 'off');
@@ -27035,6 +27061,12 @@ function fitFloatingFrameBar(bar) {
   [fromTo, juz, hizb, rub, nameGroup].forEach((el) => { el.style.fontSize = ''; el.style.fontWeight = ''; });
   [fromTo, orderNum, countNum, nameZone, juzNum, hizbNum, rubNum].forEach((el) => { if (el) el.style.minWidth = ''; });
   bookmarkSlot.style.right = ''; circleSlot.style.left = '';
+  // On a narrow screen (a phone set to a larger "display size"/screen zoom
+  // reports a much narrower width than its real one) the two round end
+  // slots shrink a little too, leaving the middle content room to fit.
+  const slotZoom = Math.min(1, Math.max(0.72, barEl.clientWidth / 345));
+  bookmarkSlot.style.zoom = slotZoom < 1 ? String(slotZoom) : '';
+  circleSlot.style.zoom = slotZoom < 1 ? String(slotZoom) : '';
 
   const baseFontPx = {
     fromTo: parseFloat(getComputedStyle(fromTo).fontSize),
@@ -27176,7 +27208,7 @@ function fitFloatingFrameBar(bar) {
   // by whichever is tighter: the bar's own fixed height (maxScaleVertical)
   // or a generous absolute ceiling, so a very wide/short bar can't blow the
   // two-line from/to block past the bar's top/bottom edges.
-  scale = Math.max(0.6, Math.min(scale, maxScaleVertical, 2.2));
+  scale = Math.max(0.3, Math.min(scale, maxScaleVertical, 2.2)); // floor low enough that everything still fits on a very narrow screen
 
   const bold = 800; // round-3: always the heaviest available weight, not just once there's room to spare
   fromTo.style.fontSize = (baseFontPx.fromTo * scale) + 'px'; fromTo.style.fontWeight = String(bold);
@@ -27815,7 +27847,7 @@ function initFreeSwipe() {
       //    stop it was a tap rather than the button): this tap resumes it.
       //  - otherwise (never engaged, or the last stop was the explicit
       //    button): taps are entirely handleTapOnAyah's to interpret.
-      if (gharibHandleTap(freeTouchStartTarget)) {
+      if (gharibHandleTap(freeTouchStartTarget, freeWasAutoScrollingBeforeTouch || freeTapPaused)) {
         // a word meaning was shown/hidden - keep the scrolling paused, and
         // let the next ordinary tap resume it
         if (freeWasAutoScrollingBeforeTouch) freeTapPaused = true;
@@ -30007,7 +30039,7 @@ function initBoundSwipe() {
       //    already-playing recitation - see its own comment for the full
       //    state machine, including why a tap on empty space still needs
       //    to reach it to clear an existing selection).
-      if (gharibHandleTap(touchStartTarget)) {
+      if (gharibHandleTap(touchStartTarget, autoPlaying)) {
         // a word meaning was shown/hidden - the scrolling (if any) stays paused
       } else if (autoPlaying) {
         if (!boundWasAnimatingBeforeTouch) resumeAutoScroll();
@@ -30661,6 +30693,7 @@ function applySidebarTopOffset() {
   document.documentElement.style.setProperty('--sidebarTop', Math.round(top) + 'px');
 }
 function openSidebar(tab) {
+  if (typeof hideGharib === 'function') hideGharib();
   applySidebarTopOffset();
   document.getElementById('headerSearch').value = '';
   const searchWasOpen = searchPageEl.style.display === 'block';
@@ -30750,7 +30783,7 @@ function renderGuideTab() {
       'الساعة واليوم والتاريخ (الهجري والميلادي).',
       'حقل "بحث" للبحث عن أي كلمة أو عبارة أو جملة في القرآن الكريم. وعند ترك مسافة قبل الكلمة التي يراد بحثها -وذلك باستعمال مفتاح المسافة من لوحة المفاتيح- فلن تظهر النتائج التي تكون فيها هذه الكلمة مسبوقة بحرف أو أكثر في نفس الكلمة، وعند ترك مسافة بعد الكلمة فلن تظهر النتائج التي تكون فيها هذه الكلمة ملحقة بحرف أو أكثر في نفس الكلمة، وعند ترك مسافة قبل الكلمة وبعدها فستظهر النتائج التي تكون فيها الكلمة نفسها بلا زيادة. ويمكن بحث كلمتين من نفس الآية في نفس الوقت، بترك مسافة واحدة بينهما إذا كانتا متجاورتين في الآية، ومسافتين إذا كانتا غير متجاورتين.',
       'زر الهلال/الشمس لتبديل الوضع الليلي والنهاري.',
-      'زر القائمة (☰) لفتح القائمة الجانبية.',
+      'زر القائمة (' + document.getElementById('menuBtn').innerHTML.replace('width="22" height="22"', 'width="16" height="16" style="vertical-align:middle"') + ') لفتح القائمة الجانبية.',
     ]},
     { title: '٢. الإطار العائم (أسفل شريط الرأس مباشرة)', items: [
       'داخل القوسين: ترتيب السورة، ثم اسمها، ثم رمز يبيّن كونها مكية أو مدنية، ثم عدد آياتها.',
@@ -30760,8 +30793,8 @@ function renderGuideTab() {
       'علامة المرجعية ودائرة رقم الصفحة وبقية عناصر الإطار ثابتة في مكانها دائماً، سواء كانت الصفحة فردية أو زوجية.',
       'يتحدّث تلقائياً أثناء التمرير ليطابق ما تقرأه.',
     ]},
-    { title: '٣. القائمة الجانبية (تُفتح بالنقر على ☰)', items: [
-      '<b>التخطيط</b>: الاختيار بين نص المصحف (عثماني برسم المصحف، أو إملائي بتشكيل كامل، أو مجرَّد بدون تشكيل)، والاختيار بين الوضع القياسي المطابق للمصحف الورقي (١٥ سطراً في الصفحة) والوضع الحر القابل للتكبير والتصغير بحرية.',
+    { title: '٣. القائمة الجانبية (تُفتح بزر القائمة أعلى يمين الشاشة)', items: [
+      '<b>التخطيط</b>: الاختيار بين نص المصحف (عثماني برسم المصحف، أو إملائي بتشكيل كامل، أو مجرَّد بدون تشكيل)، والاختيار بين الوضع القياسي المطابق للمصحف الورقي (١٥ سطراً في الصفحة) والوضع الحر القابل للتكبير والتصغير بحرية، وإظهار معاني الكلمات (التلوين الأخضر) أو إخفاؤها.',
       '<b>التلاوة</b>: اختيار القارئ لتلاوة الآيات صوتياً.',
       '<b>الأدعية</b>: مجموعة أدعية مأثورة خاصة بالتلاوة.',
       '<b>السور</b>: فهرس كامل لسور القرآن، للانتقال المباشر لأي سورة. ويمكن البحث عن سورة ما في حقل البحث الموجود في أعلى قائمة السور بإسمها أو تسلسلها.',
@@ -30784,8 +30817,8 @@ function renderGuideTab() {
     { title: '٦. شريط الأدوات السفلي', items: [
       'زرا تكبير/تصغير حجم الخط (' + roundBadge('A', 12) + ' / ' + roundBadge('A', 19) + ').',
       'زر تشغيل/إيقاف التمرير التلقائي (' + badge(PLAY_ARROW_SVG) + '/' + badge('⏸') + ')، مع زري إبطاء (' + roundBadge('−', 18) + ') وتسريع (' + roundBadge('+', 18) + ') التمرير.',
-      'زر تبديل اتجاه العرض بين الوضعين الأفقي والعمودي (' + badge('🔄') + ')، وفي الاتجاه الأفقي يعمل هذا الزر عملين متتاليين: بالنقرة الأولى يبدّل إلى الجهة الأفقية الأخرى، وبالنقرة الثانية يعود إلى الاتجاه العمودي مباشرة.',
-      'زر رجوع (' + badge('⬅️') + ') يقوم بعمل إيماءة الرجوع نفسها (العودة خطوة للخلف في البرنامج، كإغلاق نافذة أو نتائج بحث)، تسهيلاً على من لا تتوفر لديه إيماءة الرجوع في نظام جهازه. وفي الاتجاه الأفقي: إن كانت الجهة الحالية هي نفسها التي دخل بها الاتجاه الأفقي، فإنه (وكذلك إيماءة الرجوع) يعيد مباشرة إلى الاتجاه العمودي؛ وإن كان قد انتقل إلى الجهة الأفقية الأخرى (سواء بزر التدوير أو تلقائياً)، فإن أول ضغطة تعيده إلى الجهة الأولى، والضغطة الثانية تعيده إلى الاتجاه العمودي.',
+      'زر تبديل اتجاه العرض بين الوضعين الأفقي والعمودي (' + badge(document.getElementById('rotateBtn').innerHTML) + ')، وفي الاتجاه الأفقي يعمل هذا الزر عملين متتاليين: بالنقرة الأولى يبدّل إلى الجهة الأفقية الأخرى، وبالنقرة الثانية يعود إلى الاتجاه العمودي مباشرة.',
+      'زر رجوع (' + badge(document.getElementById('backBtn').innerHTML) + ') يقوم بعمل إيماءة الرجوع نفسها (العودة خطوة للخلف في البرنامج، كإغلاق نافذة أو نتائج بحث)، تسهيلاً على من لا تتوفر لديه إيماءة الرجوع في نظام جهازه. وفي الاتجاه الأفقي: إن كانت الجهة الحالية هي نفسها التي دخل بها الاتجاه الأفقي، فإنه (وكذلك إيماءة الرجوع) يعيد مباشرة إلى الاتجاه العمودي؛ وإن كان قد انتقل إلى الجهة الأفقية الأخرى (سواء بزر التدوير أو تلقائياً)، فإن أول ضغطة تعيده إلى الجهة الأولى، والضغطة الثانية تعيده إلى الاتجاه العمودي.',
     ]},
     { title: '٧. تقسيم آيات المصحف إلى خمسينات ومئات', items: [
       'مجموع آيات المصحف ٦٢٣٦ آية، مقسّمة حسب الترتيب المتسلسل من أول الفاتحة إلى آخر الناس.',
@@ -30794,7 +30827,15 @@ function renderGuideTab() {
       'تساعد هذه العلامات من يريد قراءة وردٍ يومي ثابت بمقدار خمسين آية أو مئة آية، بمتابعة الخط الأحمر أينما ظهر.',
       'آخر ٣٦ آية في المصحف لا تكتمل بها خمسون آية جديدة، فلا تحمل علامة.',
     ]},
-    { title: '٨. سور العزائم', items: [
+    { title: '٨. معاني الألفاظ (الكلمات الخضراء)', items: [
+      'الألفاظ القرآنية التي تحتاج إلى بيان ملوّنة في المصحف بـ<b style="color:#0A7D32;">اللون الأخضر</b>، وعددها أكثر من أحد عشر ألف لفظة، ومعانيها مختصرة من كتاب «الميسَّر في غريب القرآن الكريم» الصادر عن مجمع الملك فهد لطباعة المصحف الشريف.',
+      'انقر أي لفظة خضراء يظهر معناها في مستطيل صغير قريب منها لا يغطيها، وانقر في أي مكان من الصفحة يختفي. وإذا كان المعنى لعبارة من عدة كلمات تُظلَّل كلماتها كلها.',
+      'النقر على لفظة خضراء أخرى والمستطيل ظاهر يُظهر معناها مباشرة، والنقر على كلمة غير خضراء يُخفيه ويفتح نافذة الآية مباشرة، والعكس كذلك: النقر على لفظة خضراء ونافذة الآية مفتوحة يغلقها ويُظهر المعنى.',
+      'أثناء التمرير التلقائي: النقرة الأولى على لفظة خضراء توقف التمرير وتُظهر المعنى، والنقرة الثانية في أي مكان تُخفيه، والنقرة الثالثة تعيد التمرير.',
+      'يختفي المستطيل كذلك عند الانتقال إلى أي عمل آخر، كفتح القائمة الجانبية أو النقر على أزرار الشريط السفلي.',
+      'يمكن إخفاء التلوين الأخضر أو إعادته من عنوان <b>التخطيط</b> في القائمة الجانبية، في قسم «معاني الكلمات».',
+    ]},
+    { title: '٩. سور العزائم', items: [
       'وهي أربع سور تتضمن كل منها آية فيها سجدة تلاوة واجبة، وهي كما يلي:',
       '<b>سورة السجدة، آية ١٥</b><br><span class="guide-ayah-text">إِنَّمَا يُؤْمِنُ بِـَٔايَـٰتِنَا ٱلَّذِينَ إِذَا ذُكِّرُوا بِهَا خَرُّوا سُجَّدًا وَسَبَّحُوا بِحَمْدِ رَبِّهِمْ وَهُمْ لَا يَسْتَكْبِرُونَ (١٥)</span>',
       '<b>سورة فصلت، آية ٣٧</b><br><span class="guide-ayah-text">وَمِنْ ءَايَـٰتِهِ ٱلَّيْلُ وَٱلنَّهَارُ وَٱلشَّمْسُ وَٱلْقَمَرُ ۚ لَا تَسْجُدُوا لِلشَّمْسِ وَلَا لِلْقَمَرِ وَٱسْجُدُوا لِلَّهِ ٱلَّذِى خَلَقَهُنَّ إِن كُنتُمْ إِيَّاهُ تَعْبُدُونَ (٣٧)</span>',
@@ -32713,7 +32754,17 @@ function updateHeaderClock() {
 // keep the full requested size and only the longest ones give up a little
 // of it. The clock itself is left alone - only the three secondary lines
 // (day name, hijri, gregorian) shrink.
+// A phone set to a larger "display size" (screen zoom) reports a much
+// narrower screen, where even the smallest fonts below can't fit the clock
+// and both dates - lines got cut off. When that happens the whole box is
+// scaled down as one unit instead (everything stays, just smaller; its
+// height kept), trying gentle steps first. A normal-width screen never gets
+// here and keeps exactly what it had.
 function ensureHeaderDatesFit() {
+  let r = headerDatesFitPass(1);
+  for (let z = 0.92; r && r.tooTight && z >= 0.45; z -= 0.06) r = headerDatesFitPass(z);
+}
+function headerDatesFitPass(boxZoom) {
   const datesCol = document.getElementById('headerDates');
   const clockCol = document.getElementById('headerClockCol');
   const clockDateBox = document.getElementById('headerClockDate');
@@ -32729,7 +32780,14 @@ function ensureHeaderDatesFit() {
     el.querySelectorAll('.date-num').forEach((s) => { s.style.fontSize = ''; s.style.minWidth = ''; s.style.textAlign = ''; s.style.marginLeft = ''; });
     el.querySelectorAll('.date-month').forEach((s) => { s.style.minWidth = ''; s.style.textAlign = ''; s.style.marginLeft = ''; });
   });
-  if (clockDateBox) { clockDateBox.style.paddingRight = ''; clockDateBox.style.gap = ''; }
+  if (clockDateBox) {
+    clockDateBox.style.paddingRight = ''; clockDateBox.style.gap = ''; clockDateBox.style.zoom = ''; clockDateBox.style.height = '';
+    if (boxZoom < 1) {
+      const h = parseFloat(getComputedStyle(clockDateBox).height) || 42.8;
+      clockDateBox.style.zoom = String(boxZoom);
+      clockDateBox.style.height = (h / boxZoom) + 'px';
+    }
+  }
   if (clockEl) { clockEl.style.width = ''; clockEl.style.marginLeft = ''; }
   if (dayNameEl) { dayNameEl.style.width = ''; dayNameEl.style.marginLeft = ''; dayNameEl.style.transform = ''; dayNameEl.style.transformOrigin = ''; }
 
@@ -32845,6 +32903,7 @@ function ensureHeaderDatesFit() {
       dayNameEl.style.transform = 'scaleX(' + scaleX.toFixed(4) + ')';
     }
   }
+  return { tooTight: overflowing() || size < 11 };
 }
 try { updateHeaderClock(); } catch (e) { /* see updateHeaderClock's own notes - this is belt-and-suspenders */ }
 setInterval(updateHeaderClock, 15000);
