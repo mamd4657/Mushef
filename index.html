@@ -392,13 +392,13 @@ body.dark-mode .freePageTextBlock{color:#EFE8D6;}
 .search-match-highlight{background:#FFD54F99;border-radius:2px;transition:background 1s ease-out;}
 .divine-name{color:#CC0000;}
 body.dark-mode .divine-name{color:#FF5252;}
-.gharib{color:#00A51C;}
-body.dark-mode .gharib{color:#3EDB5C;}
-.gharib.gh-active{background:rgba(0,165,28,.16);border-radius:4px;}
-body.dark-mode .gharib.gh-active{background:rgba(62,219,92,.18);}
+.gharib{color:#0A7D32;}
+body.dark-mode .gharib{color:#5CD685;}
+.gharib.gh-active{background:rgba(10,125,50,.16);border-radius:4px;}
+body.dark-mode .gharib.gh-active{background:rgba(92,214,133,.18);}
 body.gharib-off .gharib{color:inherit;background:none;}
-#gharibPop{position:fixed;z-index:60;display:none;box-sizing:border-box;width:max-content;padding:6px 14px 8px;background:#FFFDF6;border:2px solid #00A51C;border-radius:11px;box-shadow:0 4px 14px rgba(0,0,0,.28);color:#00A51C;font-family:'Amiri',serif;font-weight:700;font-size:21px;line-height:1.7;direction:rtl;text-align:right;white-space:normal;user-select:none;-webkit-user-select:none;}
-body.dark-mode #gharibPop{background:#18211A;border-color:#3EDB5C;color:#3EDB5C;box-shadow:0 4px 14px rgba(0,0,0,.6);}
+#gharibPop{position:fixed;z-index:60;display:none;box-sizing:border-box;width:max-content;padding:6px 14px 8px;background:#FFFDF6;border:2px solid #0A7D32;border-radius:11px;box-shadow:0 4px 14px rgba(0,0,0,.28);color:#0A7D32;font-family:'Amiri',serif;font-weight:700;font-size:21px;line-height:1.7;direction:rtl;text-align:right;white-space:normal;user-select:none;-webkit-user-select:none;}
+body.dark-mode #gharibPop{background:#18211A;border-color:#5CD685;color:#5CD685;box-shadow:0 4px 14px rgba(0,0,0,.6);}
 /* The floating bar's own font sizes (juz/hizb/rub/surah-name/from-to/page
    number) are no longer hardcoded per orientation here - fitFloatingFrameBar()
    measures the bar's actual available width itself (already orientation-
@@ -27489,14 +27489,30 @@ function floatingBarBottomLocalY() {
 // follows the marks themselves. Before the very first mark in the whole
 // mushaf (quarter 1 itself has none, nothing precedes it), this falls
 // through to 1.
-function findCurrentRubIndex(container, barBottomY) {
+// A mark on the current page's very first text line counts as reached as
+// soon as that page becomes the current one (the page number changes), rather
+// than waiting for the line itself to scroll up to the bar - every other mark
+// still updates exactly when its own line arrives.
+function rubMarkOpensPage(m, curPage) {
+  const frame = m.closest('[data-page]');
+  if (!frame || parseInt(frame.dataset.page, 10) !== curPage) return false;
+  const firstSeg = frame.querySelector('.ayah-seg');
+  if (!firstSeg) return false;
+  const rects = firstSeg.getClientRects();
+  if (!rects.length) return false;
+  // first line of text, in the same local (pre-rotation) space as localRect
+  const p1 = localPoint(rects[0].left, rects[0].top), p2 = localPoint(rects[0].right, rects[0].bottom);
+  const lineBottom = Math.max(p1.y, p2.y);
+  return localRect(m).top < lineBottom;
+}
+function findCurrentRubIndex(container, barBottomY, curPage) {
   if (!container) return 1;
   const marks = container.querySelectorAll('.rubgrid8[data-rub]');
   let best = 0;
   marks.forEach((m) => {
     const r = localRect(m);
     if (r.width <= 0 && r.height <= 0) return;
-    if (r.top <= barBottomY) {
+    if (r.top <= barBottomY || (curPage && rubMarkOpensPage(m, curPage))) {
       const idx = parseInt(m.dataset.rub, 10);
       if (idx > best) best = idx;
     }
@@ -27636,7 +27652,7 @@ function updateFreeCurrentPage() {
     const fallbackSurah = findCurrentSurahFromHeaders(wrapTopLocalY, undefined, atMaxScrollBottomY);
     if (fallbackSurah !== null) surahOverride = fallbackSurah;
   }
-  updateFloatingFrameBar(pageNum, surahOverride, findCurrentRubIndex(container, floatBarBottomLocalY));
+  updateFloatingFrameBar(pageNum, surahOverride, findCurrentRubIndex(container, floatBarBottomLocalY, pageNum));
   // Keep a fresh record of what's centered on screen at all times (not
   // just right before a zoom/rotation), since a rotation's own resize
   // event fires only after the browser has already reflowed everything to
@@ -29533,7 +29549,7 @@ function updateBoundCurrentPage() {
     const fallbackSurah = findCurrentSurahFromHeaders(wrapTopLocalY, 'boundPagesContainer', atMaxScrollBottomY);
     if (fallbackSurah !== null) surahOverride = fallbackSurah;
   }
-  updateFloatingFrameBar(pageNum, surahOverride, findCurrentRubIndex(container, floatBarBottomLocalY));
+  updateFloatingFrameBar(pageNum, surahOverride, findCurrentRubIndex(container, floatBarBottomLocalY, pageNum));
   // See the matching comment in updateFreeCurrentPage - keeps a running
   // record of what's centered so a rotation's resize handler has something
   // valid to restore from, since by the time it fires the reflow has
@@ -30828,7 +30844,7 @@ function renderGuideTab() {
       'آخر ٣٦ آية في المصحف لا تكتمل بها خمسون آية جديدة، فلا تحمل علامة.',
     ]},
     { title: '٨. معاني الألفاظ (الكلمات الخضراء)', items: [
-      'الألفاظ القرآنية التي تحتاج إلى بيان ملوّنة في المصحف بـ<b style="color:#00A51C;">اللون الأخضر</b>، وعددها أكثر من أحد عشر ألف لفظة، ومعانيها مختصرة من كتاب «الميسَّر في غريب القرآن الكريم» الصادر عن مجمع الملك فهد لطباعة المصحف الشريف.',
+      'الألفاظ القرآنية التي تحتاج إلى بيان ملوّنة في المصحف بـ<b style="color:#0A7D32;">اللون الأخضر</b>، وعددها أكثر من أحد عشر ألف لفظة، ومعانيها مختصرة من كتاب «الميسَّر في غريب القرآن الكريم» الصادر عن مجمع الملك فهد لطباعة المصحف الشريف.',
       'انقر أي لفظة خضراء يظهر معناها في مستطيل صغير قريب منها لا يغطيها، وانقر في أي مكان من الصفحة يختفي. وإذا كان المعنى لعبارة من عدة كلمات تُظلَّل كلماتها كلها.',
       'النقر على لفظة خضراء أخرى والمستطيل ظاهر يُظهر معناها مباشرة، والنقر على كلمة غير خضراء يُخفيه ويفتح نافذة الآية مباشرة، والعكس كذلك: النقر على لفظة خضراء ونافذة الآية مفتوحة يغلقها ويُظهر المعنى.',
       'أثناء التمرير التلقائي: النقرة الأولى على لفظة خضراء توقف التمرير وتُظهر المعنى، والنقرة الثانية في أي مكان تُخفيه، والنقرة الثالثة تعيد التمرير.',
@@ -31034,7 +31050,7 @@ function renderFontTab() {
     const row = document.createElement('button');
     row.className = 'font-opt' + (gharibOn === on ? ' active' : '');
     row.innerHTML = '<span class="fo-check">✓</span>' +
-      '<span class="fo-sample" style="font-size:18px;font-family:sans-serif;font-weight:700;' + (on ? 'color:#00A51C;' : '') + '">' + label + '</span>' +
+      '<span class="fo-sample" style="font-size:18px;font-family:sans-serif;font-weight:700;' + (on ? 'color:#0A7D32;' : '') + '">' + label + '</span>' +
       '<span class="fo-label" style="text-align:center;line-height:1.35;font-size:14px;">' + desc + '</span>';
     row.addEventListener('click', () => { setGharibOn(on); renderFontTab(); });
     sidebarBody.appendChild(row);
