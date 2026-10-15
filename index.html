@@ -392,13 +392,13 @@ body.dark-mode .freePageTextBlock{color:#EFE8D6;}
 .search-match-highlight{background:#FFD54F99;border-radius:2px;transition:background 1s ease-out;}
 .divine-name{color:#CC0000;}
 body.dark-mode .divine-name{color:#FF5252;}
-.gharib{color:#0A7D32;}
-body.dark-mode .gharib{color:#5CD685;}
-.gharib.gh-active{background:rgba(10,125,50,.16);border-radius:4px;}
-body.dark-mode .gharib.gh-active{background:rgba(92,214,133,.18);}
+.gharib{color:#00A51C;}
+body.dark-mode .gharib{color:#3EDB5C;}
+.gharib.gh-active{background:rgba(0,165,28,.16);border-radius:4px;}
+body.dark-mode .gharib.gh-active{background:rgba(62,219,92,.18);}
 body.gharib-off .gharib{color:inherit;background:none;}
-#gharibPop{position:fixed;z-index:60;display:none;box-sizing:border-box;width:max-content;padding:6px 14px 8px;background:#FFFDF6;border:2px solid #0A7D32;border-radius:11px;box-shadow:0 4px 14px rgba(0,0,0,.28);color:#0A7D32;font-family:'Amiri',serif;font-weight:700;font-size:21px;line-height:1.7;direction:rtl;text-align:right;white-space:normal;user-select:none;-webkit-user-select:none;}
-body.dark-mode #gharibPop{background:#18211A;border-color:#5CD685;color:#5CD685;box-shadow:0 4px 14px rgba(0,0,0,.6);}
+#gharibPop{position:fixed;z-index:60;display:none;box-sizing:border-box;width:max-content;padding:6px 14px 8px;background:#FFFDF6;border:2px solid #00A51C;border-radius:11px;box-shadow:0 4px 14px rgba(0,0,0,.28);color:#00A51C;font-family:'Amiri',serif;font-weight:700;font-size:21px;line-height:1.7;direction:rtl;text-align:right;white-space:normal;user-select:none;-webkit-user-select:none;}
+body.dark-mode #gharibPop{background:#18211A;border-color:#3EDB5C;color:#3EDB5C;box-shadow:0 4px 14px rgba(0,0,0,.6);}
 /* The floating bar's own font sizes (juz/hizb/rub/surah-name/from-to/page
    number) are no longer hardcoded per orientation here - fitFloatingFrameBar()
    measures the bar's actual available width itself (already orientation-
@@ -30828,7 +30828,7 @@ function renderGuideTab() {
       'آخر ٣٦ آية في المصحف لا تكتمل بها خمسون آية جديدة، فلا تحمل علامة.',
     ]},
     { title: '٨. معاني الألفاظ (الكلمات الخضراء)', items: [
-      'الألفاظ القرآنية التي تحتاج إلى بيان ملوّنة في المصحف بـ<b style="color:#0A7D32;">اللون الأخضر</b>، وعددها أكثر من أحد عشر ألف لفظة، ومعانيها مختصرة من كتاب «الميسَّر في غريب القرآن الكريم» الصادر عن مجمع الملك فهد لطباعة المصحف الشريف.',
+      'الألفاظ القرآنية التي تحتاج إلى بيان ملوّنة في المصحف بـ<b style="color:#00A51C;">اللون الأخضر</b>، وعددها أكثر من أحد عشر ألف لفظة، ومعانيها مختصرة من كتاب «الميسَّر في غريب القرآن الكريم» الصادر عن مجمع الملك فهد لطباعة المصحف الشريف.',
       'انقر أي لفظة خضراء يظهر معناها في مستطيل صغير قريب منها لا يغطيها، وانقر في أي مكان من الصفحة يختفي. وإذا كان المعنى لعبارة من عدة كلمات تُظلَّل كلماتها كلها.',
       'النقر على لفظة خضراء أخرى والمستطيل ظاهر يُظهر معناها مباشرة، والنقر على كلمة غير خضراء يُخفيه ويفتح نافذة الآية مباشرة، والعكس كذلك: النقر على لفظة خضراء ونافذة الآية مفتوحة يغلقها ويُظهر المعنى.',
       'أثناء التمرير التلقائي: النقرة الأولى على لفظة خضراء توقف التمرير وتُظهر المعنى، والنقرة الثانية في أي مكان تُخفيه، والنقرة الثالثة تعيد التمرير.',
@@ -31034,7 +31034,7 @@ function renderFontTab() {
     const row = document.createElement('button');
     row.className = 'font-opt' + (gharibOn === on ? ' active' : '');
     row.innerHTML = '<span class="fo-check">✓</span>' +
-      '<span class="fo-sample" style="font-size:18px;font-family:sans-serif;font-weight:700;' + (on ? 'color:#0A7D32;' : '') + '">' + label + '</span>' +
+      '<span class="fo-sample" style="font-size:18px;font-family:sans-serif;font-weight:700;' + (on ? 'color:#00A51C;' : '') + '">' + label + '</span>' +
       '<span class="fo-label" style="text-align:center;line-height:1.35;font-size:14px;">' + desc + '</span>';
     row.addEventListener('click', () => { setGharibOn(on); renderFontTab(); });
     sidebarBody.appendChild(row);
