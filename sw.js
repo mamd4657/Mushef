@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mushaf-cache-v34';
+const CACHE_NAME = 'mushaf-cache-v35';
 const APP_SHELL = ['./', './index.html', './manifest.json'];
 // Recitation audio downloaded via the "⬇" download manager in the app is
 // stored in this separate cache (page JS writes to it directly through the
