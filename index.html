@@ -36782,6 +36782,28 @@ setTimeout(() => {
 })();
 </script><script>
 if ('serviceWorker' in navigator) {
+  // "A newer version has been downloaded" bar: the worker shows the saved copy
+  // when the site is slow to answer and finishes downloading the new one in
+  // the background - when that's done (or a new worker takes over) this bar
+  // offers to switch to it now, with one tap.
+  const showUpdateBar = () => {
+    if (document.getElementById('updateBar')) return;
+    const bar = document.createElement('div');
+    bar.id = 'updateBar';
+    bar.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:74px;z-index:80;display:flex;align-items:center;gap:10px;background:#0E4433;color:#F6EFDC;border:2px solid #E8B84B;border-radius:14px;padding:8px 10px 8px 12px;box-shadow:0 4px 16px rgba(0,0,0,.35);font-family:sans-serif;font-weight:700;font-size:15px;direction:rtl;width:calc(100% - 24px);max-width:420px;box-sizing:border-box;';
+    bar.innerHTML = '<span style="flex:1;line-height:1.4;">تم تحميل تحديث جديد للمصحف</span>' +
+      '<button type="button" style="background:#E8B84B;color:#0E4433;border:none;border-radius:9px;padding:7px 12px;font:inherit;cursor:pointer;white-space:nowrap;">تطبيقه الآن</button>' +
+      '<button type="button" aria-label="إغلاق" style="background:transparent;color:#F6EFDC;border:none;font:inherit;font-size:18px;cursor:pointer;padding:0 4px;">✕</button>';
+    const [apply, close] = bar.querySelectorAll('button');
+    apply.addEventListener('click', () => location.reload());
+    close.addEventListener('click', () => bar.remove());
+    document.body.appendChild(bar);
+  };
+  navigator.serviceWorker.addEventListener('message', (e) => {
+    if (e.data && e.data.type === 'mushaf-update-ready') showUpdateBar();
+  });
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController) showUpdateBar(); });
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').then((reg) => {
       reg.update().catch(() => {});

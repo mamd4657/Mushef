@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mushaf-cache-v35';
+const CACHE_NAME = 'mushaf-cache-v36';
 const APP_SHELL = ['./', './index.html', './manifest.json'];
 // Recitation audio downloaded via the "⬇" download manager in the app is
 // stored in this separate cache (page JS writes to it directly through the
@@ -36,10 +36,22 @@ self.addEventListener('fetch', (event) => {
   // copy for the next open. Offline, the saved copy is used straight away.
   const NETWORK_WAIT_MS = 1800;
   const sameOrigin = new URL(event.request.url).origin === self.location.origin;
+  const isPage = event.request.mode === 'navigate' || /\/(index\.html)?$/.test(new URL(event.request.url).pathname);
+  let servedSaved = false; // the saved copy was shown because the network was slow
   const network = fetch(event.request, sameOrigin ? { cache: 'no-cache' } : undefined).then((resp) => {
     if (resp && resp.ok) {
       const clone = resp.clone();
-      return caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone)).then(() => resp, () => resp);
+      return caches.open(CACHE_NAME).then((cache) => cache.match(event.request).then((old) => {
+        // The page on screen came from the saved copy and the site now has a
+        // different version: once it's saved, tell the page so it can offer
+        // to switch to it right away (instead of only on the next opening).
+        const changed = !old || (old.headers.get('etag') || old.headers.get('last-modified') || '') !== (resp.headers.get('etag') || resp.headers.get('last-modified') || '');
+        return cache.put(event.request, clone).then(() => {
+          if (isPage && servedSaved && changed) {
+            self.clients.matchAll({ type: 'window' }).then((cs) => cs.forEach((c) => c.postMessage({ type: 'mushaf-update-ready' })));
+          }
+        });
+      })).then(() => resp, () => resp);
     }
     return resp;
   });
@@ -49,6 +61,6 @@ self.addEventListener('fetch', (event) => {
     let done = false;
     const finish = (r) => { if (!done && r) { done = true; resolve(r); } };
     network.then(finish, () => cachedCopy().then((c) => { if (!done) { done = true; resolve(c || Response.error()); } }));
-    setTimeout(() => { if (!done) cachedCopy().then(finish); }, NETWORK_WAIT_MS);
+    setTimeout(() => { if (!done) cachedCopy().then((c) => { if (!done && c) servedSaved = true; finish(c); }); }, NETWORK_WAIT_MS);
   }));
 });
