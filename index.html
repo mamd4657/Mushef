@@ -164,6 +164,15 @@ body.dark-mode .surah-search-input::placeholder{color:#A79E86;}
 .font-opt .fo-sample{font-size:17px;font-weight:700;-webkit-text-stroke:0.35px currentColor;color:#0E4433;flex:1;text-align:right;overflow:hidden;white-space:normal;line-height:1.3;min-width:0;}
 .font-opt .fo-check{font-size:18px;color:#0E4433;flex:0 0 20px;visibility:hidden;}
 .font-opt.active .fo-check{visibility:visible;}
+.fo-card{border:2px solid #B98A2A;border-radius:12px;margin:12px 2px 4px;overflow:hidden;background:#FFFCF3;box-shadow:0 2px 6px rgba(0,0,0,.08);}
+.fo-card-head{background:#0E4433;color:#F6EFDC;font-family:sans-serif;font-weight:700;font-size:16px;padding:8px 12px;}
+.fo-card .font-opt{padding:9px 8px;gap:10px;}
+.fo-card .font-opt:last-child{border-bottom:none;}
+.fo-card .font-opt .fo-label{font-size:15px;}
+.fo-card .font-opt .fo-sample{font-size:15.5px;}
+.fo-card .font-opt .fo-check{font-size:16px;flex-basis:16px;}
+body.dark-mode .fo-card{background:#1B211A;border-color:#C9A227;}
+body.dark-mode .fo-card-head{background:#0B2E23;color:#EFE8D6;border-bottom:1px solid #C9A227;}
 body.dark-mode .font-opt .fo-sample,body.dark-mode .font-opt .fo-check{color:#F6EFDC;}
 .dua-row{border-bottom:1px solid #EDE3C6;}
 .dua-title-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;background:transparent;border:none;padding:14px 6px;cursor:pointer;text-align:right;font-family:sans-serif;font-weight:700;font-size:21px;color:#7B2E2E;}
@@ -34682,18 +34691,24 @@ function quranTextSample(id) {
   return QURAN_TEXT_SAMPLES[id];
 }
 
+// Each group of the Layout tab (Quran text / display / word meanings) sits in
+// its own framed card with a dark title band, so the three groups and their
+// options read as separate at a glance. Returns the card to put options in.
 function fontTabHeading(txt) {
+  const card = document.createElement('div');
+  card.className = 'fo-card';
   const h = document.createElement('div');
-  h.className = 'strong-note';
-  h.style.cssText = 'font-family:sans-serif;font-size:17px;font-weight:700;padding:16px 4px 4px;border-bottom:1.5px solid #C9B98A;';
+  h.className = 'fo-card-head';
   h.textContent = txt;
-  sidebarBody.appendChild(h);
+  card.appendChild(h);
+  sidebarBody.appendChild(card);
+  return card;
 }
 
 function renderFontTab() {
   sidebarBody.innerHTML = '';
 
-  fontTabHeading('نص المصحف');
+  let card = fontTabHeading('١. نص المصحف');
   QURAN_TEXT_OPTIONS.forEach((o) => {
     const row = document.createElement('button');
     row.className = 'font-opt' + (quranText === o.id ? ' active' : '');
@@ -34702,45 +34717,45 @@ function renderFontTab() {
       '<span class="fo-label" style="text-align:center;line-height:1.35;">' + o.label +
       '<span style="display:block;font-size:13px;font-weight:700;opacity:.75;">' + o.desc + '</span></span>';
     row.addEventListener('click', () => { applyQuranText(o.id); renderFontTab(); });
-    sidebarBody.appendChild(row);
+    card.appendChild(row);
   });
 
-  fontTabHeading('طريقة العرض');
+  card = fontTabHeading('٢. طريقة العرض');
   const boundRow = document.createElement('button');
   boundRow.className = 'font-opt' + (layoutMode === 'bound' ? ' active' : '');
   boundRow.innerHTML = '<span class="fo-check">✓</span>' +
-    '<span class="fo-sample" style="font-size:18px;font-family:sans-serif;font-weight:700;">قياسي</span>' +
+    '<span class="fo-sample" style="font-size:16px;font-family:sans-serif;font-weight:700;">قياسي</span>' +
     '<span class="fo-label">١٥ سطرًا</span>';
   boundRow.addEventListener('click', () => { applyLayoutMode('bound'); renderFontTab(); });
-  sidebarBody.appendChild(boundRow);
+  card.appendChild(boundRow);
 
   const freeRow = document.createElement('button');
   freeRow.className = 'font-opt' + (layoutMode === 'free' ? ' active' : '');
   freeRow.innerHTML = '<span class="fo-check">✓</span>' +
-    '<span class="fo-sample" style="font-size:18px;font-family:sans-serif;font-weight:700;">حر</span>' +
+    '<span class="fo-sample" style="font-size:16px;font-family:sans-serif;font-weight:700;">حر</span>' +
     '<span class="fo-label">غير قياسي</span>';
   freeRow.addEventListener('click', () => { applyLayoutMode('free'); renderFontTab(); });
-  sidebarBody.appendChild(freeRow);
+  card.appendChild(freeRow);
 
-  fontTabHeading('معاني الكلمات');
+  card = fontTabHeading('٣. معاني الكلمات');
   [['muyassar', 'الميسَّر', 'أكثر الألفاظ'], ['siraj', 'السراج', 'نحو نصفها'], [null, 'إخفاء', 'بلا تلوين']].forEach(([src, label, desc]) => {
     const row = document.createElement('button');
     const active = src ? (gharibOn && gharibSrc === src) : !gharibOn;
     row.className = 'font-opt' + (active ? ' active' : '');
     row.innerHTML = '<span class="fo-check">✓</span>' +
-      '<span class="fo-sample" style="font-size:18px;font-family:sans-serif;font-weight:700;' + (src ? 'color:#00A088;' : '') + '">' + label + '</span>' +
+      '<span class="fo-sample" style="font-size:16px;font-family:sans-serif;font-weight:700;' + (src ? 'color:#00A088;' : '') + '">' + label + '</span>' +
       '<span class="fo-label" style="text-align:center;line-height:1.35;font-size:14px;">' + desc + '</span>';
     row.addEventListener('click', () => {
       if (src) { setGharibOn(true); setGharibSource(src); } else setGharibOn(false);
       renderFontTab();
     });
-    sidebarBody.appendChild(row);
+    card.appendChild(row);
   });
   const ghNote = document.createElement('div');
   ghNote.className = 'strong-note';
-  ghNote.style.cssText = 'font-family:sans-serif;font-size:15px;font-weight:700;padding:10px 4px 0;line-height:1.7;';
+  ghNote.style.cssText = 'font-family:sans-serif;font-size:13.5px;font-weight:700;padding:8px 10px 10px;line-height:1.65;';
   ghNote.textContent = 'انقر أي كلمة ملوّنة باللون الفيروزي في المصحف ليظهر معناها، وانقر مرة أخرى لإخفائه. كتاب «الميسَّر» يشرح أكثر الألفاظ، وكتاب «السراج» يقتصر على نحو نصفها مما يحتاج إلى بيان.';
-  sidebarBody.appendChild(ghNote);
+  card.appendChild(ghNote);
 
   const credit = document.createElement('div');
   credit.className = 'strong-note';
