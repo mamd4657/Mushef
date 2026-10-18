@@ -29748,15 +29748,33 @@ function ghPhraseEls(wordEl) {
   const scope = wordEl.closest('[data-page]') || wordEl.closest('.vSlot, .freePageFrame') || document;
   return [...scope.querySelectorAll('.gharib[data-gk="' + wordEl.dataset.gk + '"]')];
 }
-function hideGharib() {
+function ghHideVisual() {
   if (ghPopEl) ghPopEl.style.display = 'none';
   document.querySelectorAll('.gharib.gh-active').forEach((e) => e.classList.remove('gh-active'));
   ghPopKey = null; ghPopWord = null;
 }
+// The open card is a Back layer like the ayah window or the side menu: the
+// Back gesture / ← button closes it first, and only a further Back (with
+// nothing else open) leaves the app. This is what Back itself runs.
+function closeGharibLayer() { ghHideVisual(); }
+// Closing the card any other way (a tap, another control, ...) takes it off
+// the Back stack at once, and its history step is either reused by the next
+// layer that opens (see pushBackLayer) or quietly retired a moment later -
+// never with an immediate history.back() that could race a layer opening
+// right after it.
+function hideGharib() {
+  const idx = backLayerStack.lastIndexOf(closeGharibLayer);
+  ghHideVisual();
+  if (idx === -1) return;
+  backLayerStack.splice(idx, 1);
+  backOrphanSteps++;
+  setTimeout(retireOrphanBackSteps, 450);
+}
 function showGharib(wordEl) {
-  hideGharib();
   const meaning = ghMeaning(wordEl.dataset.gk);
-  if (!meaning) return;
+  if (!meaning) { hideGharib(); return; }
+  ghHideVisual();
+  if (backLayerStack.lastIndexOf(closeGharibLayer) === -1) pushBackLayer(closeGharibLayer);
   const pop = ghPopup();
   pop.textContent = meaning;
   ghPopKey = wordEl.dataset.gk;
@@ -34307,9 +34325,26 @@ vScrollWrap.addEventListener('copy', (e) => {
 // button/gesture would navigate away from the page entirely instead of
 // just closing whatever is on top.
 const backLayerStack = [];
+// History steps whose layer was closed without going Back (see hideGharib):
+// the next layer to open reuses one instead of adding a new step, and any
+// left over are retired shortly after, so Back never has a dead step to eat.
+let backOrphanSteps = 0;
+let backIgnorePops = 0;
+function retireOrphanBackSteps() {
+  while (backOrphanSteps > 0) {
+    backOrphanSteps--;
+    backIgnorePops++;
+    history.back();
+  }
+}
 
 function pushBackLayer(closeFn) {
   backLayerStack.push(closeFn);
+  if (backOrphanSteps > 0) {
+    backOrphanSteps--;
+    try { history.replaceState({ mushafLayer: backLayerStack.length }, '', '#panel'); } catch (e) { /* non-fatal */ }
+    return;
+  }
   try {
     history.pushState({ mushafLayer: backLayerStack.length }, '', '#panel');
   } catch (e) {
@@ -34366,6 +34401,7 @@ function swapTopBackLayer(oldCloseFn, newCloseFn) {
 }
 
 window.addEventListener('popstate', () => {
+  if (backIgnorePops > 0) { backIgnorePops--; return; }
   const closeFn = backLayerStack.pop();
   if (closeFn) closeFn();
 });
