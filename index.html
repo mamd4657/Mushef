@@ -367,7 +367,7 @@ body.dark-mode .fbNameGroup .surah-place-icon-kaaba{background:#EFE8D6;border-ra
    the same way .pageLinesX's own padding does now; margin trimmed too so
    it isn't adding its own separate gap on top of .page-frame's already
    covering that. */
-.freePageTextBlock{padding:0 5px;margin:0;font-family:var(--quran-font,'QuranHafs'),serif;font-weight:400;-webkit-text-stroke:max(0.023em, 0.5px) currentColor;text-align:justify;text-align-last:right;line-height:1.9;white-space:normal;word-spacing:0.15em;user-select:text;}
+.freePageTextBlock{padding:0 5px;margin:0;font-family:var(--quran-font,'QuranHafs'),serif;font-weight:400;-webkit-text-stroke:max(0.05em, 0.83px) currentColor;text-align:justify;text-align-last:right;line-height:1.9;white-space:normal;word-spacing:0.15em;user-select:text;}
 .freePageTextBlock .qbsm,.freePageTextBlock .qheader,.freePageTextBlock .qcombo{margin:10px 0;}
 .freePageTextBlock .freePara{margin-bottom:0.6em;}
 body.dark-mode .freePageTextBlock{color:#EFE8D6;}
@@ -444,7 +444,7 @@ body.landscape-lock.landscape-lock-2{left:100dvw;}
    the original, lighter stroke that reads more clearly at this glyph size.
    Free mode's ayah numbers inherit .freePageTextBlock's own (already
    lighter, untouched) stroke, so they need no separate rule here. */
-.qline .ayahnum,.qline .ayahnum-badge{-webkit-text-stroke:max(0.036em, 0.65px) currentColor;}
+.qline .ayahnum,.qline .ayahnum-badge,.freePageTextBlock .ayahnum,.freePageTextBlock .ayahnum-badge{-webkit-text-stroke:max(0.036em, 0.65px) currentColor;} /* free-mode text now has bound mode's bolder stroke too (reader's request), so its numbers get the same lighter one */
 .ayahnum-50{border-bottom:4px solid #C0392B;padding-bottom:1px;}
 .ayahnum-100{border-top:4px solid #C0392B;padding-top:1px;}
 body.dark-mode .ayahnum-50{border-bottom-color:#FF6B5B;}
