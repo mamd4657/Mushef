@@ -401,13 +401,13 @@ body.dark-mode .freePageTextBlock{color:#EFE8D6;}
 .search-match-highlight{background:#FFD54F99;border-radius:2px;transition:background 1s ease-out;}
 .divine-name{color:#CC0000;}
 body.dark-mode .divine-name{color:#FF5252;}
-.gharib{color:#00A088;}
-body.dark-mode .gharib{color:#2ED9B4;}
-.gharib.gh-active{background:rgba(0,160,136,.16);border-radius:4px;}
-body.dark-mode .gharib.gh-active{background:rgba(46,217,180,.18);}
+.gharib{color:#008040;}
+body.dark-mode .gharib{color:#4CD98A;}
+.gharib.gh-active{background:rgba(0,128,64,.16);border-radius:4px;}
+body.dark-mode .gharib.gh-active{background:rgba(76,217,138,.18);}
 body.gharib-off .gharib{color:inherit;background:none;}
-#gharibPop{position:fixed;z-index:60;display:none;box-sizing:border-box;width:max-content;padding:6px 14px 8px;background:#FFFDF6;border:2px solid #00A088;border-radius:11px;box-shadow:0 4px 14px rgba(0,0,0,.28);color:#00A088;font-family:'Amiri',serif;font-weight:700;font-size:21px;line-height:1.7;direction:rtl;text-align:right;white-space:normal;user-select:none;-webkit-user-select:none;}
-body.dark-mode #gharibPop{background:#18211A;border-color:#2ED9B4;color:#2ED9B4;box-shadow:0 4px 14px rgba(0,0,0,.6);}
+#gharibPop{position:fixed;z-index:60;display:none;box-sizing:border-box;width:max-content;padding:6px 14px 8px;background:#FFFDF6;border:2px solid #008040;border-radius:11px;box-shadow:0 4px 14px rgba(0,0,0,.28);color:#008040;font-family:'Amiri',serif;font-weight:700;font-size:21px;line-height:1.7;direction:rtl;text-align:right;white-space:normal;user-select:none;-webkit-user-select:none;}
+body.dark-mode #gharibPop{background:#18211A;border-color:#4CD98A;color:#4CD98A;box-shadow:0 4px 14px rgba(0,0,0,.6);}
 /* The floating bar's own font sizes (juz/hizb/rub/surah-name/from-to/page
    number) are no longer hardcoded per orientation here - fitFloatingFrameBar()
    measures the bar's actual available width itself (already orientation-
@@ -34527,8 +34527,8 @@ function renderGuideTab() {
       'تساعد هذه العلامات من يريد قراءة وردٍ يومي ثابت بمقدار خمسين آية أو مئة آية، بمتابعة الخط الأحمر أينما ظهر.',
       'آخر ٣٦ آية في المصحف لا تكتمل بها خمسون آية جديدة، فلا تحمل علامة.',
     ]},
-    { title: '٨. معاني الألفاظ (الكلمات الفيروزية)', items: [
-      'الألفاظ القرآنية التي تحتاج إلى بيان ملوّنة في المصحف بـ<b style="color:#00A088;">اللون الفيروزي</b>، ومعانيها مختصرة من أحد كتابين تختار بينهما:',
+    { title: '٨. معاني الألفاظ (الكلمات الخضراء)', items: [
+      'الألفاظ القرآنية التي تحتاج إلى بيان ملوّنة في المصحف بـ<b style="color:#008040;">اللون الأخضر</b>، ومعانيها مختصرة من أحد كتابين تختار بينهما:',
       '<b>«الميسَّر في غريب القرآن الكريم»</b> الصادر عن مجمع الملك فهد لطباعة المصحف الشريف: يشرح أكثر من أحد عشر ألف لفظة (نحو ثمانية عشر ألف كلمة ملوّنة).',
       '<b>«السراج في بيان غريب القرآن»</b> للدكتور محمد بن عبد العزيز الخضيري: يقتصر على نحو ستة آلاف لفظة مما يحتاج إلى بيان (نحو نصف الكلمات الملوّنة في الميسَّر)، فتكون الصفحة أقل تلويناً.',
       'انقر أي لفظة ملوّنة يظهر معناها في مستطيل صغير قريب منها لا يغطيها، وانقر في أي مكان من الصفحة يختفي. وإذا كان المعنى لعبارة من عدة كلمات تُظلَّل كلماتها كلها.',
@@ -34743,7 +34743,7 @@ function renderFontTab() {
     const active = src ? (gharibOn && gharibSrc === src) : !gharibOn;
     row.className = 'font-opt' + (active ? ' active' : '');
     row.innerHTML = '<span class="fo-check">✓</span>' +
-      '<span class="fo-sample" style="font-size:16px;font-family:sans-serif;font-weight:700;' + (src ? 'color:#00A088;' : '') + '">' + label + '</span>' +
+      '<span class="fo-sample" style="font-size:16px;font-family:sans-serif;font-weight:700;' + (src ? 'color:#008040;' : '') + '">' + label + '</span>' +
       '<span class="fo-label" style="text-align:center;line-height:1.35;font-size:14px;">' + desc + '</span>';
     row.addEventListener('click', () => {
       if (src) { setGharibOn(true); setGharibSource(src); } else setGharibOn(false);
@@ -34754,7 +34754,7 @@ function renderFontTab() {
   const ghNote = document.createElement('div');
   ghNote.className = 'strong-note';
   ghNote.style.cssText = 'font-family:sans-serif;font-size:13.5px;font-weight:700;padding:8px 10px 10px;line-height:1.65;';
-  ghNote.textContent = 'انقر أي كلمة ملوّنة باللون الفيروزي في المصحف ليظهر معناها، وانقر مرة أخرى لإخفائه. كتاب «الميسَّر» يشرح أكثر الألفاظ، وكتاب «السراج» يقتصر على نحو نصفها مما يحتاج إلى بيان.';
+  ghNote.textContent = 'انقر أي كلمة ملوّنة باللون الأخضر في المصحف ليظهر معناها، وانقر مرة أخرى لإخفائه. كتاب «الميسَّر» يشرح أكثر الألفاظ، وكتاب «السراج» يقتصر على نحو نصفها مما يحتاج إلى بيان.';
   card.appendChild(ghNote);
 
   const credit = document.createElement('div');
