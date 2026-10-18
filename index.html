@@ -406,7 +406,7 @@ body.dark-mode .gharib{color:#4CD98A;}
 .gharib.gh-active{background:rgba(0,144,74,.16);border-radius:4px;}
 body.dark-mode .gharib.gh-active{background:rgba(76,217,138,.18);}
 body.gharib-off .gharib{color:inherit;background:none;}
-#gharibPop{position:fixed;z-index:60;display:none;box-sizing:border-box;width:max-content;padding:6px 14px 8px;background:#FFFDF6;border:2px solid #00904A;border-radius:11px;box-shadow:0 4px 14px rgba(0,0,0,.28);color:#00904A;font-family:'Amiri',serif;font-weight:700;font-size:21px;line-height:1.7;direction:rtl;text-align:right;white-space:normal;user-select:none;-webkit-user-select:none;}
+#gharibPop{position:fixed;z-index:60;display:none;box-sizing:border-box;width:max-content;padding:6px 14px 8px;background:#FFFDF6;border:2.5px solid #00602F;border-radius:11px;box-shadow:0 4px 14px rgba(0,0,0,.28);color:#00602F;-webkit-text-stroke:0.3px currentColor;font-family:'Amiri',serif;font-weight:700;font-size:21px;line-height:1.7;direction:rtl;text-align:right;white-space:normal;user-select:none;-webkit-user-select:none;}
 body.dark-mode #gharibPop{background:#18211A;border-color:#4CD98A;color:#4CD98A;box-shadow:0 4px 14px rgba(0,0,0,.6);}
 /* The floating bar's own font sizes (juz/hizb/rub/surah-name/from-to/page
    number) are no longer hardcoded per orientation here - fitFloatingFrameBar()
@@ -29818,9 +29818,11 @@ function gharibHandleTap(target, scrollMode) {
   const w = target && target.closest ? target.closest('.gharib') : null;
   const usable = !!w && gharibOn && !w.closest('#swipeOverlay');
   if (gharibOpen()) {
+    // another green word: its meaning replaces this one; anything else
+    // (a black word included) only closes the card - the ayah window then
+    // takes a separate tap
     if (usable && w.dataset.gk !== ghPopKey) { showGharib(w); return true; }
     hideGharib();
-    if (!usable && !scrollMode && target && target.closest && target.closest('.ayah-seg')) return false; // -> ayah window
     return true;
   }
   if (!usable) return false;
@@ -32686,7 +32688,8 @@ function openReciteModeBar() {
   positionReciteModeBar();
   syncRecitePlayButtons();
   if (ayahPopupEl.style.display !== 'none') {
-    swapTopBackLayer(closeAyahPopupLayer, closeReciteModeBarLayer);
+    ayahPopupSwappingToRecite = true;
+    try { swapTopBackLayer(closeAyahPopupLayer, closeReciteModeBarLayer); } finally { ayahPopupSwappingToRecite = false; }
   } else {
     pushBackLayer(closeReciteModeBarLayer);
   }
@@ -32755,8 +32758,13 @@ function positionAyahPopup() {
   ayahPopupEl.style.top = Math.max(0, bodyHeight - fabH - popupH) + 'px';
 }
 
+// Closing the ayah window (Back gesture, the ← button, ...) clears the ayah's
+// highlight with it - except when the window is only being swapped for the
+// recitation bar (its "تلاوة" button), where that highlight is the ayah to read.
+let ayahPopupSwappingToRecite = false;
 function closeAyahPopupLayer() {
   ayahPopupEl.style.display = 'none';
+  if (!ayahPopupSwappingToRecite) clearAyahTapSelection();
 }
 // A tap that opens the popup can, on mobile browsers, be immediately
 // followed by a synthetic "ghost click" fired at the very same
@@ -34532,7 +34540,7 @@ function renderGuideTab() {
       '<b>«الميسَّر في غريب القرآن الكريم»</b> الصادر عن مجمع الملك فهد لطباعة المصحف الشريف: يشرح أكثر من أحد عشر ألف لفظة (نحو ثمانية عشر ألف كلمة ملوّنة).',
       '<b>«السراج في بيان غريب القرآن»</b> للدكتور محمد بن عبد العزيز الخضيري: يقتصر على نحو ستة آلاف لفظة مما يحتاج إلى بيان (نحو نصف الكلمات الملوّنة في الميسَّر)، فتكون الصفحة أقل تلويناً.',
       'انقر أي لفظة ملوّنة يظهر معناها في مستطيل صغير قريب منها لا يغطيها، وانقر في أي مكان من الصفحة يختفي. وإذا كان المعنى لعبارة من عدة كلمات تُظلَّل كلماتها كلها.',
-      'النقر على لفظة ملوّنة أخرى والمستطيل ظاهر يُظهر معناها مباشرة، والنقر على كلمة غير ملوّنة يُخفيه ويفتح نافذة الآية مباشرة، والعكس كذلك: النقر على لفظة ملوّنة ونافذة الآية مفتوحة يغلقها ويُظهر المعنى.',
+      'النقر على لفظة ملوّنة أخرى والمستطيل ظاهر يُظهر معناها مباشرة، والنقر على أي موضع آخر من النص يُخفي المستطيل فقط، ثم تُفتح نافذة الآية بنقرة أخرى. أما النقر على لفظة ملوّنة ونافذة الآية مفتوحة فيغلقها ويُظهر المعنى مباشرة.',
       'أثناء التمرير التلقائي: النقرة الأولى على لفظة ملوّنة توقف التمرير وتُظهر المعنى، والنقرة الثانية في أي مكان تُخفيه، والنقرة الثالثة تعيد التمرير.',
       'يختفي المستطيل كذلك عند الانتقال إلى أي عمل آخر، كفتح القائمة الجانبية أو النقر على أزرار الشريط السفلي.',
       'يُختار الكتاب، أو يُخفى التلوين كله، من عنوان <b>التخطيط</b> في القائمة الجانبية، في قسم «معاني الكلمات».',
