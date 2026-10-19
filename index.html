@@ -89,9 +89,10 @@ header{background:#0E4433;color:#F6EFDC;padding:8px 16px;display:flex;align-item
    built for portrait's tight ~390px budget can relax considerably; none
    of this touches portrait, which keeps exactly what was tuned above. */
 @media (max-width:340px){body:not(.landscape-lock) #headerSearch{flex-basis:1.35cm !important;width:1.35cm !important;}}
-body.landscape-lock #headerSearch{flex:0 1 4cm !important;width:4cm !important;}
-/* Landscape: everything on one line, centred - hijri date (with هـ), 1cm,
-   clock, 1cm, day name, 1cm, gregorian date (with م). */
+body.landscape-lock #headerSearch{flex:0 1 3cm !important;width:3cm !important;}
+/* Landscape: everything on one line, centred - hijri date (with هـ), 7mm,
+   clock, 7mm, day name, 7mm, gregorian date (with م); at least 5mm clear of
+   both edges (see headerDatesLandscapeLayout). */
 .date-era{display:none;}
 body.landscape-lock #headerClockDate{justify-content:center;}
 body.landscape-lock #headerClockCol,body.landscape-lock #headerDates{display:contents;}
@@ -100,7 +101,7 @@ body.landscape-lock #headerClock{order:2;}
 body.landscape-lock #headerDayName{order:3;}
 body.landscape-lock #headerGregDate{order:4;}
 body.landscape-lock #headerHijriDate,body.landscape-lock #headerGregDate,body.landscape-lock #headerClock,body.landscape-lock #headerDayName{white-space:nowrap;line-height:1.2;}
-body.landscape-lock .date-month{margin:0 0.45em;}
+body.landscape-lock .date-month{margin:0 0.38em;}
 body.landscape-lock .date-era{display:inline;margin-right:0.12em;}
 #headerDates.dgrid{display:grid;grid-template-columns:max-content 1fr max-content;align-content:center;line-height:1.15;}
 #headerDates.dgrid #headerHijriDate,#headerDates.dgrid #headerGregDate{display:contents;}
@@ -36575,12 +36576,12 @@ function headerDatesLandscapeLayout(boxZoom, mm) {
   [hijriEl, gregEl].forEach((el) => el.querySelectorAll('span').forEach((sp) => { sp.removeAttribute('style'); }));
   [clockEl, dayNameEl, hijriEl, gregEl].forEach((el) => { if (el) { el.style.width = ''; el.style.marginLeft = ''; el.style.transform = ''; el.style.transformOrigin = ''; } });
   box.style.zoom = ''; box.style.height = '';
-  box.style.paddingRight = mm + 'px';
-  box.style.paddingLeft = mm + 'px';
-  box.style.gap = (10 * mm) + 'px';
+  box.style.paddingRight = (5 * mm) + 'px';
+  box.style.paddingLeft = (5 * mm) + 'px';
+  box.style.gap = (7 * mm) + 'px';
   const items = [hijriEl, clockEl, dayNameEl, gregEl].filter(Boolean);
-  const avail = box.clientWidth - 2 * mm;
-  const need = () => items.reduce((a, el) => a + el.offsetWidth, 0) + (items.length - 1) * 10 * mm; // offsetWidth: layout size, unaffected by the landscape rotation
+  const avail = box.clientWidth - 10 * mm; // at least 5mm clear of each edge
+  const need = () => items.reduce((a, el) => a + el.offsetWidth, 0) + (items.length - 1) * 7 * mm; // offsetWidth: layout size, unaffected by the landscape rotation
   const apply = (k) => {
     if (clockEl) clockEl.style.fontSize = (24 * k) + 'px';
     dayNameEl.style.fontSize = (19 * k) + 'px';
@@ -36589,10 +36590,10 @@ function headerDatesLandscapeLayout(boxZoom, mm) {
       el.querySelectorAll('.date-num').forEach((sp) => { sp.style.fontSize = (21 * k) + 'px'; });
     });
   };
-  let k = 1;
+  let k = 1.2; // as large as the box's height comfortably allows...
   apply(k);
   let guard = 0;
-  while (need() > avail && k > 0.5 && guard++ < 30) { k -= 0.03; apply(k); }
+  while (need() > avail && k > 0.5 && guard++ < 40) { k -= 0.02; apply(k); } // ...shrunk only as far as the line needs
   return { tooTight: need() > avail + 1 };
 }
 function headerDatesFitPass(boxZoom) {
