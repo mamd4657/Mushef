@@ -95,11 +95,10 @@ body.landscape-lock #headerSearch{flex:0 1 3cm !important;width:3cm !important;}
    both edges (see headerDatesLandscapeLayout). */
 .date-era{display:none;}
 body.landscape-lock #headerClockDate{justify-content:center;}
-body.landscape-lock #headerClockCol,body.landscape-lock #headerDates{display:contents;}
+body.landscape-lock #headerDates{display:contents;}
 body.landscape-lock #headerHijriDate{order:1;}
-body.landscape-lock #headerClock{order:2;}
-body.landscape-lock #headerDayName{order:3;}
-body.landscape-lock #headerGregDate{order:4;}
+body.landscape-lock #headerClockCol{order:2;display:flex;flex-direction:row;align-items:center;justify-content:center;flex:0 0 auto;box-sizing:border-box;border:2px solid #E8B84B;border-radius:9px;line-height:1;}
+body.landscape-lock #headerGregDate{order:3;}
 body.landscape-lock #headerHijriDate,body.landscape-lock #headerGregDate,body.landscape-lock #headerClock,body.landscape-lock #headerDayName{white-space:nowrap;line-height:1.2;}
 body.landscape-lock .date-month{margin:0 0.38em;}
 body.landscape-lock .date-era{display:inline;margin-right:0.12em;}
@@ -36565,8 +36564,14 @@ function ensureHeaderDatesFit() {
 // the four groups, fonts as large as the box allows (capped), shrunk only if
 // the line wouldn't fit.
 function headerDatesLandscapeLayout(boxZoom, mm) {
+  // One centred line: hijri date | 7mm | gold frame [clock 5mm day name] | 7mm |
+  // gregorian date; at least 5mm clear of both edges. The two dates are set
+  // clearly smaller than the clock and day name. The frame's size never
+  // changes with the time or the day: it's sized for the widest clock time
+  // and the longest day name, the actual ones centred inside it.
   const box = document.getElementById('headerClockDate');
   const datesCol = document.getElementById('headerDates');
+  const clockCol = document.getElementById('headerClockCol');
   const clockEl = document.getElementById('headerClock');
   const dayNameEl = document.getElementById('headerDayName');
   const hijriEl = document.getElementById('headerHijriDate');
@@ -36579,21 +36584,54 @@ function headerDatesLandscapeLayout(boxZoom, mm) {
   box.style.paddingRight = (5 * mm) + 'px';
   box.style.paddingLeft = (5 * mm) + 'px';
   box.style.gap = (7 * mm) + 'px';
-  const items = [hijriEl, clockEl, dayNameEl, gregEl].filter(Boolean);
+  clockCol.style.gap = (5 * mm) + 'px';
+  const innerH = box.clientHeight;
+  const frameH = Math.max(24, innerH - 8);
+  clockCol.style.height = frameH + 'px';
+  const padX = 3 * mm;
+  clockCol.style.padding = '0 ' + padX + 'px';
+
+  // widest possible clock text / longest day name, measured in the live fonts
+  const probe = document.createElement('span');
+  probe.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;left:-9999px;top:0;';
+  document.body.appendChild(probe);
+  const AR = '٠١٢٣٤٥٦٧٨٩';
+  const widestClock = () => {
+    probe.className = '';
+    probe.style.font = getComputedStyle(clockEl).font;
+    let best = 0;
+    for (const h of ['١٠', '١١', '١٢']) for (const d of AR) for (const per of ['ص', 'م']) {
+      probe.innerHTML = h + '<span class="clock-colon">:</span>' + d + d + '<span class="clock-period">' + per + '</span>';
+      best = Math.max(best, probe.offsetWidth);
+    }
+    return best;
+  };
+  const widestDay = () => {
+    probe.style.font = getComputedStyle(dayNameEl).font;
+    let best = 0;
+    (typeof ARABIC_DAY_NAMES !== 'undefined' ? ARABIC_DAY_NAMES : [dayNameEl.textContent]).forEach((n) => { probe.textContent = n; best = Math.max(best, probe.offsetWidth); });
+    return best;
+  };
+
   const avail = box.clientWidth - 10 * mm; // at least 5mm clear of each edge
-  const need = () => items.reduce((a, el) => a + el.offsetWidth, 0) + (items.length - 1) * 7 * mm; // offsetWidth: layout size, unaffected by the landscape rotation
+  let frameW = 0;
   const apply = (k) => {
     if (clockEl) clockEl.style.fontSize = (24 * k) + 'px';
     dayNameEl.style.fontSize = (19 * k) + 'px';
     [hijriEl, gregEl].forEach((el) => {
-      el.style.fontSize = (18 * k) + 'px';
-      el.querySelectorAll('.date-num').forEach((sp) => { sp.style.fontSize = (21 * k) + 'px'; });
+      el.style.fontSize = (14 * k) + 'px';
+      el.querySelectorAll('.date-num').forEach((sp) => { sp.style.fontSize = (16 * k) + 'px'; });
     });
+    frameW = Math.ceil(widestClock() + 5 * mm + widestDay() + 2 * padX + 4); // +4: the 2px border each side
+    clockCol.style.width = frameW + 'px';
   };
-  let k = 1.2; // as large as the box's height comfortably allows...
+  const need = () => hijriEl.offsetWidth + gregEl.offsetWidth + frameW + 2 * 7 * mm; // offsetWidth: unaffected by the landscape rotation
+  // as large as the frame's height allows, shrunk only as far as the line needs
+  let k = Math.min(1.2, (frameH - 4) / (24 * 1.15));
   apply(k);
   let guard = 0;
-  while (need() > avail && k > 0.5 && guard++ < 40) { k -= 0.02; apply(k); } // ...shrunk only as far as the line needs
+  while (need() > avail && k > 0.5 && guard++ < 40) { k -= 0.02; apply(k); }
+  probe.remove();
   return { tooTight: need() > avail + 1 };
 }
 function headerDatesFitPass(boxZoom) {
@@ -36622,6 +36660,7 @@ function headerDatesFitPass(boxZoom) {
 
   datesCol.classList.add('dgrid');
   [dayNameEl, hijriEl, gregEl, clockEl].forEach((el) => { if (el) el.style.fontSize = ''; });
+  ['gap', 'height', 'padding', 'width'].forEach((k) => { clockCol.style[k] = ''; });
   [hijriEl, gregEl].forEach((el) => el.querySelectorAll('span').forEach((sp) => { sp.removeAttribute('style'); }));
   clockDateBox.style.zoom = ''; clockDateBox.style.height = '';
   if (boxZoom < 1) {
