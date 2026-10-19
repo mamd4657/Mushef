@@ -90,7 +90,11 @@ header{background:#0E4433;color:#F6EFDC;padding:8px 16px;display:flex;align-item
    of this touches portrait, which keeps exactly what was tuned above. */
 @media (max-width:340px){body:not(.landscape-lock) #headerSearch{flex-basis:1.35cm !important;width:1.35cm !important;}}
 body.landscape-lock #headerSearch{flex:0 1 4cm !important;width:4cm !important;}
-body.landscape-lock #headerClockDate{padding-right:0.6cm !important;gap:1.2cm !important;}
+#headerDates.dgrid{display:grid;grid-template-columns:max-content 1fr max-content;align-content:center;line-height:1.15;}
+#headerDates.dgrid #headerHijriDate,#headerDates.dgrid #headerGregDate{display:contents;}
+#headerDates.dgrid .date-day{text-align:left;}
+#headerDates.dgrid .date-month{text-align:right;white-space:nowrap;}
+#headerDates.dgrid .date-year{text-align:right;}
 header input[type=search]{padding:8px 12px;color:#F6EFDC;font-size:16px;font-weight:700;}
 header input::placeholder{color:#F6EFDCcc;font-weight:700;}
 .iconbtn{background:transparent;border:1.5px solid #F6EFDC;color:#F6EFDC;border-radius:10px;padding:8px 10px;cursor:pointer;font-size:16px;flex-shrink:0;height:42.8px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;}
@@ -36521,6 +36525,18 @@ function ensureHeaderDatesFit() {
   for (let z = 0.92; r && r.tooTight && z >= 0.45; z -= 0.06) r = headerDatesFitPass(z);
 }
 function headerDatesFitPass(boxZoom) {
+  // The reader's own layout (all distances in real millimetres):
+  //  - clock + day name hug the box's RIGHT edge (1mm in), the day name
+  //    stretched to exactly the clock's width so both lines line up on
+  //    both sides;
+  //  - the two years hug the box's LEFT edge (1mm in), right-aligned with
+  //    each other;
+  //  - day numbers start at least 3mm left of the clock column, the two
+  //    left-aligned with each other; month names 3mm after the day
+  //    numbers, right-aligned with each other. Any spare width falls
+  //    between the month names and the years.
+  // The date lines are laid out as one 3-column grid (#headerDates.dgrid,
+  // its two line spans display:contents) so the columns line up exactly.
   const datesCol = document.getElementById('headerDates');
   const clockCol = document.getElementById('headerClockCol');
   const clockDateBox = document.getElementById('headerClockDate');
@@ -36528,135 +36544,48 @@ function headerDatesFitPass(boxZoom) {
   const dayNameEl = document.getElementById('headerDayName');
   const hijriEl = document.getElementById('headerHijriDate');
   const gregEl = document.getElementById('headerGregDate');
-  if (!datesCol || !clockCol || !dayNameEl || !hijriEl || !gregEl) return;
+  if (!datesCol || !clockCol || !dayNameEl || !hijriEl || !gregEl || !clockDateBox) return null;
+  const mm = (typeof MM_PX === 'number' && MM_PX > 0) ? MM_PX : 3.78;
 
-  // Reset every inline override a previous run may have left.
+  datesCol.classList.add('dgrid');
   [dayNameEl, hijriEl, gregEl].forEach((el) => { el.style.fontSize = ''; });
-  [hijriEl, gregEl].forEach((el) => {
-    el.querySelectorAll('.date-num').forEach((s) => { s.style.fontSize = ''; s.style.minWidth = ''; s.style.textAlign = ''; s.style.marginLeft = ''; });
-    el.querySelectorAll('.date-month').forEach((s) => { s.style.minWidth = ''; s.style.textAlign = ''; s.style.marginLeft = ''; });
-  });
-  if (clockDateBox) {
-    clockDateBox.style.paddingRight = ''; clockDateBox.style.gap = ''; clockDateBox.style.zoom = ''; clockDateBox.style.height = '';
-    if (boxZoom < 1) {
-      const h = parseFloat(getComputedStyle(clockDateBox).height) || 42.8;
-      clockDateBox.style.zoom = String(boxZoom);
-      clockDateBox.style.height = (h / boxZoom) + 'px';
-    }
+  [hijriEl, gregEl].forEach((el) => el.querySelectorAll('span').forEach((sp) => { sp.removeAttribute('style'); }));
+  clockDateBox.style.zoom = ''; clockDateBox.style.height = '';
+  if (boxZoom < 1) {
+    const h = parseFloat(getComputedStyle(clockDateBox).height) || 42.8;
+    clockDateBox.style.zoom = String(boxZoom);
+    clockDateBox.style.height = (h / boxZoom) + 'px';
   }
+  clockDateBox.style.paddingRight = mm + 'px';
+  clockDateBox.style.paddingLeft = mm + 'px';
+  clockDateBox.style.gap = (3 * mm) + 'px';
+  datesCol.style.columnGap = (3 * mm) + 'px';
   if (clockEl) { clockEl.style.width = ''; clockEl.style.marginLeft = ''; }
-  if (dayNameEl) { dayNameEl.style.width = ''; dayNameEl.style.marginLeft = ''; dayNameEl.style.transform = ''; dayNameEl.style.transformOrigin = ''; }
-
-  // round-5 (round-3 #1/#2/#3 restored, with the anchor side corrected per
-  // the person's clarification): reserve a fixed-width day column (2
-  // Arabic-Indic digits) AND a fixed-width month column (the widest
-  // possible month name, Hijri or Gregorian) in both date lines - but the
-  // day column is now LEFT-aligned (not right-aligned), so any day always
-  // sits flush against the gap-before-the-month, on the month side, with
-  // any leftover reserved space (a 1-digit day short of the 2-digit box)
-  // falling on the day's own outer/right side instead. This is what
-  // actually delivers what was asked: the day-to-month distance is now a
-  // real fixed margin, identical between the two lines regardless of
-  // digit count (not merely "close" by coincidence of natural text width),
-  // the month column being fixed-width in turn keeps the months' first
-  // letters - and the years after them - aligned exactly as before.
-  // Whichever digit two different-length days line up on (both units,
-  // both tens, or one of each) falls out of this automatically and is not
-  // pinned to one specific digit place on purpose. Expressed in em
-  // (relative to each span's own font-size) so both reservations shrink in
-  // lockstep with the overflow-guard loop below instead of becoming
-  // stale/oversized once it kicks in.
-  const dayEl = hijriEl.querySelector('.date-day') || gregEl.querySelector('.date-day');
-  const monthEl = hijriEl.querySelector('.date-month') || gregEl.querySelector('.date-month');
-  let twoSpaceEm = 0;
-  if (dayEl && monthEl) {
-    const dayFontPx = parseFloat(getComputedStyle(dayEl).fontSize) || 18.5;
-    const monthFontPx = parseFloat(getComputedStyle(monthEl).fontSize) || 14.5;
-    const dayResEmBase = (measureDigitWidth(dayEl) * 2 + 1) / dayFontPx;
-    const monthResEmBase = measureWidestHeaderMonthWidth(monthEl) / monthFontPx;
-    twoSpaceEm = measureTwoSpaceWidth(monthEl) / monthFontPx;
-    // round-7 (per the person's own "move the alignment lines" framing):
-    // three separate 1mm/2mm gives, each converted to em in whichever
-    // span's own font the line actually belongs to, so every one of them
-    // stays put in physical mm regardless of font-size:
-    //  - the day column's own reservation (the line on the LEFT of the day
-    //    digits) moves 1mm right, i.e. shrinks by 1mm - a 1-digit day's
-    //    slack (which lands on the day's outer/right side) shrinks by that
-    //    same 1mm; a 2-digit day is unaffected, minWidth is a floor, not a
-    //    cap, so it still grows to fit if this reservation undercuts it.
-    //  - the day-to-month gap (the line on the RIGHT of the month names)
-    //    moves another 2mm right/closer on top of round-6's -2mm, i.e. -2mm
-    //    more from where round-6 left it.
-    //  - the month column's own reservation no longer carries a separate
-    //    trailing gap to the year at all (round-5/6's "two-space" gap is
-    //    gone); it's now exactly the widest month name's own width plus a
-    //    flat 1mm, so "جمادى الآخرة" itself sits with only ~1mm of daylight
-    //    before the year column starts.
-    // All three are floored well above zero so nothing can collapse or
-    // invert on an unusually small font.
-    const dayResEm = Math.max(measureDigitWidth(dayEl) / dayFontPx + 0.02, dayResEmBase - MM_PX / dayFontPx);
-    const dayMonthGapEm = Math.max(twoSpaceEm * 0.25, twoSpaceEm * 2 - (MM_PX * 4) / dayFontPx);
-    const monthResEm = monthResEmBase + MM_PX / monthFontPx;
-    [hijriEl, gregEl].forEach((el) => {
-      const d = el.querySelector('.date-day'), mo = el.querySelector('.date-month');
-      if (d) { d.style.minWidth = dayResEm + 'em'; d.style.textAlign = 'left'; d.style.marginLeft = dayMonthGapEm + 'em'; }
-      if (mo) { mo.style.minWidth = monthResEm + 'em'; mo.style.textAlign = 'right'; mo.style.marginLeft = '0em'; }
-    });
-  }
+  dayNameEl.style.width = ''; dayNameEl.style.marginLeft = ''; dayNameEl.style.transform = ''; dayNameEl.style.transformOrigin = '';
 
   let size = parseFloat(getComputedStyle(hijriEl).fontSize) || 14.5;
-
-  let numSize = parseFloat(getComputedStyle(hijriEl.querySelector('.date-num') || hijriEl).fontSize) || 16.5;
-  const colWidth = datesCol.clientWidth;
-  const clockColWidth = clockCol.clientWidth;
+  let numSize = parseFloat(getComputedStyle(hijriEl.querySelector('.date-num') || hijriEl).fontSize) || 18.5;
+  const overflowing = () => datesCol.scrollWidth > datesCol.clientWidth + 1;
   let guard = 0;
-  function overflowing() {
-    return hijriEl.scrollWidth > colWidth + 1 || gregEl.scrollWidth > colWidth + 1 || dayNameEl.scrollWidth > clockColWidth + 1;
-  }
   while (overflowing() && size > 8 && guard < 20) {
-    size -= 0.5;
-    numSize -= 0.5;
+    size -= 0.5; numSize -= 0.5; guard++;
     dayNameEl.style.fontSize = size + 'px';
     hijriEl.style.fontSize = size + 'px';
     gregEl.style.fontSize = size + 'px';
-    hijriEl.querySelectorAll('.date-num').forEach((s) => { s.style.fontSize = numSize + 'px'; });
-    gregEl.querySelectorAll('.date-num').forEach((s) => { s.style.fontSize = numSize + 'px'; });
-    guard++;
+    [hijriEl, gregEl].forEach((el) => el.querySelectorAll('.date-num').forEach((sp) => { sp.style.fontSize = numSize + 'px'; }));
   }
 
-  // round-3 #6: two-space gaps that live outside the two date lines
-  // themselves (so they never entered the overflow guard above) - the
-  // box's own inner edge to the clock, and the gap between the clock/
-  // day-name column and the date column (round-4: doubled, per request).
-  // Reuses the same "two spaces" measurement, in the (now final,
-  // post-shrink) date-line font.
-  if (clockDateBox) {
-    const twoSpacePx = measureTwoSpaceWidth(hijriEl);
-    clockDateBox.style.paddingRight = twoSpacePx + 'px';
-    clockDateBox.style.gap = (twoSpacePx * 2) + 'px';
-  }
-
-  // round-3 #5: stretch the day name so its first letter starts exactly
-  // under the clock's units-minute digit and its last letter ends exactly
-  // under the ص/م marker. True kashida (tatweel-letter insertion) would
-  // need per-letter Arabic connectivity rules; a horizontal scale of the
-  // whole word, anchored at its already-correct right edge (both the
-  // clock and the day name naturally sit flush against the same right
-  // edge of their shared column), reaches the same two endpoints without
-  // that complexity. width:max-content+margin-left:auto first shrinks
-  // each box to its own true content width (flush right), so the scale
-  // below stretches only the text itself, not any left-over flex space.
-  if (clockEl && dayNameEl) {
+  // clock and day name: same width, both flush with the column's two edges
+  if (clockEl) {
     clockEl.style.width = 'max-content';
     clockEl.style.marginLeft = 'auto';
     dayNameEl.style.width = 'max-content';
     dayNameEl.style.marginLeft = 'auto';
-    const clockNaturalWidth = clockEl.getBoundingClientRect().width;
-    const dayNameNaturalWidth = dayNameEl.getBoundingClientRect().width;
-    if (clockNaturalWidth > 0 && dayNameNaturalWidth > 0) {
-      const scaleX = clockNaturalWidth / dayNameNaturalWidth;
+    const cw = clockEl.getBoundingClientRect().width;
+    const dw = dayNameEl.getBoundingClientRect().width;
+    if (cw > 0 && dw > 0) {
       dayNameEl.style.transformOrigin = 'right center';
-      dayNameEl.style.transform = 'scaleX(' + scaleX.toFixed(4) + ')';
+      dayNameEl.style.transform = 'scaleX(' + (cw / dw).toFixed(4) + ')';
     }
   }
   return { tooTight: overflowing() || size < 11 };
