@@ -30755,7 +30755,8 @@ function measureWidestSurahNameWidth(el) {
   return width;
 }
 
-function fitFloatingFrameBar(bar) {
+function fitFloatingFrameBar(bar, scaleMul, depth) {
+  scaleMul = scaleMul || 1; depth = depth || 0;
   // Callers pass either the outer #floatingFrameBar positioning wrapper or
   // the inner .frame-bar element itself; every box-model measurement below
   // (padding, border, content edges) must use the actual .frame-bar box -
@@ -30936,6 +30937,7 @@ function fitFloatingFrameBar(bar) {
   // or a generous absolute ceiling, so a very wide/short bar can't blow the
   // two-line from/to block past the bar's top/bottom edges.
   scale = Math.max(0.3, Math.min(scale, maxScaleVertical, 2.2)); // floor low enough that everything still fits on a very narrow screen
+  scale = Math.max(0.3, scale * scaleMul); // < 1 only on a re-run that makes room to centre the surah brackets (see below)
 
   const bold = 800; // round-3: always the heaviest available weight, not just once there's room to spare
   fromTo.style.fontSize = (baseFontPx.fromTo * scale) + 'px'; fromTo.style.fontWeight = String(bold);
@@ -30978,6 +30980,48 @@ function fitFloatingFrameBar(bar) {
     middle.style.marginLeft = (parseFloat(middle.style.marginLeft) + half) + 'px';
     bookmarkSlot.style.right = (4 + half) + 'px';
     circleSlot.style.left = (4 + half) + 'px';
+  }
+
+  // ---- surah brackets exactly at the bar's centre (reader's request) ----
+  // The parts on either side of the brackets differ in width (bookmark +
+  // من/إلى + ج on the right, ح + ر + page circle on the left), so the fixed
+  // gaps alone leave the brackets off-centre. With the bracket group pinned
+  // at the centre, each side gets exactly half of what's left: a side that
+  // doesn't fit makes the whole bar re-run a touch smaller; the narrower
+  // side spreads its spare width evenly over its own three gaps; and any
+  // width both sides have spare (a wide bar) goes outside the bookmark /
+  // page circle as before, so the gaps there keep their set sizes.
+  bookmarkSlot.style.right = ''; circleSlot.style.left = '';
+  const bR = localRect(barEl);
+  const cx = (bR.left + bR.right) / 2;
+  const bmEdge = localRect(bookmarkSlot).left;   // inner edge of the bookmark
+  const ccEdge = localRect(circleSlot).right;    // inner edge of the page circle
+  const G = localRect(rightBracket || nameGroup).right - localRect(leftBracket || nameGroup).left;
+  const groupExtraR = localRect(nameGroup).right - localRect(rightBracket || nameGroup).right; // nameGroup's own box beyond the bracket glyphs
+  const groupExtraL = localRect(leftBracket || nameGroup).left - localRect(nameGroup).left;
+  const gpx = (mmv) => mmv * MM_PX * scale;
+  const minR = fromTo.offsetWidth + juz.offsetWidth + groupExtraR + gpx(GAP_MM.bmFromTo) + gpx(GAP_MM.fromToJuz) + gpx(GAP_MM.juzRB);
+  const minL = hizb.offsetWidth + rub.offsetWidth + groupExtraL + gpx(GAP_MM.lbHizb) + gpx(GAP_MM.hizbRub) + gpx(GAP_MM.rubCircle);
+  const halfR = bmEdge - cx, halfL = cx - ccEdge; // room from the centre to each end
+  const spareR = halfR - G / 2 - minR, spareL = halfL - G / 2 - minL;
+  if ((spareR < -0.5 || spareL < -0.5) && depth < 4) {
+    const k = Math.min(halfR / (minR + G / 2), halfL / (minL + G / 2)) * 0.997;
+    fitFloatingFrameBar(bar, scaleMul * k, depth + 1);
+    return;
+  }
+  const common = Math.max(0, Math.min(spareR, spareL));
+  const eR = Math.max(0, spareR - common) / 3, eL = Math.max(0, spareL - common) / 3;
+  fromTo.style.marginLeft = (gpx(GAP_MM.fromToJuz) + eR) + 'px';
+  juz.style.marginLeft = (gpx(GAP_MM.juzRB) + eR) + 'px';
+  nameGroup.style.marginLeft = (gpx(GAP_MM.lbHizb) + eL) + 'px';
+  hizb.style.marginLeft = (gpx(GAP_MM.hizbRub) + eL) + 'px';
+  const crEdge = bR.right - parseFloat(barCs.borderRightWidth) - parseFloat(barCs.paddingRight);
+  const clEdge = bR.left + parseFloat(barCs.borderLeftWidth) + parseFloat(barCs.paddingLeft);
+  middle.style.marginRight = ((crEdge - bmEdge) + common + gpx(GAP_MM.bmFromTo) + eR) + 'px';
+  middle.style.marginLeft = ((ccEdge - clEdge) + common + gpx(GAP_MM.rubCircle) + eL) + 'px';
+  if (common > 0) {
+    bookmarkSlot.style.right = (4 + common) + 'px';
+    circleSlot.style.left = (4 + common) + 'px';
   }
 }
 
