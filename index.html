@@ -90,6 +90,18 @@ header{background:#0E4433;color:#F6EFDC;padding:8px 16px;display:flex;align-item
    of this touches portrait, which keeps exactly what was tuned above. */
 @media (max-width:340px){body:not(.landscape-lock) #headerSearch{flex-basis:1.35cm !important;width:1.35cm !important;}}
 body.landscape-lock #headerSearch{flex:0 1 4cm !important;width:4cm !important;}
+/* Landscape: everything on one line, centred - hijri date (with هـ), 1cm,
+   clock, 1cm, day name, 1cm, gregorian date (with م). */
+.date-era{display:none;}
+body.landscape-lock #headerClockDate{justify-content:center;}
+body.landscape-lock #headerClockCol,body.landscape-lock #headerDates{display:contents;}
+body.landscape-lock #headerHijriDate{order:1;}
+body.landscape-lock #headerClock{order:2;}
+body.landscape-lock #headerDayName{order:3;}
+body.landscape-lock #headerGregDate{order:4;}
+body.landscape-lock #headerHijriDate,body.landscape-lock #headerGregDate,body.landscape-lock #headerClock,body.landscape-lock #headerDayName{white-space:nowrap;line-height:1.2;}
+body.landscape-lock .date-month{margin:0 0.45em;}
+body.landscape-lock .date-era{display:inline;margin-right:0.12em;}
 #headerDates.dgrid{display:grid;grid-template-columns:max-content 1fr max-content;align-content:center;line-height:1.15;}
 #headerDates.dgrid #headerHijriDate,#headerDates.dgrid #headerGregDate{display:contents;}
 #headerDates.dgrid .date-day{text-align:left;}
@@ -36435,6 +36447,11 @@ function renderDatePartsInto(el, parts) {
       el.appendChild(document.createTextNode(p.value));
     }
   });
+  // "هـ" / "م" after the year - shown only in landscape's one-line layout
+  const era = document.createElement('span');
+  era.className = 'date-era';
+  era.textContent = el.id === 'headerHijriDate' ? 'هـ' : 'م';
+  el.appendChild(era);
 }
 
 // Splits the ص/م day-period out of the clock text into its own span so it
@@ -36520,9 +36537,63 @@ function updateHeaderClock() {
 // scaled down as one unit instead (everything stays, just smaller; its
 // height kept), trying gentle steps first. A normal-width screen never gets
 // here and keeps exactly what it had.
+let headerFitWidth = -1;
 function ensureHeaderDatesFit() {
   let r = headerDatesFitPass(1);
   for (let z = 0.92; r && r.tooTight && z >= 0.45; z -= 0.06) r = headerDatesFitPass(z);
+  const box = document.getElementById('headerClockDate');
+  headerFitWidth = box ? box.offsetWidth + (landscapeMode ? 1e5 : 0) : -1;
+}
+// Re-fit whenever the box's own size settles to something new (rotation,
+// the header being re-laid-out after the fit already ran, ...).
+(function () {
+  const box = document.getElementById('headerClockDate');
+  if (!box || typeof ResizeObserver !== 'function') return;
+  let pending = false;
+  new ResizeObserver(() => {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(() => {
+      pending = false;
+      const w = box.offsetWidth + (landscapeMode ? 1e5 : 0);
+      if (Math.abs(w - headerFitWidth) > 1) { try { ensureHeaderDatesFit(); } catch (e) { /* cosmetic */ } }
+    });
+  }).observe(box);
+})();
+// Landscape: one centred line (see the body.landscape-lock rules), 1cm between
+// the four groups, fonts as large as the box allows (capped), shrunk only if
+// the line wouldn't fit.
+function headerDatesLandscapeLayout(boxZoom, mm) {
+  const box = document.getElementById('headerClockDate');
+  const datesCol = document.getElementById('headerDates');
+  const clockEl = document.getElementById('headerClock');
+  const dayNameEl = document.getElementById('headerDayName');
+  const hijriEl = document.getElementById('headerHijriDate');
+  const gregEl = document.getElementById('headerGregDate');
+  datesCol.classList.remove('dgrid');
+  datesCol.style.columnGap = '';
+  [hijriEl, gregEl].forEach((el) => el.querySelectorAll('span').forEach((sp) => { sp.removeAttribute('style'); }));
+  [clockEl, dayNameEl, hijriEl, gregEl].forEach((el) => { if (el) { el.style.width = ''; el.style.marginLeft = ''; el.style.transform = ''; el.style.transformOrigin = ''; } });
+  box.style.zoom = ''; box.style.height = '';
+  box.style.paddingRight = mm + 'px';
+  box.style.paddingLeft = mm + 'px';
+  box.style.gap = (10 * mm) + 'px';
+  const items = [hijriEl, clockEl, dayNameEl, gregEl].filter(Boolean);
+  const avail = box.clientWidth - 2 * mm;
+  const need = () => items.reduce((a, el) => a + el.offsetWidth, 0) + (items.length - 1) * 10 * mm; // offsetWidth: layout size, unaffected by the landscape rotation
+  const apply = (k) => {
+    if (clockEl) clockEl.style.fontSize = (24 * k) + 'px';
+    dayNameEl.style.fontSize = (19 * k) + 'px';
+    [hijriEl, gregEl].forEach((el) => {
+      el.style.fontSize = (18 * k) + 'px';
+      el.querySelectorAll('.date-num').forEach((sp) => { sp.style.fontSize = (21 * k) + 'px'; });
+    });
+  };
+  let k = 1;
+  apply(k);
+  let guard = 0;
+  while (need() > avail && k > 0.5 && guard++ < 30) { k -= 0.03; apply(k); }
+  return { tooTight: need() > avail + 1 };
 }
 function headerDatesFitPass(boxZoom) {
   // The reader's own layout (all distances in real millimetres):
@@ -36546,9 +36617,10 @@ function headerDatesFitPass(boxZoom) {
   const gregEl = document.getElementById('headerGregDate');
   if (!datesCol || !clockCol || !dayNameEl || !hijriEl || !gregEl || !clockDateBox) return null;
   const mm = (typeof MM_PX === 'number' && MM_PX > 0) ? MM_PX : 3.78;
+  if (typeof landscapeMode !== 'undefined' && landscapeMode) return headerDatesLandscapeLayout(boxZoom, mm);
 
   datesCol.classList.add('dgrid');
-  [dayNameEl, hijriEl, gregEl].forEach((el) => { el.style.fontSize = ''; });
+  [dayNameEl, hijriEl, gregEl, clockEl].forEach((el) => { if (el) el.style.fontSize = ''; });
   [hijriEl, gregEl].forEach((el) => el.querySelectorAll('span').forEach((sp) => { sp.removeAttribute('style'); }));
   clockDateBox.style.zoom = ''; clockDateBox.style.height = '';
   if (boxZoom < 1) {
