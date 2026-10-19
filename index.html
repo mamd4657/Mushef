@@ -466,6 +466,8 @@ body.landscape-lock.landscape-lock-2{left:100dvw;}
 ::-webkit-scrollbar{display:none;}
 *{scrollbar-width:none;-ms-overflow-style:none;}
 .cover-text-wrap{box-sizing:border-box;}
+.ayahnum,.ayahnum-badge{position:relative;}
+.ayahnum::after,.ayahnum-badge::after{content:'';position:absolute;left:-2.5mm;right:-2.5mm;top:-2mm;bottom:-2mm;} /* easier to hit: the ayah number opens its window */
 .ayahnum{color:#1B5FA8;font-weight:700;font-family:'Amiri Quran',serif;}
 /* -webkit-text-stroke-width/-color are inherited properties, so both ayah-
    number styles (the plain "(N)" .ayahnum glyph and the filled .ayahnum-badge
@@ -29806,12 +29808,8 @@ function closeGharibLayer() { ghHideVisual(); }
 // never with an immediate history.back() that could race a layer opening
 // right after it.
 function hideGharib() {
-  const idx = backLayerStack.lastIndexOf(closeGharibLayer);
   ghHideVisual();
-  if (idx === -1) return;
-  backLayerStack.splice(idx, 1);
-  backOrphanSteps++;
-  setTimeout(retireOrphanBackSteps, 450);
+  dropBackLayer(closeGharibLayer);
 }
 function showGharib(wordEl) {
   const meaning = ghMeaning(wordEl.dataset.gk);
@@ -31586,6 +31584,7 @@ let freeTouchStartX = null;
 let freeTouchStartY = null;
 let freeSwipeAxis = null;
 let freeWasAutoScrollingBeforeTouch = false;
+let freeTouchStartTime = 0;
 let freeTapPaused = false; // true when a plain tap (not the button, not a manual drag) is what most recently paused free-mode auto-scroll - lets the next tap know to resume it rather than fall through to ayah-selection
 let freeTouchStartTarget = null;
 let freeTouchOnControl = false;
@@ -31602,6 +31601,7 @@ function initFreeSwipe() {
     const p = localPoint(e.touches[0].clientX, e.touches[0].clientY);
     freeTouchStartX = p.x;
     freeTouchStartY = p.y;
+    freeTouchStartTime = Date.now();
     freeSwipeAxis = null;
     freeTouchStartTarget = e.target;
   }, { passive: true });
@@ -31633,6 +31633,7 @@ function initFreeSwipe() {
         const btn = document.getElementById('freePlayPauseBtn');
         if (btn) btn.innerHTML = PLAY_ARROW_SVG;
       }
+      dropBackLayer(closeScrollLayer); // auto-scroll is now off - nothing left for Back to stop
       const p = localPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
       const dx = p.x - freeTouchStartX;
       if (swipeState) swipeEnd(dx);
@@ -31641,6 +31642,14 @@ function initFreeSwipe() {
       // resume automatically once the manual scroll (including momentum) settles.
       freeTapPaused = false;
       scheduleFreeAutoScrollResume();
+    } else if (freeSwipeAxis === 'y' && freeTapPaused) {
+      // switched on but stopped: a quick upward flick starts it again (and
+      // hides a meaning card); a slow drag is just a manual scroll
+      const pe = localPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+      if (isResumeFlick(pe.y - freeTouchStartY, freeTouchStartTime)) {
+        hideGharib();
+        scheduleFreeAutoScrollResume();
+      }
     } else if (freeSwipeAxis === null) {
       // a plain tap (no real movement). Mirrors bound mode's split, adapted
       // to free mode's simpler pause (which fully disengages, unlike bound
@@ -31654,18 +31663,8 @@ function initFreeSwipe() {
       //    stop it was a tap rather than the button): this tap resumes it.
       //  - otherwise (never engaged, or the last stop was the explicit
       //    button): taps are entirely handleTapOnAyah's to interpret.
-      if (gharibHandleTap(freeTouchStartTarget, freeWasAutoScrollingBeforeTouch || freeTapPaused)) {
-        // a word meaning was shown/hidden - keep the scrolling paused, and
-        // let the next ordinary tap resume it
-        if (freeWasAutoScrollingBeforeTouch) freeTapPaused = true;
-      } else if (freeWasAutoScrollingBeforeTouch) {
-        freeTapPaused = true;
-      } else if (freeTapPaused) {
-        freeTapPaused = false;
-        startFreeAutoScroll();
-      } else {
-        handleTapOnAyah(freeTouchStartTarget);
-      }
+      if (freeWasAutoScrollingBeforeTouch) freeTapPaused = true; // touch-down stopped it: switched on, paused
+      handleTextTap(freeTouchStartTarget, freeWasAutoScrollingBeforeTouch);
     }
     freeTouchStartX = null;
     freeTouchStartY = null;
@@ -31711,6 +31710,8 @@ function freeAutoScrollStep(ts) {
 }
 
 function startFreeAutoScroll() {
+  ensureScrollLayer();
+  freeTapPaused = false;
   freeAutoScrolling = true;
   freeAutoLastTs = null;
   const btn = document.getElementById('freePlayPauseBtn');
@@ -31730,6 +31731,8 @@ function pauseFreeAutoScroll(keepPauseIcon) {
   // stopped for real (the button itself, reaching the end of the mushaf,
   // or a horizontal swipe that turns the page) resets it back to play.
   if (!keepPauseIcon) {
+    freeTapPaused = false; // switched off, not just paused
+    if (typeof dropBackLayer === 'function') dropBackLayer(closeScrollLayer);
     const btn = document.getElementById('freePlayPauseBtn');
     if (btn) btn.innerHTML = PLAY_ARROW_SVG;
   }
@@ -32224,6 +32227,38 @@ function getTapSelectedAyah() {
 //    ayah, a different one, or empty space) while something IS selected
 //    clears it - selecting a different ayah is therefore two taps (clear,
 //    then select), not one, matching a simple, predictable toggle.
+// A plain tap on the text (no drag, no long press). wasMoving: auto-scroll was
+// actually scrolling when the finger came down (touch-down already stopped it).
+//  - while scrolling: the tap just stops it; on a green word its meaning shows
+//  - a meaning card is open: the same word (or anywhere else) hides it,
+//    another green word shows that one instead
+//  - an ayah window is open: any tap closes it (and its highlight), nothing more
+//  - a green word: its meaning
+//  - an ayah NUMBER: that ayah's window (or, while reciting, recite from it)
+//  - anything else: nothing
+function handleTextTap(target, wasMoving) {
+  const w = target && target.closest ? target.closest('.gharib') : null;
+  const green = !!w && gharibOn && !w.closest('#swipeOverlay');
+  if (wasMoving) { if (green) showGharib(w); return; }
+  if (gharibOpen()) {
+    if (green && w.dataset.gk !== ghPopKey) showGharib(w);
+    else hideGharib();
+    return;
+  }
+  if (getTapSelectedAyah() || ayahPopupEl.style.display !== 'none') {
+    if (ayahPopupCloseCooldownActive()) return;
+    clearAyahTapSelection();
+    hideAyahPopup();
+    return;
+  }
+  if (green) { showGharib(w); return; }
+  const num = target && target.closest ? target.closest('.ayahnum, .ayahnum-badge') : null;
+  if (!num) return;
+  const found = findAyahSegAt(num);
+  if (!found) return;
+  if (reciting) { playAyah(found.surah, found.ayah); return; }
+  if (setAyahTapSelection(found.surah, found.ayah)) showAyahPopup(found.surah, found.ayah);
+}
 function handleTapOnAyah(target) {
   const found = findAyahSegAt(target);
   if (reciting) {
@@ -32915,6 +32950,13 @@ function hideAyahPopup() {
 // that same toggle here directly, so the gesture works the same regardless
 // of orientation without having to reshape the popup itself to leave the
 // text exposed.
+// The tap that opened the window can be followed by the phone's own repeat
+// "click" at the same spot a moment later - landing on whatever button just
+// appeared under the finger (e.g. «فتح مجمع البيان»). Swallow any click in
+// the window during that first moment.
+document.getElementById('ayahPopup').addEventListener('click', (e) => {
+  if (Date.now() - ayahPopupOpenedAt < 600) { e.preventDefault(); e.stopPropagation(); }
+}, true);
 document.getElementById('ayahPopup').addEventListener('click', (e) => {
   if (e.target.closest('button, a, input, select, textarea')) return;
   if (ayahPopupCloseCooldownActive()) return; // ignore a ghost click right after opening - see its own comment
@@ -33490,6 +33532,10 @@ let boundTouchStartX = null;
 let boundTouchStartY = null;
 let boundSwipeAxis = null;
 let boundWasAutoScrollingBeforeTouch = false;
+let boundTouchStartTime = 0;
+// A quick upward flick (short, fast) while auto-scroll is switched on but
+// stopped starts it again; a slow drag stays an ordinary manual scroll.
+function isResumeFlick(dy, startTime) { return dy < -40 && (Date.now() - startTime) < 350; }
 let boundWasAnimatingBeforeTouch = false; // was it actively animating (not just enabled) right when this touch began
 let boundFingerDown = false;
 let touchOnControl = false;
@@ -33762,6 +33808,7 @@ function initBoundSwipe() {
     const p = localPoint(e.touches[0].clientX, e.touches[0].clientY);
     boundTouchStartX = p.x;
     boundTouchStartY = p.y;
+    boundTouchStartTime = Date.now();
     boundSwipeAxis = null;
     boundFingerDown = true;
     landscapeDragBaseScrollTop = wrap.scrollTop;
@@ -33829,8 +33876,19 @@ function initBoundSwipe() {
       }
       if (Math.abs(velocity) > 0.05) startLandscapeMomentum(velocity);
       else setTimeout(maybeSnapBound, 30); // no coast: settle right away
-      if (boundWasAutoScrollingBeforeTouch) scheduleBoundAutoScrollResume();
-    } else if (boundSwipeAxis === 'y' && boundWasAutoScrollingBeforeTouch) {
+      const pe = e.changedTouches.length ? localPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY) : null;
+      const flick = autoPlaying && !boundWasAnimatingBeforeTouch && pe && isResumeFlick(pe.y - boundTouchStartY, boundTouchStartTime);
+      if (flick) hideGharib();
+      if (boundWasAnimatingBeforeTouch || flick) scheduleBoundAutoScrollResume();
+    } else if (boundSwipeAxis === 'y' && autoPlaying && !boundWasAnimatingBeforeTouch) {
+      // switched on but stopped: a quick upward flick starts it again (and
+      // hides a meaning card); a slow drag is just a manual scroll
+      const pe = e.changedTouches.length ? localPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY) : null;
+      if (pe && isResumeFlick(pe.y - boundTouchStartY, boundTouchStartTime)) {
+        hideGharib();
+        scheduleBoundAutoScrollResume();
+      }
+    } else if (boundSwipeAxis === 'y' && boundWasAnimatingBeforeTouch) {
       // a genuine manual scroll (not just a tap) while auto-scroll was
       // running - resume once the manual scroll (including momentum) settles.
       scheduleBoundAutoScrollResume();
@@ -33852,13 +33910,7 @@ function initBoundSwipe() {
       //    already-playing recitation - see its own comment for the full
       //    state machine, including why a tap on empty space still needs
       //    to reach it to clear an existing selection).
-      if (gharibHandleTap(touchStartTarget, autoPlaying)) {
-        // a word meaning was shown/hidden - the scrolling (if any) stays paused
-      } else if (autoPlaying) {
-        if (!boundWasAnimatingBeforeTouch) resumeAutoScroll();
-      } else {
-        handleTapOnAyah(touchStartTarget);
-      }
+      handleTextTap(touchStartTarget, boundWasAnimatingBeforeTouch);
     }
     boundTouchStartX = null;
     boundTouchStartY = null;
@@ -34355,7 +34407,30 @@ function autoScrollStep(ts) {
   autoRafId = requestAnimationFrame(autoScrollStep);
 }
 
+// ---- auto-scroll, both layouts, seen as one thing ----
+// "enabled" = switched on (moving or paused); "moving" = actually scrolling.
+function scrollEnabled() { return layoutMode === 'free' ? (freeAutoScrolling || freeTapPaused) : autoPlaying; }
+function scrollMoving() { return layoutMode === 'free' ? freeAutoScrolling : !!autoRafId; }
+function scrollPause() {
+  if (layoutMode === 'free') { if (freeAutoScrolling) { pauseFreeAutoScroll(true); freeTapPaused = true; } }
+  else pauseAutoScroll();
+}
+function scrollDisable() {
+  if (layoutMode === 'free') { freeTapPaused = false; pauseFreeAutoScroll(); }
+  else if (autoPlaying) stopAutoScroll();
+}
+// While auto-scroll is switched on it is a Back layer: Back first stops it
+// (if it's moving), a further Back switches it off.
+function closeScrollLayer() {
+  if (!scrollEnabled()) return;
+  if (scrollMoving()) { scrollPause(); pushBackLayer(closeScrollLayer); }
+  else scrollDisable();
+}
+function ensureScrollLayer() {
+  if (backLayerStack.lastIndexOf(closeScrollLayer) === -1) pushBackLayer(closeScrollLayer);
+}
 function startAutoScroll() {
+  ensureScrollLayer();
   autoPlaying = true;
   lastFrameTime = 0;
   playPauseBtn.textContent = '⏸';
@@ -34371,6 +34446,7 @@ function pauseAutoScroll() {
   autoRafId = null;
 }
 function stopAutoScroll() {
+  dropBackLayer(closeScrollLayer);
   autoPlaying = false;
   playPauseBtn.innerHTML = PLAY_ARROW_SVG;
   pauseAutoScroll();
@@ -34417,6 +34493,16 @@ const backLayerStack = [];
 // left over are retired shortly after, so Back never has a dead step to eat.
 let backOrphanSteps = 0;
 let backIgnorePops = 0;
+// Takes a layer off the Back stack without going Back (its history step is
+// reused by the next layer to open, or retired shortly - see above).
+function dropBackLayer(closeFn) {
+  const idx = backLayerStack.lastIndexOf(closeFn);
+  if (idx === -1) return false;
+  backLayerStack.splice(idx, 1);
+  backOrphanSteps++;
+  setTimeout(retireOrphanBackSteps, 450);
+  return true;
+}
 function retireOrphanBackSteps() {
   while (backOrphanSteps > 0) {
     backOrphanSteps--;
@@ -34525,6 +34611,11 @@ function applySidebarTopOffset() {
 }
 function openSidebar(tab) {
   if (typeof hideGharib === 'function') hideGharib();
+  if (typeof ayahPopupEl !== 'undefined' && ayahPopupEl.style.display !== 'none') {
+    ayahPopupEl.style.display = 'none';
+    clearAyahTapSelection();
+    dropBackLayer(closeAyahPopupLayer);
+  }
   applySidebarTopOffset();
   document.getElementById('headerSearch').value = '';
   const searchWasOpen = searchPageEl.style.display === 'block';
@@ -34634,7 +34725,8 @@ function renderGuideTab() {
       '<b>المرجعيات</b>: قائمة الصفحات والآيات التي وضعت عليها علامة مرجعية.',
       '<b>تعديل هجري</b>: ضبط دقيق للتاريخ الهجري المعروض (تقديم أو تأخير يوم أو يومين).',
     ]},
-    { title: '٤. نافذة الآية (تظهر بالنقر على أي آية)', items: [
+    { title: '٤. نافذة الآية (تظهر بالنقر على رقم الآية)', items: [
+      'تُفتح نافذة الآية بالنقر على <b>رقم الآية</b>، وتُغلق مع تظليل الآية بالنقر على أي موضع من النص (حتى لو كان كلمة خضراء)، أو بالرجوع، أو بالانتقال إلى أي عمل آخر. وأثناء التلاوة الصوتية، النقر على رقم آية ينقل التلاوة إليها.',
       '<b>تلاوة</b>: الاستماع لتلاوة الآية بصوت القارئ المختار، مع اختيارات قراءة الآية مرة واحدة أو تكرارها أو الاستمرار.',
       '<b>نسخ الآية</b>: نسخ نص الآية.',
       '<b>حفظ الآية</b>: وضع علامة مرجعية على آية بعينها.',
@@ -34648,6 +34740,7 @@ function renderGuideTab() {
     { title: '٦. شريط الأدوات السفلي', items: [
       'زرا تكبير/تصغير حجم الخط (' + roundBadge('A', 12) + ' / ' + roundBadge('A', 19) + ').',
       'زر تشغيل/إيقاف التمرير التلقائي (' + badge(PLAY_ARROW_SVG) + '/' + badge('⏸') + ')، مع زري إبطاء (' + roundBadge('−', 18) + ') وتسريع (' + roundBadge('+', 18) + ') التمرير.',
+      'أثناء التمرير التلقائي: النقر في أي موضع من النص يوقفه، ودفعة سريعة بالإصبع إلى الأعلى تعيده (أما السحب الهادئ فيحرّك الصفحة يدوياً والتمرير متوقف). وزر الرجوع أو إيماءته: الأولى توقف التمرير إن كان متحركاً، والثانية تلغي تفعيله.',
       'زر تبديل اتجاه العرض بين الوضعين الأفقي والعمودي (' + badge(document.getElementById('rotateBtn').innerHTML) + ')، وفي الاتجاه الأفقي يعمل هذا الزر عملين متتاليين: بالنقرة الأولى يبدّل إلى الجهة الأفقية الأخرى، وبالنقرة الثانية يعود إلى الاتجاه العمودي مباشرة.',
       'زر رجوع (' + badge(document.getElementById('backBtn').innerHTML) + ') يقوم بعمل إيماءة الرجوع نفسها (العودة خطوة للخلف في البرنامج، كإغلاق نافذة أو نتائج بحث)، تسهيلاً على من لا تتوفر لديه إيماءة الرجوع في نظام جهازه. وفي الاتجاه الأفقي: إن كانت الجهة الحالية هي نفسها التي دخل بها الاتجاه الأفقي، فإنه (وكذلك إيماءة الرجوع) يعيد مباشرة إلى الاتجاه العمودي؛ وإن كان قد انتقل إلى الجهة الأفقية الأخرى (سواء بزر التدوير أو تلقائياً)، فإن أول ضغطة تعيده إلى الجهة الأولى، والضغطة الثانية تعيده إلى الاتجاه العمودي.',
     ]},
@@ -34662,10 +34755,9 @@ function renderGuideTab() {
       'الألفاظ القرآنية التي تحتاج إلى بيان ملوّنة في المصحف بـ<b style="color:#00904A;">اللون الأخضر</b>، ومعانيها مختصرة من أحد كتابين تختار بينهما:',
       '<b>«الميسَّر في غريب القرآن الكريم»</b> الصادر عن مجمع الملك فهد لطباعة المصحف الشريف: يشرح أكثر من أحد عشر ألف لفظة (نحو ثمانية عشر ألف كلمة ملوّنة).',
       '<b>«السراج في بيان غريب القرآن»</b> للدكتور محمد بن عبد العزيز الخضيري: يقتصر على نحو ستة آلاف لفظة مما يحتاج إلى بيان (نحو نصف الكلمات الملوّنة في الميسَّر)، فتكون الصفحة أقل تلويناً.',
-      'انقر أي لفظة ملوّنة يظهر معناها في مستطيل صغير قريب منها لا يغطيها، وانقر في أي مكان من الصفحة يختفي. وإذا كان المعنى لعبارة من عدة كلمات تُظلَّل كلماتها كلها.',
-      'النقر على لفظة ملوّنة أخرى والمستطيل ظاهر يُظهر معناها مباشرة، والنقر على أي موضع آخر من النص يُخفي المستطيل فقط، ثم تُفتح نافذة الآية بنقرة أخرى. أما النقر على لفظة ملوّنة ونافذة الآية مفتوحة فيغلقها ويُظهر المعنى مباشرة.',
-      'أثناء التمرير التلقائي: النقرة الأولى على لفظة ملوّنة توقف التمرير وتُظهر المعنى، والنقرة الثانية في أي مكان تُخفيه، والنقرة الثالثة تعيد التمرير.',
-      'يختفي المستطيل كذلك عند الانتقال إلى أي عمل آخر، كفتح القائمة الجانبية أو النقر على أزرار الشريط السفلي.',
+      'انقر أي لفظة ملوّنة يظهر معناها في مستطيل صغير قريب منها لا يغطيها. ويختفي بالنقر على اللفظة نفسها أو على أي موضع آخر من النص، أو بالرجوع، أو بالانتقال إلى أي عمل آخر. وإذا كان المعنى لعبارة من عدة كلمات تُظلَّل كلماتها كلها.',
+      'النقر على لفظة ملوّنة أخرى والمستطيل ظاهر يُخفيه ويُظهر معناها. وإذا كانت نافذة الآية مفتوحة، فالنقر على لفظة ملوّنة يغلق النافذة فقط.',
+      'أثناء التمرير التلقائي: النقر على لفظة ملوّنة يوقف التمرير ويُظهر معناها، والدفعة السريعة إلى الأعلى تُخفي المستطيل وتعيد التمرير.',
       'يُختار الكتاب، أو يُخفى التلوين كله، من عنوان <b>التخطيط</b> في القائمة الجانبية، في قسم «معاني الكلمات».',
     ]},
     { title: '٩. سور العزائم', items: [
