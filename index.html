@@ -88,8 +88,14 @@ header{background:#0E4433;color:#F6EFDC;padding:8px 16px;display:flex;align-item
    spans the device's height, not its width), so the compact spacing
    built for portrait's tight ~390px budget can relax considerably; none
    of this touches portrait, which keeps exactly what was tuned above. */
-@media (max-width:340px){body:not(.landscape-lock) #headerSearch{flex-basis:1.35cm !important;width:1.35cm !important;}}
-body.landscape-lock #headerSearch{flex:0 1 3cm !important;width:3cm !important;}
+/* Header order (right to left): menu, day/night, date box, search - the
+   search box exactly as wide as the two buttons plus the gap between them,
+   so the date box sits dead centre. */
+:root{--hdrMenuW:44px;--hdrDarkW:40px;--hdrGap:6px;}
+@media (max-width:340px){:root{--hdrMenuW:38px;--hdrDarkW:34px;}}
+#menuBtn{width:var(--hdrMenuW);padding:0;}
+#darkModeBtn{width:var(--hdrDarkW);}
+#headerSearch{flex:0 0 calc(var(--hdrMenuW) + var(--hdrGap) + var(--hdrDarkW)) !important;width:calc(var(--hdrMenuW) + var(--hdrGap) + var(--hdrDarkW)) !important;}
 /* Landscape: everything on one line, centred - hijri date (with هـ), 7mm,
    clock, 7mm, day name, 7mm, gregorian date (with م); at least 5mm clear of
    both edges (see headerDatesLandscapeLayout). */
@@ -690,6 +696,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
 <body>
 <header>
   <button class="iconbtn" id="menuBtn" aria-label="فتح الفهرس"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 6.5h16M4 12h16M4 17.5h16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+  <button class="iconbtn" id="darkModeBtn" aria-label="تبديل الوضع الليلي/النهاري" style="font-size:18px;padding:0;"></button>
   <div id="headerClockDate">
     <div id="headerClockCol">
       <span id="headerClock"></span>
@@ -701,7 +708,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
     </div>
   </div>
   <input type="search" id="headerSearch" class="header-frame" placeholder="بحث" style="flex:0 1 2cm;width:2cm;min-width:0;padding:8px 5px;color:#F6EFDC;font-family:'Amiri',serif;height:42.8px;box-sizing:border-box;">
-  <button class="iconbtn" id="darkModeBtn" aria-label="تبديل الوضع الليلي/النهاري" style="width:36px;font-size:18px;padding:0;"></button>
+
 </header>
 
 <div id="floatingFrameBar" class="floating-frame-bar" style="display:none;position:fixed;left:0;right:0;z-index:29;padding:1px 8px 0;"></div>
