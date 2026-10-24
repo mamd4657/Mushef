@@ -55,7 +55,10 @@
 }
 html{--quran-font:'HafsUthmani';}
 *{box-sizing:border-box;}
-html,body{margin:0;padding:0;background:linear-gradient(180deg,#FBF5E4,#F3E9D1 60%,#ECE0C2);color:#211C14;font-family:'Amiri',serif;min-height:100vh;}
+html{background:#0E4433;}
+html:has(body.dark-mode){background:#08251C;}
+html,body{margin:0;padding:0;}
+body{background:linear-gradient(180deg,#FBF5E4,#F3E9D1 60%,#ECE0C2);color:#211C14;font-family:'Amiri',serif;min-height:100vh;}
 header{background:#0E4433;color:#F6EFDC;padding:8px 16px;display:flex;align-items:center;gap:6px;position:fixed;top:0;left:0;right:0;z-index:30;box-shadow:0 2px 10px rgba(14,68,51,.25);box-sizing:border-box;}
 .header-frame{background:#0E4433;border:1.5px solid #F6EFDC;border-radius:10px;}
 #headerClockDate{display:flex;align-items:center;gap:0.5cm;flex:1;min-width:0;padding:2px 4px;background:#0E4433;border:1.5px solid #F6EFDC;border-radius:10px;height:42.8px;box-sizing:border-box;}
@@ -118,6 +121,8 @@ header input::placeholder{color:#F6EFDCcc;font-weight:700;}
 .iconbtn{background:transparent;border:1.5px solid #F6EFDC;color:#F6EFDC;border-radius:10px;padding:8px 10px;cursor:pointer;font-size:16px;flex-shrink:0;height:42.8px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;}
 #freeAutoFab .iconbtn{font-size:19px;padding:9px 12px;}
 #autoFab,#freeAutoFab{position:relative;}
+body.search-open #autoFab>.fab-frame:not(#backFrameBound),body.search-open #freeAutoFab>.fab-frame:not(#backFrameFree){display:none !important;}
+body.search-open #searchPage{padding-bottom:calc(var(--floatBarH) + 16px) !important;}
 .rotateFabBtn{position:absolute;right:8px;top:50%;transform:translateY(-50%);}
 body.landscape-lock .rotateFabBtn{right:auto;left:8px;}
 .iconbtn:hover{background:#ffffff15;}
@@ -28953,7 +28958,8 @@ function clearSearchMatchHighlight() {
 // long gone, rather than closing whatever the person actually meant to.
 function clearSearchMatchHighlightIfLeftItsPage() {
   if (searchMatchHighlightPages !== null && (pageNum < searchMatchHighlightPages.min - 1 || pageNum > searchMatchHighlightPages.max + 1)) {
-    closeSpecificLayer(closeSearchHighlightLayer);
+    if (backLayerStack.lastIndexOf(closeSearchHighlightLayer) !== -1) closeSpecificLayer(closeSearchHighlightLayer);
+    else clearSearchMatchHighlight();
   }
 }
 // Highlights exactly the substring the person typed (not the whole ayah)
@@ -28968,7 +28974,7 @@ function clearSearchMatchHighlightIfLeftItsPage() {
 // name coloring spans in particular): a matched node is split with the
 // native Text.splitText() and only the exact matched middle part gets
 // wrapped, so anything already inside the segment is otherwise left alone.
-function highlightSearchMatchInAyah(surah, ayah, query) {
+function highlightSearchMatchInAyah(surah, ayah, query, noBackLayer) {
   // A synchronous splice-and-clear rather than closeSpecificLayer here
   // specifically: this function is about to push its own new layer a few
   // lines down regardless of outcome, so clearing any previous highlight's
@@ -29054,7 +29060,7 @@ function highlightSearchMatchInAyah(surah, ayah, query) {
   // Registered last, only once the highlight is actually showing - so
   // Back can dismiss it (per the person's own request) when it's the only
   // thing left open, the same way every other dismissible layer here works.
-  pushBackLayer(closeSearchHighlightLayer);
+  if (!noBackLayer) pushBackLayer(closeSearchHighlightLayer);
   return true;
 }
 // Wraps the [start, end) character range (relative to el's own full
@@ -32986,10 +32992,12 @@ function closeSearchPageLayer() {
   if (keepSearchFocusOnClose) keepSearchFocusOnClose = false;
   else document.getElementById('headerSearch').blur();
   resetPinchZoom();
+  document.body.classList.remove('search-open');
   mainEl.style.display = '';
   searchPageEl.style.display = 'none';
   if (layoutMode === 'free') {
     document.getElementById('freeAutoFab').style.display = 'flex';
+    document.getElementById('autoFab').style.display = 'none';
   } else {
     document.getElementById('autoFab').style.display = 'flex';
   }
@@ -33004,9 +33012,15 @@ function closeSearchPageLayer() {
 // a back-layer's own close-function (see the search-result click handler
 // below), which is what's actually pushing/popping the history entry.
 function showSearchPageVisualsOnly() {
+  clearSearchMatchHighlight();
+  document.body.classList.add('search-open');
   mainEl.style.display = 'none';
   searchPageEl.style.display = 'block';
-  document.getElementById('autoFab').style.display = 'none';
+  document.body.classList.add('search-open');
+  // The bound-layout bar sits outside <main> (hidden here), so it is the
+  // one shown on the search page in both layouts - only its Back button,
+  // via the body.search-open CSS rule.
+  document.getElementById('autoFab').style.display = 'flex';
   document.getElementById('freeAutoFab').style.display = 'none';
   document.getElementById('floatingFrameBar').style.display = 'none';
 }
@@ -33020,7 +33034,11 @@ function showSearchPage(q) {
   const wasAlreadyOpen = searchPageEl.style.display === 'block';
   mainEl.style.display = 'none';
   searchPageEl.style.display = 'block';
-  document.getElementById('autoFab').style.display = 'none';
+  document.body.classList.add('search-open');
+  // The bound-layout bar sits outside <main> (hidden here), so it is the
+  // one shown on the search page in both layouts - only its Back button,
+  // via the body.search-open CSS rule.
+  document.getElementById('autoFab').style.display = 'flex';
   document.getElementById('freeAutoFab').style.display = 'none';
   document.getElementById('floatingFrameBar').style.display = 'none';
   if (!wasAlreadyOpen) {
@@ -33136,9 +33154,9 @@ function showSearchPage(q) {
       // exist to highlight, but staying on the same page can highlight
       // immediately since nothing needs to re-render first.
       if (needsPageChange) {
-        setTimeout(() => highlightSearchMatchInAyah(r.surah, r.ayah, q), 250);
+        setTimeout(() => highlightSearchMatchInAyah(r.surah, r.ayah, q, true), 250);
       } else {
-        highlightSearchMatchInAyah(r.surah, r.ayah, q);
+        highlightSearchMatchInAyah(r.surah, r.ayah, q, true);
       }
     });
     return div;
@@ -33369,7 +33387,7 @@ document.addEventListener('focusout', (e) => {
   if (e.target.matches && e.target.matches('input, textarea')) {
     setTimeout(() => {
       const stillTyping = document.activeElement && document.activeElement.matches && document.activeElement.matches('input, textarea');
-      if (!stillTyping && searchPageEl.style.display !== 'block') {
+      if (!stillTyping && searchPageEl.style.display !== 'block' && layoutMode !== 'free') {
         document.getElementById('autoFab').style.display = 'flex';
       }
     }, 150);
