@@ -1,4 +1,7 @@
-const CACHE_NAME = 'mushaf-cache-v54';
+const CACHE_NAME = 'mushaf-cache-v55';
+// Book files (books/<id>/NNN.json - تفسير البرهان etc.), one per surah: served
+// cache-first from their own cache, which app updates never clear.
+const BOOKS_CACHE_NAME = 'mushaf-books-v1';
 const APP_SHELL = ['./', './index.html', './manifest.json'];
 // Recitation audio downloaded via the "⬇" download manager in the app is
 // stored in this separate cache (page JS writes to it directly through the
@@ -12,7 +15,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 self.addEventListener('activate', (event) => {
-  event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE_NAME && k !== AUDIO_CACHE_NAME).map((k) => caches.delete(k)))));
+  event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE_NAME && k !== AUDIO_CACHE_NAME && k !== BOOKS_CACHE_NAME).map((k) => caches.delete(k)))));
   self.clients.claim();
 });
 self.addEventListener('fetch', (event) => {
@@ -24,6 +27,17 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.open(AUDIO_CACHE_NAME).then((cache) =>
         cache.match(event.request).then((cached) => cached || fetch(event.request, { mode: 'no-cors' }).catch(() => undefined))
+      )
+    );
+    return;
+  }
+  if (/\/books\/[^/]+\/\d+\.json$/.test(new URL(event.request.url).pathname)) {
+    event.respondWith(
+      caches.open(BOOKS_CACHE_NAME).then((cache) =>
+        cache.match(event.request.url).then((cached) => cached || fetch(event.request).then((resp) => {
+          if (resp && resp.ok) cache.put(event.request.url, resp.clone());
+          return resp;
+        }))
       )
     );
     return;

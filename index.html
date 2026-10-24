@@ -146,6 +146,32 @@ body.landscape-lock .rotateFabBtn{right:auto;left:8px;}
 .ayah-content-tab{flex:1;padding:10px 4px;background:transparent;border:2px solid #0E4433;border-radius:9px;margin:4px 3px;font-family:sans-serif;font-weight:700;font-size:18px;color:#211C14;cursor:pointer;}
 .ayah-content-tab.active{background:#F3E9D1;color:#7B2E2E;border-color:#7B2E2E;}
 #ayahPopupContent{flex:1;overflow-y:auto;padding:14px;font-family:sans-serif;font-weight:700;font-size:19px;color:#211C14;min-height:90px;line-height:1.85;}
+#bookReader{position:fixed;top:0;left:0;right:0;bottom:calc(var(--floatBarH) + var(--navInset));z-index:56;background:#FBF5E4;flex-direction:column;color:#211C14;}
+#bookReaderHead{background:#0E4433;color:#F6EFDC;padding:8px 10px 6px;padding-top:calc(8px + var(--topInset));flex:0 0 auto;}
+#bookReaderTitle{font-family:'Amiri',serif;font-weight:700;font-size:20px;text-align:center;line-height:1.5;}
+#bookReaderNav{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:4px;}
+#bookReaderWhere{font-family:sans-serif;font-weight:700;font-size:16px;color:#E8B84B;text-align:center;flex:1;}
+.book-nav-btn{background:transparent;border:1.5px solid #E8B84B;color:#F6EFDC;border-radius:9px;padding:5px 9px;font-family:sans-serif;font-weight:700;font-size:14px;cursor:pointer;white-space:nowrap;}
+.book-nav-btn:disabled{opacity:.35;}
+#bookReaderBody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px 24px;font-family:'Amiri',serif;font-size:20px;line-height:1.95;text-align:justify;max-width:760px;margin:0 auto;width:100%;box-sizing:border-box;}
+#bookReaderBody p{margin:0 0 10px;}
+#bookReaderBody p.qa{text-align:center;margin:6px 0 12px;}
+#bookReaderBody q{quotes:none;color:#0E6B45;font-weight:700;}
+#bookReaderBody i{font-style:normal;font-family:sans-serif;font-size:12px;color:#8A7A55;border:1px solid #D9C99E;border-radius:6px;padding:0 4px;margin-left:4px;vertical-align:2px;}
+#bookReaderBody h4{font-size:19px;color:#7B2E2E;margin:16px 0 8px;text-align:center;}
+.book-seg{border-bottom:1px dashed #CDBB8C;padding-bottom:6px;margin-bottom:14px;}
+.book-seg-label{display:block;text-align:center;font-family:sans-serif;font-weight:700;font-size:14px;color:#7B2E2E;margin:0 0 6px;}
+.book-note{text-align:center !important;font-family:sans-serif;font-weight:700;font-size:16px;color:#6B5E40;margin:18px 6px;line-height:1.8;}
+.book-btn{display:block;margin:14px auto;background:#0E4433;color:#F6EFDC;border:none;border-radius:18px;padding:9px 18px;font-family:sans-serif;font-weight:700;font-size:15px;cursor:pointer;}
+.book-btn.alt{background:transparent;color:#0E4433;border:2px solid #0E4433;}
+body.dark-mode #bookReader{background:#171C18;color:#EFE8D6;}
+body.dark-mode #bookReaderHead{background:#08251C;}
+body.dark-mode #bookReaderBody q{color:#6FCB9A;}
+body.dark-mode #bookReaderBody h4,body.dark-mode .book-seg-label{color:#E8B84B;}
+body.dark-mode .book-note{color:#BDB396;}
+body.dark-mode .book-btn{background:#3A9B6E;}
+body.dark-mode .book-btn.alt{background:transparent;color:#6FB894;border-color:#6FB894;}
+body.dark-mode .book-seg{border-color:#3C4A3E;}
 .ayah-popup-card{background:#FBF5E4;border:3px solid #0E4433;}
 body.dark-mode .ayah-popup-card{background:#1B211A;border-color:#3A9B6E;}
 body.dark-mode .ayah-popup-title,body.dark-mode .ayah-content-tab{color:#EFE8D6;border-color:#6FB894;}
@@ -740,6 +766,17 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
 
 </header>
 
+<div id="bookReader" style="display:none;">
+  <div id="bookReaderHead">
+    <div id="bookReaderTitle"></div>
+    <div id="bookReaderNav">
+      <button id="bookPrev" class="book-nav-btn">‹ السابقة</button>
+      <span id="bookReaderWhere"></span>
+      <button id="bookNext" class="book-nav-btn">التالية ›</button>
+    </div>
+  </div>
+  <div id="bookReaderBody"></div>
+</div>
 <div id="floatingFrameBar" class="floating-frame-bar" style="display:none;position:fixed;left:0;right:0;z-index:29;padding:1px 8px 0;"></div>
 
 <div id="ayahPopup" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:55;">
@@ -749,12 +786,11 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
       <button class="ayah-popup-title" data-action="copy">نسخ الآية</button>
       <button class="ayah-popup-title" data-action="save">حفظ الآية</button>
     </div>
-    <div style="display:flex;">
-      <button class="ayah-content-tab active" data-content="meanings">معاني</button>
-      <button class="ayah-content-tab" data-content="tafsir">تفسير</button>
-      <button class="ayah-content-tab" data-content="irab">إعراب</button>
+    <div style="display:flex;padding-bottom:4px;">
+      <button class="ayah-content-tab" data-content="tafsir">تفسير القرآن</button>
+      <button class="ayah-content-tab" data-content="irab">إعراب القرآن</button>
     </div>
-    <div id="ayahPopupContent"></div>
+    <div id="ayahPopupContent" style="display:none;"></div>
   </div>
 </div>
 
@@ -29848,8 +29884,7 @@ function showAyahPopup(surah, ayah) {
   ayahPopupAyah = ayah;
   ayahPopupEl.style.display = 'block';
   ayahPopupOpenedAt = Date.now();
-  document.querySelectorAll('.ayah-content-tab').forEach((t) => t.classList.toggle('active', t.dataset.content === 'meanings'));
-  renderAyahPopupContent('meanings');
+  document.querySelectorAll('.ayah-content-tab').forEach((t) => t.classList.remove('active'));
   positionAyahPopup();
   if (reciteModeBarEl.style.display !== 'none') {
     swapTopBackLayer(closeReciteModeBarLayer, closeAyahPopupLayer);
@@ -29906,70 +29941,159 @@ document.querySelectorAll('.ayah-popup-title').forEach((btn) => {
   });
 });
 
+// ---------------- كتب الآية: تفسير البرهان / إعراب القرآن ----------------
+// Each book lives OUTSIDE index.html, one small JSON file per surah under
+// books/<id>/NNN.json, so the app itself stays the same size. A surah's file
+// is fetched the first time any of its ayahs is opened and kept in its own
+// cache (BOOKS_CACHE, which the service worker serves cache-first and never
+// clears on app updates), so from then on it opens with no internet. The
+// reader also offers a one-shot "download the whole book" for full offline use.
+const BOOKS_CACHE = 'mushaf-books-v1';
+const BOOKS = {
+  tafsir: { dir: 'books/burhan/', title: 'تفسير البرهان', author: 'للسيد هاشم البحراني', sizeLabel: 'نحو ٣ ميغابايت' },
+  irab: { dir: null, title: 'إعراب القرآن', author: 'للشيخ محمد جعفر الكرباسي', sizeLabel: '' }
+};
+const bookMemCache = {}; // `${kind}:${surah}` -> parsed JSON
+let bookReaderKind = null, bookReaderSurah = null, bookReaderAyah = null;
+const bookReaderEl = document.getElementById('bookReader');
+const bookReaderBodyEl = document.getElementById('bookReaderBody');
+
+function bookFileUrl(kind, surah) {
+  return new URL(BOOKS[kind].dir + String(surah).padStart(3, '0') + '.json', location.href).href;
+}
+async function loadBookSurah(kind, surah) {
+  const key = kind + ':' + surah;
+  if (bookMemCache[key]) return bookMemCache[key];
+  const url = bookFileUrl(kind, surah);
+  let resp = null;
+  try {
+    if (window.caches) { const c = await caches.open(BOOKS_CACHE); resp = await c.match(url); }
+  } catch (e) { /* ignore */ }
+  if (!resp) {
+    resp = await fetch(url);
+    if (!resp.ok) throw new Error('http ' + resp.status);
+    try { if (window.caches) { const c = await caches.open(BOOKS_CACHE); await c.put(url, resp.clone()); } } catch (e) { /* ignore */ }
+  }
+  const data = await resp.json();
+  bookMemCache[key] = data;
+  return data;
+}
+async function countCachedBookSurahs(kind) {
+  if (!window.caches || !BOOKS[kind].dir) return 0;
+  try {
+    const c = await caches.open(BOOKS_CACHE);
+    const keys = await c.keys();
+    const prefix = new URL(BOOKS[kind].dir, location.href).href;
+    return keys.filter((r) => r.url.startsWith(prefix)).length;
+  } catch (e) { return 0; }
+}
+let bookDownloadRunning = false;
+async function downloadWholeBook(kind, btn) {
+  if (bookDownloadRunning) return;
+  bookDownloadRunning = true;
+  let ok = 0, fail = 0;
+  try {
+    const c = await caches.open(BOOKS_CACHE);
+    const todo = [];
+    for (let s = 1; s <= 114; s++) {
+      const url = bookFileUrl(kind, s);
+      if (!(await c.match(url))) todo.push(url); else ok++;
+    }
+    let i = 0;
+    const worker = async () => {
+      while (i < todo.length) {
+        const url = todo[i++];
+        try {
+          const r = await fetch(url);
+          if (r.ok) { await c.put(url, r); ok++; } else fail++;
+        } catch (e) { fail++; }
+        if (btn) btn.textContent = 'جارٍ التنزيل… ' + toArabicDigits(ok) + ' من ١١٤';
+      }
+    };
+    await Promise.all([worker(), worker(), worker(), worker()]);
+  } catch (e) { fail++; }
+  bookDownloadRunning = false;
+  if (fail) toast('تعذّر تنزيل بعض السور، أعد المحاولة عند توفر الاتصال');
+  else toast('✓ تم تنزيل ' + BOOKS[kind].title + ' كاملاً، ويعمل الآن بدون إنترنت');
+  if (bookReaderEl.style.display !== 'none') renderBookReader();
+}
+
+function bookSegLabel(a, b) {
+  return a === b ? ('الآية ' + toArabicDigits(a)) : ('الآيات ' + toArabicDigits(a) + ' - ' + toArabicDigits(b));
+}
+async function renderBookReader() {
+  const kind = bookReaderKind, surah = bookReaderSurah, ayah = bookReaderAyah;
+  const book = BOOKS[kind];
+  document.getElementById('bookReaderTitle').textContent = book.title + ' ' + book.author;
+  document.getElementById('bookReaderWhere').textContent = 'سورة ' + SURAH_NAMES[surah] + ' - الآية ' + toArabicDigits(ayah);
+  document.getElementById('bookPrev').disabled = (surah === 1 && ayah === 1);
+  document.getElementById('bookNext').disabled = (surah === 114 && ayah === SURAH_AYAH_COUNT[114]);
+  if (!book.dir) {
+    bookReaderBodyEl.innerHTML = '<p class="book-note">سيُضاف ' + book.title + ' ' + book.author + ' هنا، مرتّباً حسب السور والآيات، ويعمل بدون إنترنت.</p>';
+    return;
+  }
+  bookReaderBodyEl.innerHTML = '<p class="book-note">جارٍ التحميل…</p>';
+  let data;
+  try {
+    data = await loadBookSurah(kind, surah);
+  } catch (e) {
+    if (bookReaderKind !== kind || bookReaderSurah !== surah || bookReaderAyah !== ayah) return;
+    bookReaderBodyEl.innerHTML = '<p class="book-note">تعذّر تحميل هذه السورة. يلزم اتصال بالإنترنت لفتحها أول مرة، ثم تبقى محفوظة في الجهاز وتعمل بدون إنترنت.</p>';
+    return;
+  }
+  if (bookReaderKind !== kind || bookReaderSurah !== surah || bookReaderAyah !== ayah) return; // navigated meanwhile
+  const segs = data.s.filter((x) => x[0] <= ayah && ayah <= x[1]);
+  let h = '';
+  if (segs.length) {
+    segs.forEach((x) => {
+      h += '<div class="book-seg">' + (x[0] !== x[1] ? '<span class="book-seg-label">' + bookSegLabel(x[0], x[1]) + '</span>' : '') + x[2] + '</div>';
+    });
+  } else {
+    h += '<p class="book-note">لم ترد في ' + book.title + ' روايات في تفسير هذه الآية.</p>';
+  }
+  if (data.i) h += '<button class="book-btn alt" id="bookIntroBtn">فضل سورة ' + SURAH_NAMES[surah] + ' وخواصّها</button><div id="bookIntro" style="display:none;">' + data.i + '</div>';
+  const cached = await countCachedBookSurahs(kind);
+  if (cached < 114) {
+    h += '<button class="book-btn" id="bookDlBtn">' + (bookDownloadRunning ? 'جارٍ التنزيل…' : 'تنزيل ' + book.title + ' كاملاً للعمل بدون إنترنت (' + book.sizeLabel + ')') + '</button>';
+  }
+  bookReaderBodyEl.innerHTML = h;
+  bookReaderBodyEl.scrollTop = 0;
+  const ib = document.getElementById('bookIntroBtn');
+  if (ib) ib.addEventListener('click', () => {
+    const d = document.getElementById('bookIntro');
+    d.style.display = d.style.display === 'none' ? 'block' : 'none';
+    if (d.style.display === 'block') d.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  });
+  const db = document.getElementById('bookDlBtn');
+  if (db) db.addEventListener('click', () => downloadWholeBook(kind, db));
+}
+function closeBookReaderLayer() {
+  bookReaderEl.style.display = 'none';
+}
+function openBookReader(kind, surah, ayah) {
+  bookReaderKind = kind; bookReaderSurah = surah; bookReaderAyah = ayah;
+  bookReaderEl.style.display = 'flex';
+  pushBackLayer(closeBookReaderLayer);
+  renderBookReader();
+}
+function stepBookReader(dir) {
+  let s = bookReaderSurah, a = bookReaderAyah + dir;
+  if (a < 1) { s--; if (s < 1) return; a = SURAH_AYAH_COUNT[s]; }
+  else if (a > SURAH_AYAH_COUNT[s]) { s++; if (s > 114) return; a = 1; }
+  bookReaderSurah = s; bookReaderAyah = a;
+  renderBookReader();
+}
+document.getElementById('bookPrev').addEventListener('click', () => stepBookReader(-1));
+document.getElementById('bookNext').addEventListener('click', () => stepBookReader(1));
+
 document.querySelectorAll('.ayah-content-tab').forEach((btn) => {
   btn.addEventListener('click', () => {
-    // Tapping the tab that's already active has no other purpose - in
-    // landscape specifically, this is what a second tap intended to close
-    // the popup often actually lands on (its footprint after rotation can
-    // cover the same screen position the ayah text underneath it used to
-    // occupy), so treat that specific case as the equivalent of the
-    // "tap the ayah again" close gesture instead of a no-op re-select.
-    if (ayahPopupCloseCooldownActive()) return; // ignore a ghost click right after opening - see its own comment
-    if (btn.classList.contains('active')) {
-      clearAyahTapSelection();
-      hideAyahPopup();
-      return;
-    }
-    document.querySelectorAll('.ayah-content-tab').forEach((t) => t.classList.toggle('active', t === btn));
-    renderAyahPopupContent(btn.dataset.content);
+    if (ayahPopupCloseCooldownActive()) return; // ignore a ghost click right after opening
+    if (!ayahPopupSurah || !ayahPopupAyah) return;
+    openBookReader(btn.dataset.content, Number(ayahPopupSurah), Number(ayahPopupAyah));
   });
 });
 
-// altafsir.com's per-ayah URL needs no lookup table at all - surah/ayah
-// plug straight into the query string - so البرهان is fully wired up now.
-// المعاني (التفسير الميسر) والإعراب (الجدول) are both hosted on shamela.ws,
-// whose page numbering does not line up arithmetically with ayah numbers
-// (some pages hold more than one ayah's worth of commentary), so those two
-// need an actual verified surah+ayah -> shamela page-number table before
-// they can link precisely - not yet built, so they show a clear
-// placeholder rather than a wrong or approximate link.
-// altafsir.com's البرهان and holyquran.net's مجمع البيان both plug
-// surah/ayah straight into their URLs with no lookup table needed - و
-// مجمع البيان specifically interleaves اللغة (word meanings) والإعراب
-// (grammar) sections into its running commentary for each passage, so the
-// very same link doubles as a (page-level, not sub-section-anchored)
-// source for معاني and إعراب too until a precise إعراب-only link (الجدول
-// على shamela.ws) is wired up.
-function ayahBurhanUrl(surah, ayah) {
-  return 'https://www.altafsir.com/Tafasir.asp?tMadhNo=4&tTafsirNo=110&tSoraNo=' + surah + '&tAyahNo=' + ayah + '&tDisplay=yes&UserProfile=0&LanguageId=1';
-}
-function ayahMajmaUrl(surah, ayah) {
-  return 'https://holyquran.net/tafseer/view.php?book=majma&ch=' + surah + '&vr=' + ayah;
-}
-function popupLinkBtn(url, label, color) {
-  return '<a href="' + url + '" target="_blank" rel="noopener" style="display:block;margin:0 0 10px;background:' + color + ';color:#F6EFDC;padding:10px 22px;border-radius:20px;text-decoration:none;font-weight:700;">' + label + '</a>';
-}
-function renderAyahPopupContent(kind) {
-  if (!ayahPopupSurah || !ayahPopupAyah) return;
-  const majmaUrl = ayahMajmaUrl(ayahPopupSurah, ayahPopupAyah);
-  if (kind === 'tafsir') {
-    ayahPopupContentEl.innerHTML = '<div style="text-align:center;">' +
-      '<p class="strong-note" style="margin:0 0 14px;font-size:15px;font-weight:700;line-height:1.7;">تفسيرا هذه الآية (يفتحان في متصفح الجهاز، ويتطلبان اتصالاً بالإنترنت)</p>' +
-      popupLinkBtn(ayahBurhanUrl(ayahPopupSurah, ayahPopupAyah), 'تفسير البرهان (روائي)', '#7B2E2E') +
-      popupLinkBtn(majmaUrl, 'مجمع البيان (شامل)', '#0E4433') +
-      '</div>';
-  } else if (kind === 'meanings') {
-    ayahPopupContentEl.innerHTML = '<div style="text-align:center;">' +
-      '<p class="strong-note" style="margin:0 0 14px;font-size:15px;font-weight:700;line-height:1.7;">معاني مفردات هذه الآية ضمن مجمع البيان (ابحث عن عنوان «اللغة» داخل الصفحة - تفتح في متصفح الجهاز، وتتطلب اتصالاً بالإنترنت)</p>' +
-      popupLinkBtn(majmaUrl, 'فتح مجمع البيان', '#0E4433') +
-      '</div>';
-  } else if (kind === 'irab') {
-    ayahPopupContentEl.innerHTML = '<div style="text-align:center;">' +
-      '<p class="strong-note" style="margin:0 0 14px;font-size:15px;font-weight:700;line-height:1.7;">إعراب هذه الآية ضمن مجمع البيان (ابحث عن عنوان «الإعراب» داخل الصفحة - تفتح في متصفح الجهاز، وتتطلب اتصالاً بالإنترنت). رابط دقيق مخصص للإعراب وحده (الجدول) سيُضاف لاحقاً.</p>' +
-      popupLinkBtn(majmaUrl, 'فتح مجمع البيان', '#0E4433') +
-      '</div>';
-  }
-}
 
 function getAyahFullText(surah, ayah) {
   const segs = document.querySelectorAll('.ayah-seg[data-surah="' + surah + '"][data-ayah="' + ayah + '"]');
@@ -31639,7 +31763,8 @@ function renderGuideTab() {
       '<b>تلاوة</b>: الاستماع لتلاوة الآية بصوت القارئ المختار، مع اختيارات قراءة الآية مرة واحدة أو تكرارها أو الاستمرار.',
       '<b>نسخ الآية</b>: نسخ نص الآية.',
       '<b>حفظ الآية</b>: وضع علامة مرجعية على آية بعينها.',
-      'ثلاثة تبويبات إضافية: <b>معاني</b> (شرح مفردات الآية)، <b>تفسير</b>، <b>إعراب</b>.',
+      '<b>تفسير القرآن</b>: تفسير البرهان للسيد هاشم البحراني، مرتّباً حسب السور والآيات، مع أزرار للانتقال إلى الآية السابقة والتالية، وزر لفضل السورة وخواصّها. تُحمَّل كل سورة عند فتحها أول مرة ثم تعمل بدون إنترنت، ويمكن تنزيل التفسير كاملاً من داخله.',
+      '<b>إعراب القرآن</b>: إعراب القرآن للشيخ محمد جعفر الكرباسي (قيد الإضافة).',
     ]},
     { title: '٥. صفحة النص القرآني', items: [
       'ميزة النسخ الحر بالضغط المطوّل على أي موضع من الصفحة.',
