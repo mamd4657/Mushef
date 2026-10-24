@@ -29988,7 +29988,7 @@ async function countCachedBookSurahs(kind) {
   } catch (e) { return 0; }
 }
 let bookDownloadRunning = false;
-async function downloadWholeBook(kind, btn) {
+async function downloadWholeBook(kind, btn, silent) {
   if (bookDownloadRunning) return;
   bookDownloadRunning = true;
   let ok = 0, fail = 0;
@@ -30010,9 +30010,10 @@ async function downloadWholeBook(kind, btn) {
         if (btn) btn.textContent = 'جارٍ التنزيل… ' + toArabicDigits(ok) + ' من ١١٤';
       }
     };
-    await Promise.all([worker(), worker(), worker(), worker()]);
+    await Promise.all(silent ? [worker(), worker()] : [worker(), worker(), worker(), worker()]);
   } catch (e) { fail++; }
   bookDownloadRunning = false;
+  if (silent) return;
   if (fail) toast('تعذّر تنزيل بعض السور، أعد المحاولة عند توفر الاتصال');
   else toast('✓ تم تنزيل ' + BOOKS[kind].title + ' كاملاً، ويعمل الآن بدون إنترنت');
   if (bookReaderEl.style.display !== 'none') renderBookReader();
@@ -30083,6 +30084,22 @@ function stepBookReader(dir) {
   bookReaderSurah = s; bookReaderAyah = a;
   renderBookReader();
 }
+// Quietly fetches every book that has files (currently تفسير البرهان) into
+// its offline cache once, in the background, a little after the app opens -
+// so the whole book works without internet as if it shipped with the app,
+// while index.html itself stays small. Already-saved surahs are skipped, so
+// after the first complete run this costs nothing; an interrupted run just
+// resumes on a later opening.
+function autoDownloadBooksInBackground() {
+  if (!window.caches || !navigator.onLine) return;
+  if (navigator.connection && navigator.connection.saveData) return;
+  Object.keys(BOOKS).forEach((kind) => {
+    if (!BOOKS[kind].dir) return;
+    countCachedBookSurahs(kind).then((n) => { if (n < 114) downloadWholeBook(kind, null, true); });
+  });
+}
+setTimeout(autoDownloadBooksInBackground, 20000);
+window.addEventListener('online', () => setTimeout(autoDownloadBooksInBackground, 5000));
 document.getElementById('bookPrev').addEventListener('click', () => stepBookReader(-1));
 document.getElementById('bookNext').addEventListener('click', () => stepBookReader(1));
 
