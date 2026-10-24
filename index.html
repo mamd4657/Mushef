@@ -26752,7 +26752,12 @@ function ghHideVisual() {
 // The open card is a Back layer like the ayah window or the side menu: the
 // Back gesture / ← button closes it first, and only a further Back (with
 // nothing else open) leaves the app. This is what Back itself runs.
-function closeGharibLayer() { ghHideVisual(); }
+function closeGharibLayer() {
+  ghHideVisual();
+  // auto-scroll switched on but stopped (the tap that showed the card
+  // stopped it): Back hides the card and the text moves on again
+  if (scrollEnabled() && !scrollMoving()) { if (layoutMode === 'free') startFreeAutoScroll(); else resumeAutoScroll(); }
+}
 // Closing the card any other way (a tap, another control, ...) takes it off
 // the Back stack at once, and its history step is either reused by the next
 // layer that opens (see pushBackLayer) or quietly retired a moment later -
@@ -26845,12 +26850,24 @@ function gharibHandleTap(target, scrollMode) {
 }
 // Any touch/click outside the text (a toolbar button, the header, the side
 // menu...) means the reader moved on - the card goes away.
+// With auto-scroll switched on but stopped, if that touch opens another
+// window or menu (the side menu, search, ...), the text moves on again once
+// it is closed and the reader is back on the mushaf; a control that acts at
+// once (speed, font size, night mode ...) opens nothing and leaves it stopped.
 document.addEventListener('pointerdown', (e) => {
   if (!gharibOpen()) return;
   const t = e.target;
   if (t && t.closest && t.closest('#vScrollWrap, #freeScrollWrap, #gharibPop')) return;
+  if (scrollEnabled() && !scrollMoving()) window.ghResumeArmedAt = Date.now();
   hideGharib();
 }, true);
+function ghResumeCheck() {
+  const lay = window.ghResumeLayer;
+  if (!lay || backLayerStack.indexOf(lay) !== -1) return;
+  if (backLayerStack.length && backLayerStack[backLayerStack.length - 1] !== closeScrollLayer) return; // something else still open
+  window.ghResumeLayer = null;
+  if (scrollEnabled() && !scrollMoving()) { if (layoutMode === 'free') startFreeAutoScroll(); else resumeAutoScroll(); }
+}
 function setGharibOn(on) {
   gharibOn = !!on;
   store.set('gharib', gharibOn ? 'on' : 'off');
@@ -29186,7 +29203,7 @@ function getTapSelectedAyah() {
 //    another green word shows that one instead
 //  - an ayah window is open: any tap closes it (and its highlight), nothing more
 //  - a green word: its meaning
-//  - an ayah NUMBER: that ayah's window (or, while reciting, recite from it)
+//  - any word or the number of an ayah: that ayah's window
 //  - anything else: nothing
 function handleTextTap(target, wasMoving) {
   const w = target && target.closest ? target.closest('.gharib') : null;
@@ -29196,7 +29213,9 @@ function handleTextTap(target, wasMoving) {
   // (black words, ayah numbers, blank space, surah bars, the basmala ...)
   // starts it again, closing a meaning card if one is open; green words still
   // show their meaning
-  if (scrollEnabled() && !green) {
+  // (the green word whose meaning is already showing counts as "anywhere
+  // else" too)
+  if (scrollEnabled() && (!green || (gharibOpen() && w.dataset.gk === ghPopKey))) {
     hideGharib();
     if (layoutMode === 'free') startFreeAutoScroll(); else resumeAutoScroll();
     return;
@@ -29213,11 +29232,11 @@ function handleTextTap(target, wasMoving) {
     return;
   }
   if (green) { showGharib(w); return; }
-  const num = target && target.closest ? target.closest('.ayahnum, .ayahnum-badge') : null;
-  if (!num) return;
-  const found = findAyahSegAt(num);
+  // any word of an ayah, or its number, opens that ayah's window (recitation
+  // or not - reciting is started only from the window); blank space, surah
+  // name bars and the basmala of other surahs belong to no ayah: nothing
+  const found = target && target.closest ? findAyahSegAt(target) : null;
   if (!found) return;
-  if (reciting) { playAyah(found.surah, found.ayah); return; }
   if (setAyahTapSelection(found.surah, found.ayah)) showAyahPopup(found.surah, found.ayah);
 }
 function handleTapOnAyah(target) {
@@ -31654,6 +31673,7 @@ function dropBackLayer(closeFn) {
   backLayerStack.splice(idx, 1);
   backOrphanSteps++;
   setTimeout(retireOrphanBackSteps, 450);
+  if (typeof ghResumeCheck === 'function') setTimeout(ghResumeCheck, 0);
   return true;
 }
 function retireOrphanBackSteps() {
@@ -31666,6 +31686,8 @@ function retireOrphanBackSteps() {
 
 function pushBackLayer(closeFn) {
   backLayerStack.push(closeFn);
+  if (window.ghResumeArmedAt && Date.now() - window.ghResumeArmedAt < 1500) window.ghResumeLayer = closeFn;
+  window.ghResumeArmedAt = 0;
   if (backOrphanSteps > 0) {
     backOrphanSteps--;
     try { history.replaceState({ mushafLayer: backLayerStack.length }, '', '#panel'); } catch (e) { /* non-fatal */ }
@@ -31701,6 +31723,7 @@ function closeSpecificLayer(closeFn) {
   } else {
     backLayerStack.splice(idx, 1);
     closeFn();
+    if (typeof ghResumeCheck === 'function') ghResumeCheck();
   }
 }
 
@@ -31730,6 +31753,7 @@ window.addEventListener('popstate', () => {
   if (backIgnorePops > 0) { backIgnorePops--; return; }
   const closeFn = backLayerStack.pop();
   if (closeFn) closeFn();
+  if (typeof ghResumeCheck === 'function') ghResumeCheck();
 });
 
 function closeSidebarLayer() {
@@ -31878,8 +31902,8 @@ function renderGuideTab() {
       '<b>المرجعيات</b>: قائمة الصفحات والآيات التي وضعت عليها علامة مرجعية.',
       '<b>تعديل هجري</b>: ضبط دقيق للتاريخ الهجري المعروض (تقديم أو تأخير يوم أو يومين).',
     ]},
-    { title: '٤. نافذة الآية (تظهر بالنقر على رقم الآية)', items: [
-      'تُفتح نافذة الآية بالنقر على <b>رقم الآية</b> (والتمرير التلقائي غير مفعّل)، وتُغلق مع تظليل الآية بالنقر على أي موضع من النص (حتى لو كان كلمة خضراء)، أو بالرجوع، أو بالانتقال إلى أي عمل آخر. وأثناء التلاوة الصوتية، النقر على رقم آية ينقل التلاوة إليها.',
+    { title: '٤. نافذة الآية (تظهر بالنقر على الآية)', items: [
+      'تُفتح نافذة الآية بالنقر على <b>أي كلمة من الآية أو على رقمها</b> عدا الكلمات الخضراء (والتمرير التلقائي غير مفعّل)، وتُغلق مع تظليل الآية بالنقر على أي موضع من النص (حتى لو كان كلمة خضراء)، أو بالرجوع، أو بالانتقال إلى أي عمل آخر. وتبدأ التلاوة الصوتية من النافذة.',
       '<b>تلاوة</b>: الاستماع لتلاوة الآية بصوت القارئ المختار، مع اختيارات قراءة الآية مرة واحدة أو تكرارها أو الاستمرار.',
       '<b>نسخ الآية</b>: نسخ نص الآية.',
       '<b>حفظ الآية</b>: وضع علامة مرجعية على آية بعينها.',
@@ -31909,7 +31933,7 @@ function renderGuideTab() {
       'الألفاظ والعبارات القرآنية التي تحتاج إلى بيان ملوّنة في المصحف بـ<b style="color:#00904A;">اللون الأخضر</b>، ومعانيها مختصرة لمستوى الناشئين، تكاد تشمل النص القرآني كله (أكثر من أحد عشر ألف مدخل)، مأخوذة من تفسير الصافي، وتبيين القرآن، ومعانٍ لغوية مكمِّلة.',
       'انقر أي لفظة ملوّنة يظهر معناها في مستطيل صغير قريب منها لا يغطيها. ويختفي بالنقر على اللفظة نفسها أو على أي موضع آخر من النص، أو بالرجوع، أو بالانتقال إلى أي عمل آخر. وإذا كان المعنى لعبارة من عدة كلمات تُظلَّل كلماتها كلها.',
       'النقر على لفظة ملوّنة أخرى والمستطيل ظاهر يُخفيه ويُظهر معناها. وإذا كانت نافذة الآية مفتوحة، فالنقر على لفظة ملوّنة يغلق النافذة فقط.',
-      'أثناء التمرير التلقائي: النقر على لفظة ملوّنة يوقف التمرير ويُظهر معناها، والنقر بعدها على أي موضع آخر من الصفحة يُخفي المستطيل ويعيد التمرير.',
+      'أثناء التمرير التلقائي: النقر على لفظة ملوّنة يوقف التمرير ويُظهر معناها، والنقر على لفظة ملوّنة أخرى يُظهر معناها بدلاً منه. والنقر على أي موضع آخر من الصفحة أو على اللفظة نفسها، أو الرجوع، يُخفي المستطيل ويعيد التمرير. والانتقال إلى نافذة أو قائمة أخرى يُخفيه، ويعود التمرير عند إغلاقها والرجوع إلى المصحف؛ أما أزرار السرعة وحجم الخط ونحوها فتُخفيه ويبقى التمرير متوقفاً.',
       'يُظهَر التلوين أو يُخفى من عنوان <b>التخطيط</b> في القائمة الجانبية، في قسم «معاني الكلمات».',
     ]},
     { title: '٩. سور العزائم', items: [
