@@ -154,6 +154,7 @@ body.landscape-lock .rotateFabBtn{right:auto;left:8px;}
 .book-hbox{flex:0 0 auto;box-sizing:border-box;border:1.5px solid #FFFFFF;border-radius:9px;background:transparent;color:#E8B84B;font-family:'Amiri',serif;font-weight:700;font-size:15px;line-height:1.5;padding:2px 7px;white-space:nowrap;text-align:center;}
 #bookReaderSurah{min-width:var(--bookSurahBoxW,96px);}
 #bookIntroToggle{cursor:pointer;}
+#bookIntroToggle.on{background:#E8B84B;color:#0E4433;border-color:#E8B84B;}
 #bookIntroToggle.off{visibility:hidden;}
 #bookReaderBody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px 24px;font-family:'Amiri',serif;font-weight:700;font-size:20px;line-height:1.95;text-align:justify;max-width:760px;margin:0 auto;width:100%;box-sizing:border-box;}
 #bookReaderBody p{margin:0 0 10px;}
@@ -30111,7 +30112,7 @@ function stepBookReader(dir) {
   if (a < 1) { s--; if (s < 1) return; a = SURAH_AYAH_COUNT[s]; }
   else if (a > SURAH_AYAH_COUNT[s]) { s++; if (s > 114) return; a = 1; }
   bookReaderSurah = s; bookReaderAyah = a;
-  bookIntroShown = false;
+  if (bookIntroShown) { bookIntroShown = false; closeSpecificLayer(closeBookIntroLayer); }
   renderBookReader();
 }
 // Quietly fetches every book that has files (currently تفسير البرهان) into
@@ -30135,9 +30136,17 @@ window.addEventListener('online', () => setTimeout(autoDownloadBooksInBackground
 // The gold-lettered box on the left of the header shows the surah's virtues
 // (فضل السورة وخواصّها) in place of the tafsir; tapping it again, or turning
 // to another ayah, brings the tafsir back.
+// While it is shown, the box is filled gold, and the Back gesture / back
+// arrow also returns to the tafsir.
+function closeBookIntroLayer() {
+  bookIntroShown = false;
+  if (bookReaderEl.style.display !== 'none') renderBookReader();
+}
 document.getElementById('bookIntroToggle').addEventListener('click', (e) => {
   if (e.currentTarget.classList.contains('off')) return;
-  bookIntroShown = !bookIntroShown;
+  if (bookIntroShown) { closeSpecificLayer(closeBookIntroLayer); return; }
+  bookIntroShown = true;
+  pushBackLayer(closeBookIntroLayer);
   renderBookReader();
 });
 // Book reader page turning: swipe the text right for the next ayah, left for
