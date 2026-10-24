@@ -150,7 +150,11 @@ body.landscape-lock .rotateFabBtn{right:auto;left:8px;}
 #bookReaderHead{background:#0E4433;color:#F6EFDC;padding:8px 10px 6px;padding-top:calc(8px + var(--topInset));flex:0 0 auto;}
 #bookReaderTitle{font-family:'Amiri',serif;font-weight:700;font-size:20px;text-align:center;line-height:1.5;}
 #bookReaderNav{display:flex;align-items:center;justify-content:center;margin-top:4px;}
-#bookReaderWhere{font-family:sans-serif;font-weight:700;font-size:16px;color:#E8B84B;text-align:center;flex:1;}
+#bookReaderWhere{font-family:'Amiri',serif;font-weight:700;font-size:15px;color:#FFFFFF;text-align:center;flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px;}
+.book-hbox{flex:0 0 auto;box-sizing:border-box;border:1.5px solid #FFFFFF;border-radius:9px;background:transparent;color:#E8B84B;font-family:'Amiri',serif;font-weight:700;font-size:15px;line-height:1.5;padding:2px 7px;white-space:nowrap;text-align:center;}
+#bookReaderSurah{min-width:var(--bookSurahBoxW,96px);}
+#bookIntroToggle{cursor:pointer;}
+#bookIntroToggle.off{visibility:hidden;}
 #bookReaderBody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px 24px;font-family:'Amiri',serif;font-weight:700;font-size:20px;line-height:1.95;text-align:justify;max-width:760px;margin:0 auto;width:100%;box-sizing:border-box;}
 #bookReaderBody p{margin:0 0 10px;}
 #bookReaderBody p.qa{text-align:center;margin:6px 0 12px;}
@@ -768,7 +772,9 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
   <div id="bookReaderHead">
     <div id="bookReaderTitle"></div>
     <div id="bookReaderNav">
+      <span id="bookReaderSurah" class="book-hbox"></span>
       <span id="bookReaderWhere"></span>
+      <button id="bookIntroToggle" class="book-hbox off">فضل السورة وخواصّها</button>
     </div>
   </div>
   <div id="bookReaderBody"></div>
@@ -30021,13 +30027,36 @@ async function downloadWholeBook(kind, btn, silent) {
 }
 
 function bookSegLabel(a, b) {
-  return a === b ? ('الآية ' + toArabicDigits(a)) : ('الآيات ' + toArabicDigits(a) + ' - ' + toArabicDigits(b));
+  if (a === b) return 'الآية ' + toArabicDigits(a);
+  return (b - a === 1 ? 'الآيتان ' : 'الآيات ') + toArabicDigits(a) + ' - ' + toArabicDigits(b);
 }
+// The surah box on the right of the reader's header is as wide as the widest
+// surah name, so it never changes size while turning pages.
+let bookSurahBoxSized = false;
+function sizeBookSurahBox() {
+  const el = document.getElementById('bookReaderSurah');
+  if (bookSurahBoxSized || !el.offsetParent) return;
+  const s = document.createElement('span');
+  const cs = getComputedStyle(el);
+  s.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font:' + cs.font;
+  document.body.appendChild(s);
+  let w = 0;
+  for (let i = 1; i <= 114; i++) { s.textContent = 'سورة ' + SURAH_NAMES[i]; w = Math.max(w, s.offsetWidth); }
+  s.remove();
+  if (!w) return;
+  el.style.setProperty('--bookSurahBoxW', Math.ceil(w + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + parseFloat(cs.borderLeftWidth) * 2 + 2) + 'px');
+  bookSurahBoxSized = true;
+}
+let bookIntroShown = false;
 async function renderBookReader() {
   const kind = bookReaderKind, surah = bookReaderSurah, ayah = bookReaderAyah;
   const book = BOOKS[kind];
   document.getElementById('bookReaderTitle').textContent = book.title + ' ' + book.author;
-  document.getElementById('bookReaderWhere').textContent = 'سورة ' + SURAH_NAMES[surah] + ' - الآية ' + toArabicDigits(ayah);
+  sizeBookSurahBox();
+  document.getElementById('bookReaderSurah').textContent = 'سورة ' + SURAH_NAMES[surah];
+  document.getElementById('bookReaderWhere').textContent = 'الآية ' + toArabicDigits(ayah);
+  const introBtn = document.getElementById('bookIntroToggle');
+  introBtn.className = 'book-hbox off';
   if (!book.dir) {
     bookReaderBodyEl.innerHTML = '<p class="book-note">سيُضاف ' + book.title + ' ' + book.author + ' هنا، مرتّباً حسب السور والآيات، ويعمل بدون إنترنت.</p>';
     return;
@@ -30043,27 +30072,27 @@ async function renderBookReader() {
   }
   if (bookReaderKind !== kind || bookReaderSurah !== surah || bookReaderAyah !== ayah) return; // navigated meanwhile
   const segs = data.s.filter((x) => x[0] <= ayah && ayah <= x[1] && x[book.col]);
+  // The header names the ayah(s) the shown text explains: one segment ->
+  // its range; several (rare) -> each keeps its own label in the text.
+  if (segs.length === 1) document.getElementById('bookReaderWhere').textContent = bookSegLabel(segs[0][0], segs[0][1]);
+  const hasIntro = !!(data.i && kind === 'tafsir');
+  if (hasIntro) introBtn.className = 'book-hbox' + (bookIntroShown ? ' on' : '');
   let h = '';
-  if (segs.length) {
+  if (hasIntro && bookIntroShown) {
+    h += '<h4>فضل سورة ' + SURAH_NAMES[surah] + ' وخواصّها</h4>' + data.i;
+  } else if (segs.length) {
     segs.forEach((x) => {
-      h += '<div class="book-seg">' + (x[0] !== x[1] ? '<span class="book-seg-label">' + bookSegLabel(x[0], x[1]) + '</span>' : '') + x[book.col] + '</div>';
+      h += '<div class="book-seg">' + (segs.length > 1 && x[0] !== x[1] ? '<span class="book-seg-label">' + bookSegLabel(x[0], x[1]) + '</span>' : '') + x[book.col] + '</div>';
     });
   } else {
     h += '<p class="book-note">' + book.none + '</p>';
   }
-  if (data.i && kind === 'tafsir') h += '<button class="book-btn alt" id="bookIntroBtn">فضل سورة ' + SURAH_NAMES[surah] + ' وخواصّها</button><div id="bookIntro" style="display:none;">' + data.i + '</div>';
   const cached = await countCachedBookSurahs(kind);
   if (cached < 114) {
     h += '<button class="book-btn" id="bookDlBtn">' + (bookDownloadRunning[book.dir] ? 'جارٍ التنزيل…' : 'تنزيل ' + (book.dir === 'books/majma/' ? 'اللغة والإعراب' : book.title) + ' كاملاً للعمل بدون إنترنت') + '</button>';
   }
   bookReaderBodyEl.innerHTML = h;
   bookReaderBodyEl.scrollTop = 0;
-  const ib = document.getElementById('bookIntroBtn');
-  if (ib) ib.addEventListener('click', () => {
-    const d = document.getElementById('bookIntro');
-    d.style.display = d.style.display === 'none' ? 'block' : 'none';
-    if (d.style.display === 'block') d.scrollIntoView({ block: 'start', behavior: 'smooth' });
-  });
   const db = document.getElementById('bookDlBtn');
   if (db) db.addEventListener('click', () => downloadWholeBook(kind, db));
 }
@@ -30071,6 +30100,7 @@ function closeBookReaderLayer() {
   bookReaderEl.style.display = 'none';
 }
 function openBookReader(kind, surah, ayah) {
+  bookIntroShown = false;
   bookReaderKind = kind; bookReaderSurah = surah; bookReaderAyah = ayah;
   bookReaderEl.style.display = 'flex';
   pushBackLayer(closeBookReaderLayer);
@@ -30081,6 +30111,7 @@ function stepBookReader(dir) {
   if (a < 1) { s--; if (s < 1) return; a = SURAH_AYAH_COUNT[s]; }
   else if (a > SURAH_AYAH_COUNT[s]) { s++; if (s > 114) return; a = 1; }
   bookReaderSurah = s; bookReaderAyah = a;
+  bookIntroShown = false;
   renderBookReader();
 }
 // Quietly fetches every book that has files (currently تفسير البرهان) into
@@ -30101,6 +30132,14 @@ function autoDownloadBooksInBackground() {
 }
 setTimeout(autoDownloadBooksInBackground, 20000);
 window.addEventListener('online', () => setTimeout(autoDownloadBooksInBackground, 5000));
+// The gold-lettered box on the left of the header shows the surah's virtues
+// (فضل السورة وخواصّها) in place of the tafsir; tapping it again, or turning
+// to another ayah, brings the tafsir back.
+document.getElementById('bookIntroToggle').addEventListener('click', (e) => {
+  if (e.currentTarget.classList.contains('off')) return;
+  bookIntroShown = !bookIntroShown;
+  renderBookReader();
+});
 // Book reader page turning: swipe the text right for the next ayah, left for
 // the previous one (the same direction as turning pages in the mushaf). The
 // text follows the finger; past half the width, or with a quick flick, it
@@ -31835,7 +31874,7 @@ function renderGuideTab() {
       '<b>تلاوة</b>: الاستماع لتلاوة الآية بصوت القارئ المختار، مع اختيارات قراءة الآية مرة واحدة أو تكرارها أو الاستمرار.',
       '<b>نسخ الآية</b>: نسخ نص الآية.',
       '<b>حفظ الآية</b>: وضع علامة مرجعية على آية بعينها.',
-      '<b>تفسير القرآن</b>: تفسير البرهان للسيد هاشم البحراني، مرتّباً حسب السور والآيات، ويُنتقل فيه إلى الآية التالية بسحب النص بالإصبع يميناً، وإلى السابقة بسحبه يساراً، وزر لفضل السورة وخواصّها. تُحمَّل كل سورة عند فتحها أول مرة ثم تعمل بدون إنترنت، ويمكن تنزيل التفسير كاملاً من داخله.',
+      '<b>تفسير القرآن</b>: تفسير البرهان للسيد هاشم البحراني، مرتّباً حسب السور والآيات، ويُنتقل فيه إلى الآية التالية بسحب النص بالإصبع يميناً، وإلى السابقة بسحبه يساراً، وإطار في شريطه العلوي لفضل السورة وخواصّها. تُحمَّل كل سورة عند فتحها أول مرة ثم تعمل بدون إنترنت، ويمكن تنزيل التفسير كاملاً من داخله.',
       '<b>اللغة</b> و<b>الإعراب</b>: فقرتا «اللغة» و«الإعراب» من تفسير مجمع البيان للشيخ الطبرسي، مربوطتين بآيات كل مقطع، ويُنتقل فيهما بين الآيات بالسحب يميناً ويساراً، وتعملان بدون إنترنت.',
     ]},
     { title: '٥. صفحة النص القرآني', items: [
