@@ -31212,31 +31212,19 @@ function enterLandscape() {
 function toggleRotation() {
   if (rotationState === 0) {
     enterLandscape();
-  } else if (rotationState === landscapeEntrySide) {
-    // First press while still on the side landscape was entered on -
-    // flip to the other side, and eagerly arm one Back step for the flip
-    // itself (see revertToLandscapeEntrySide) so the system Back
-    // gesture/button can unwind the flip and the full exit as two
-    // separate steps, exactly like this button's own two presses do.
-    rotationState = (rotationState === 1) ? 2 : 1;
-    applyLandscapeMode();
-    store.set('landscape-state', String(rotationState));
-    landscapeFlipPushed = true;
-    pushBackLayer(revertToLandscapeEntrySide);
   } else {
-    // Already flipped - the rotate button always exits straight to
-    // portrait in a single press (skipping the intermediate "back to the
-    // entry side" step that Back itself takes one at a time). Both
-    // eagerly-pushed layers (the flip, then landscape itself) are spliced
-    // out directly and their combined effect applied in one go, then
-    // history.go(-2) brings the browser's own history depth back in sync
-    // in a single shot - the popstate listener's own null-guard makes any
-    // resulting pop(s) safely no-op since the stack is already emptied of
-    // both entries by then.
+    // In landscape (either side - the side is now chosen only by the
+    // device's own auto-rotation, see handlePossibleDeviceRotation) the
+    // rotate button always exits straight to portrait in a single press.
+    // Whatever back layers landscape armed (the possible flip, then
+    // landscape itself) are spliced out directly and their combined effect
+    // applied in one go, then history.go(-n) brings the browser's own
+    // history depth back in sync in a single shot.
+    let removedLayers = 0;
     const flipIdx = backLayerStack.lastIndexOf(revertToLandscapeEntrySide);
-    if (flipIdx !== -1) backLayerStack.splice(flipIdx, 1);
+    if (flipIdx !== -1) { backLayerStack.splice(flipIdx, 1); removedLayers++; }
     const exitIdx = backLayerStack.lastIndexOf(exitLandscapeLayer);
-    if (exitIdx !== -1) backLayerStack.splice(exitIdx, 1);
+    if (exitIdx !== -1) { backLayerStack.splice(exitIdx, 1); removedLayers++; }
     landscapeFlipPushed = false;
     rotationState = 0;
     landscapeMode = false;
@@ -31244,7 +31232,7 @@ function toggleRotation() {
     applyLandscapeMode();
     store.set('landscape-state', String(rotationState));
     updateRotateButtonsVisibility();
-    try { history.go(-2); } catch (e) { /* non-fatal */ }
+    if (removedLayers > 0) { try { history.go(-removedLayers); } catch (e) { /* non-fatal */ } }
   }
 }
 // The rotate button stays visible in landscape too now (same position as
