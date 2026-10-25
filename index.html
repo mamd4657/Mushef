@@ -29748,7 +29748,7 @@ function startRecitation() {
   if (tapSelected) {
     // A tap-selected ayah always takes priority as the starting point.
     start = tapSelected;
-    clearAyahTapSelection();
+    if (ayahPopupEl.style.display === 'none') clearAyahTapSelection();
   } else if (reciteGlobalIndex !== null && searchIndex && searchIndex[reciteGlobalIndex]) {
     // No new selection since the last stop - resume exactly where playback
     // left off rather than restarting from the page's first ayah every time.
@@ -29786,9 +29786,16 @@ function positionReciteModeBar() {
   reciteModeBarEl.style.left = '0';
   reciteModeBarEl.style.right = '0';
   const rect = bar.getBoundingClientRect();
+  // While the ayah window is open the bar sits directly above it instead.
+  const popupOpen = ayahPopupEl && ayahPopupEl.style.display !== 'none';
   if (!landscapeMode) {
     reciteModeBarEl.style.top = '';
-    reciteModeBarEl.style.bottom = (window.innerHeight - rect.top) + 'px';
+    const anchorTop = popupOpen ? document.getElementById('ayahPopupCard').getBoundingClientRect().top : rect.top;
+    reciteModeBarEl.style.bottom = (window.innerHeight - anchorTop) + 'px';
+  } else if (popupOpen) {
+    reciteModeBarEl.style.bottom = 'auto';
+    const barH = reciteModeBarEl.offsetHeight || 50;
+    reciteModeBarEl.style.top = Math.max(0, (parseFloat(ayahPopupEl.style.top) || 0) - barH) + 'px';
   } else {
     // position:fixed + bottom under a CSS-transformed ancestor is
     // unreliable (see positionChromeForRotation) - use an explicit top in
@@ -29805,14 +29812,12 @@ function closeReciteModeBarLayer() {
 }
 function openReciteModeBar() {
   reciteModeBarEl.style.display = 'block';
+  reciteModeBarEl.style.zIndex = '56';
   positionReciteModeBar();
   syncRecitePlayButtons();
-  if (ayahPopupEl.style.display !== 'none') {
-    ayahPopupSwappingToRecite = true;
-    try { swapTopBackLayer(closeAyahPopupLayer, closeReciteModeBarLayer); } finally { ayahPopupSwappingToRecite = false; }
-  } else {
-    pushBackLayer(closeReciteModeBarLayer);
-  }
+  // The ayah window stays open under the bar: Back first closes the bar,
+  // then a second Back closes the window together with its highlight.
+  if (backLayerStack.lastIndexOf(closeReciteModeBarLayer) === -1) pushBackLayer(closeReciteModeBarLayer);
 }
 function closeReciteModeBar() {
   closeSpecificLayer(closeReciteModeBarLayer);
@@ -29828,8 +29833,8 @@ document.querySelectorAll('input[name="reciteModeRadio"]').forEach((radio) => {
   });
 });
 window.addEventListener('resize', () => {
-  if (reciteModeBarEl.style.display !== 'none') positionReciteModeBar();
   if (ayahPopupEl && ayahPopupEl.style.display !== 'none') positionAyahPopup();
+  if (reciteModeBarEl.style.display !== 'none') positionReciteModeBar();
 });
 
 // ---------------- ayah popup (تلاوة / نسخ الآية / حفظ الآية + معاني / تفسير / إعراب) ----------------
@@ -29884,7 +29889,10 @@ function positionAyahPopup() {
 let ayahPopupSwappingToRecite = false;
 function closeAyahPopupLayer() {
   ayahPopupEl.style.display = 'none';
-  if (!ayahPopupSwappingToRecite) clearAyahTapSelection();
+  if (!ayahPopupSwappingToRecite) {
+    clearAyahTapSelection();
+    if (!reciting) clearReciteHighlight();
+  }
 }
 // A tap that opens the popup can, on mobile browsers, be immediately
 // followed by a synthetic "ghost click" fired at the very same
@@ -29916,7 +29924,9 @@ function showAyahPopup(surah, ayah) {
   }
 }
 function hideAyahPopup() {
+  const barAbove = backLayerStack.lastIndexOf(closeReciteModeBarLayer) > backLayerStack.lastIndexOf(closeAyahPopupLayer) && backLayerStack.lastIndexOf(closeAyahPopupLayer) !== -1;
   closeSpecificLayer(closeAyahPopupLayer);
+  if (barAbove) closeReciteModeBar();
 }
 
 // In landscape, the popup's own footprint (its width pre-rotation becomes
