@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mushaf-cache-v67';
+const CACHE_NAME = 'mushaf-cache-v68';
 // Book files (books/<id>/NNN.json - تفسير البرهان etc.), one per surah: served
 // cache-first from their own cache, which app updates never clear.
 const BOOKS_CACHE_NAME = 'mushaf-books-v1';
@@ -15,7 +15,15 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 self.addEventListener('activate', (event) => {
-  event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE_NAME && k !== AUDIO_CACHE_NAME && k !== BOOKS_CACHE_NAME).map((k) => caches.delete(k)))));
+  // Old app copies are deleted only once this version's own copy of the page
+  // is fully saved. On a slow or broken connection the install step can fail
+  // to save it; deleting the previous copy then would leave nothing to open
+  // offline or on 3G. The old copy is kept (and still served) until a later
+  // visit manages to save the new one.
+  event.waitUntil(caches.open(CACHE_NAME).then((c) => c.match('./index.html')).then((have) => {
+    if (!have) return;
+    return caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE_NAME && k !== AUDIO_CACHE_NAME && k !== BOOKS_CACHE_NAME).map((k) => caches.delete(k))));
+  }));
   self.clients.claim();
 });
 self.addEventListener('fetch', (event) => {
