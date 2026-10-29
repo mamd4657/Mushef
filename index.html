@@ -521,6 +521,11 @@ body.dark-mode .cd-in{background:#0E1A15;color:#F6EFDC;}
 body.dark-mode .cd-btn{background:#F6EFDC;color:#0E4433;}
 body.dark-mode .cd-btn.light{background:transparent;color:#F6EFDC;}
 body.dark-mode .cd-head input,body.dark-mode .cd-row input,body.dark-mode .cd-chk input,body.dark-mode .cd-chip input{accent-color:#F6EFDC;}
+#segPanel{display:none;position:fixed;left:8px;right:8px;z-index:48;align-items:stretch;justify-content:center;gap:6px;max-width:744px;margin:0 auto;direction:rtl;pointer-events:auto;}
+#segPanel .seg-mid{flex:1.3;display:flex;align-items:center;justify-content:center;text-align:center;background:#0E4433;color:#F6EFDC;border:2px solid #C9A227;border-radius:12px;padding:6px 6px;font-family:sans-serif;font-weight:700;font-size:15px;line-height:1.4;}
+#segPanel .seg-side{flex:1;display:flex;flex-direction:column;gap:4px;}
+#segPanel .seg-btn{flex:1;background:#FBF6E8;color:#0E4433;border:2px solid #0E4433;border-radius:12px;padding:6px 4px;font-family:sans-serif;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+body.dark-mode #segPanel .seg-btn{background:#14231D;color:#F6EFDC;border-color:#F6EFDC;}
 .rb-opt{display:flex;align-items:center;gap:7px;color:#F6EFDC;font-family:sans-serif;font-size:18px;font-weight:700;cursor:pointer;white-space:nowrap;}
 .rb-opt input{-webkit-appearance:none;appearance:none;width:22px;height:22px;margin:0;border:2px solid #F6EFDC;border-radius:50%;background:transparent;display:grid;place-content:center;flex-shrink:0;cursor:pointer;}
 .rb-opt input::before{content:'';width:10px;height:10px;border-radius:50%;background:#F6EFDC;transform:scale(0);transition:transform .12s;}
@@ -28089,6 +28094,9 @@ function renderFreeWindow(centerPage, scrollToCenter) {
   const end = Math.min(604, centerPage + FREE_WINDOW_RADIUS);
   freeWindowStart = start;
   freeWindowEnd = end;
+  segRenderCheck = true;
+  segLimits = { min: -Infinity, max: Infinity };
+  if (typeof hideSegPanel === 'function') hideSegPanel();
   const container = document.getElementById('freePagesContainer');
   container.innerHTML = '';
   for (let p = start; p <= end; p++) {
@@ -28476,6 +28484,7 @@ function initFreeScrollTracking() {
   wrap.addEventListener('scroll', () => {
     if (freeSuppressScrollTracking) return;
     extendFreeWindowIfNeeded();
+    if (typeof segGuard === 'function') segGuard();
     updateFreeCurrentPage();
     noteFreeScrollActivity(); // resets the settle timer while momentum scrolling is still happening
     if (freeAutoScrolling && freeWindowEnd >= 604 &&
@@ -30876,6 +30885,9 @@ function renderBoundWindow(centerPage, scrollToCenter) {
   const end = Math.min(604, centerPage + BOUND_WINDOW_RADIUS);
   boundWindowStart = start;
   boundWindowEnd = end;
+  segRenderCheck = true;
+  segLimits = { min: -Infinity, max: Infinity };
+  if (typeof hideSegPanel === 'function') hideSegPanel();
   boundPagesContainer.innerHTML = '';
   boundPagesContainer.appendChild(boundTopSpacer);
   let firstEl = null;
@@ -31059,6 +31071,7 @@ function initBoundScrollTracking() {
   wrap.addEventListener('scroll', () => {
     if (boundSuppressScrollTracking) return;
     reconcileBoundWindow();
+    if (typeof segGuard === 'function') segGuard();
     updateBoundCurrentPage();
     noteBoundScrollActivity();
     if (autoPlaying && boundWindowEnd >= 604 &&
@@ -31152,6 +31165,225 @@ function centerOn(n) {
 // bismillah layout) into view at the top - used right after jumping to a
 // surah from its list, since the surah's start page can land the reader
 // mid-page or near its end rather than right at the name bar itself.
+
+// ---------------- stop at the end/start of a surah or a juz ----------------
+// Manual and auto scrolling (both layouts, both directions) never cross the
+// boundary between two surahs, or between two ajza'. Reaching one shows
+// three boxes: the middle one says where the reader is (نهاية/بداية السورة
+// and/or الجزء), with السورة/الجزء السابق on its right and التالي on its
+// left; moving on is only by those boxes. The boxes float over the
+// boundary itself (the next surah's bar) when it is on screen, otherwise
+// just above the bottom toolbar.
+const SEG_PANEL_RESERVE = 84;
+let segStartId = null;      // the boundary the current stretch begins at ('s12', 'j3', or 'FAR')
+let segRenderCheck = true;  // a jump re-rendered the pages: re-check which stretch we are in
+let segHint = null;         // { s } or { j } - where a box/index jump is meant to land
+let segPanelEl = null;
+let segEngaged = null;      // { lim } while the boxes are showing
+let segLimits = { min: -Infinity, max: Infinity };
+// page snapping settles inside the current stretch too
+function segClampTarget(t) { return reciting ? t : Math.max(segLimits.min, Math.min(segLimits.max, t)); }
+function segWrap() { return layoutMode === 'free' ? document.getElementById('freeScrollWrap') : vScrollWrap; }
+function segContainer() { return layoutMode === 'free' ? document.getElementById('freePagesContainer') : boundPagesContainer; }
+function segPageFit() { return layoutMode !== 'free' && !!boundRowH; } // portrait standard: one page = one screen
+function yInWrap(el, wrap) {
+  let y = 0;
+  while (el && el !== wrap) { y += el.offsetTop; el = el.offsetParent; }
+  return el === wrap ? y : null;
+}
+function segPageEl(container, n) {
+  return container.querySelector(layoutMode === 'free' ? '.page-frame[data-page="' + n + '"]' : '.vSlot[data-page="' + n + '"]');
+}
+// Every surah/juz start currently on the page, top to bottom.
+function collectSegBoundaries() {
+  const wrap = segWrap(), container = segContainer();
+  const map = {};
+  const add = (page, atTop, y, pageTop, s, j) => {
+    const k = atTop ? 'p' + page : 'y' + Math.round(y);
+    const b = map[k] || (map[k] = { y, pageTop, atTop, page, s: null, j: null });
+    if (s) b.s = s;
+    if (j) b.j = j;
+  };
+  container.querySelectorAll('.qheader[data-surah], .qcombo[data-surah]').forEach((h) => {
+    const pageEl = h.closest(layoutMode === 'free' ? '.page-frame[data-page]' : '.vSlot[data-page]');
+    if (!pageEl) return;
+    const page = parseInt(pageEl.dataset.page, 10);
+    const pageTop = yInWrap(pageEl, wrap);
+    const hy = yInWrap(h, wrap);
+    if (pageTop === null || hy === null) return;
+    const firstSeg = pageEl.querySelector('.ayah-seg');
+    const atTop = !firstSeg || !!(h.compareDocumentPosition(firstSeg) & Node.DOCUMENT_POSITION_FOLLOWING);
+    add(page, atTop, atTop ? pageTop : hy, pageTop, parseInt(h.dataset.surah, 10), null);
+  });
+  for (let j = 1; j <= 30; j++) {
+    const pageEl = segPageEl(container, JUZ_PAGES[j]);
+    if (!pageEl) continue;
+    const y = yInWrap(pageEl, wrap);
+    if (y !== null) add(JUZ_PAGES[j], true, y, y, null, j);
+  }
+  const list = Object.values(map).sort((a, b) => a.y - b.y);
+  list.forEach((b) => { b.id = b.s ? 's' + b.s : 'j' + b.j; });
+  return list;
+}
+function segLimMin(b) { return b.atTop ? b.pageTop : (segPageFit() ? b.pageTop : b.y); }
+function segLimMax(b, wrap) {
+  if (segPageFit()) return b.atTop ? b.pageTop - boundSlotH : b.pageTop;
+  return b.y - (wrap.clientHeight - SEG_PANEL_RESERVE);
+}
+function segFind(list, id) {
+  if (!id) return null;
+  const n = parseInt(id.slice(1), 10);
+  return list.find((b) => (id[0] === 's' && b.s === n) || (id[0] === 'j' && b.j === n)) || null;
+}
+// Which stretch the ayah at the top of the screen belongs to, worked out
+// from the mushaf's own data (so it never depends on which pages happen
+// to be loaded): the later of its surah's start and its juz's start.
+function segIdAtTop(top) {
+  const wrap = segWrap(), container = segContainer();
+  const pages = container.querySelectorAll(layoutMode === 'free' ? '.page-frame[data-page]' : '.vSlot[data-page]');
+  let pageEl = null;
+  for (const el of pages) {
+    const y = yInWrap(el, wrap);
+    if (y !== null && y <= top + 8) pageEl = el; else if (y !== null) break;
+  }
+  if (!pageEl) pageEl = pages[0];
+  if (!pageEl) return null;
+  let seg = null;
+  for (const el of pageEl.querySelectorAll('.ayah-seg')) {
+    const y = yInWrap(el, wrap);
+    if (y !== null && y + el.offsetHeight > top + 8) { seg = el; break; }
+  }
+  const page = parseInt(pageEl.dataset.page, 10);
+  if (!seg) {
+    // nothing of this page left below the top line: the next page's start
+    const nx = Math.min(604, page + 1);
+    return SURAH_PAGES[surahAtPage(nx)] >= JUZ_PAGES[juzAtPage(nx)] ? 's' + surahAtPage(nx) : 'j' + juzAtPage(nx);
+  }
+  const S = parseInt(seg.dataset.surah, 10);
+  const segPage = parseInt((seg.closest('[data-page]') || pageEl).dataset.page, 10);
+  const J = juzAtPage(segPage);
+  return SURAH_PAGES[S] >= JUZ_PAGES[J] ? 's' + S : 'j' + J;
+}
+function segAutoActive() { return layoutMode === 'free' ? freeAutoScrolling : autoPlaying; }
+function segStopAuto() {
+  if (layoutMode === 'free') { if (freeAutoScrolling || freeTapPaused) { freeTapPaused = false; pauseFreeAutoScroll(); } }
+  else if (autoPlaying) stopAutoScroll();
+}
+function segClampTo(wrap, v) {
+  // stop any finger fling / momentum right at the limit
+  if (!wrap.dataset.segOv) wrap.dataset.segOv = wrap.style.overflowY || '-';
+  const prev = wrap.dataset.segOv;
+  wrap.style.overflowY = 'hidden';
+  wrap.scrollTo({ top: v, behavior: 'instant' }); // also cancels a smooth snap in flight
+  if (layoutMode === 'free') freeAutoScrollAccum = v; else autoScrollAccum = v;
+  requestAnimationFrame(() => { wrap.style.overflowY = prev === '-' ? '' : prev; });
+}
+function segGuard() {
+  if (reciting) return;
+  const wrap = segWrap();
+  if (!wrap || !wrap.clientHeight) return;
+  const list = collectSegBoundaries();
+  const top = wrap.scrollTop;
+  if (segHint) { segStartId = segHint.s ? 's' + segHint.s : 'j' + segHint.j; segHint = null; segRenderCheck = false; }
+  if (!segStartId || segRenderCheck) {
+    // after a jump (or at first) take the stretch of the ayah at the top
+    segRenderCheck = false;
+    const id = segIdAtTop(top);
+    if (id) segStartId = id;
+  }
+  const startB = segFind(list, segStartId);
+  const endB = list.find((b) => b.y > (startB ? startB.y : top + 8)) || null;
+  const min = startB ? segLimMin(startB) : -Infinity;
+  let max = endB ? segLimMax(endB, wrap) : Infinity;
+  if (max < min) max = min;
+  segLimits = { min, max };
+  const atNaturalEnd = !endB && (layoutMode === 'free' ? freeWindowEnd : boundWindowEnd) >= 604 &&
+    (wrap.scrollHeight - top - wrap.clientHeight) < 2;
+  // a few px off the limit (rounding while the pages settle) is corrected
+  // quietly; a real push past it stops scrolling and shows the boxes
+  if (top > max + 0.5) {
+    segClampTo(wrap, max);
+    if (top > max + 6 || segAutoActive()) { segStopAuto(); showSegPanel('end', endB, startB, wrap, max); }
+  } else if (top < min - 0.5) {
+    segClampTo(wrap, min);
+    if (top < min - 6 || segAutoActive()) { segStopAuto(); showSegPanel('start', startB, startB, wrap, min); }
+  } else if (atNaturalEnd && !segEngaged) {
+    segStopAuto();
+    showSegPanel('end', { s: 115, j: 31, y: wrap.scrollHeight, natural: true }, startB, wrap, top);
+  } else if (segEngaged && Math.abs(top - segEngaged.lim) > 30) {
+    hideSegPanel();
+  } else if (segEngaged) {
+    positionSegPanel();
+  }
+}
+
+function segGo(kind, n) {
+  hideSegPanel();
+  segStopAuto();
+  segHint = kind === 's' ? { s: n } : { j: n };
+  segStartId = null;
+  const page = kind === 's' ? SURAH_PAGES[n] : JUZ_PAGES[n];
+  centerOn(page);
+  setTimeout(() => {
+    const wrap = segWrap();
+    const list = collectSegBoundaries();
+    const b = segFind(list, kind + n);
+    if (b && wrap) {
+      if (layoutMode === 'free') setFreeScrollTop(wrap, segLimMin(b));
+      else if (!segPageFit()) setBoundScrollTop(segLimMin(b));
+    }
+    segHint = kind === 's' ? { s: n } : { j: n };
+    segStartId = null;
+    segGuard();
+  }, 260);
+}
+function hideSegPanel() {
+  segEngaged = null;
+  if (segPanelEl) segPanelEl.style.display = 'none';
+}
+function showSegPanel(where, b, startB, wrap, lim) {
+  if (!b) return;
+  // current surah / juz of the stretch the reader is in
+  const S = where === 'end' ? (b.s ? b.s - 1 : null) : (b.s || null);
+  const J = where === 'end' ? (b.j ? b.j - 1 : null) : (b.j || null);
+  if (!segPanelEl) {
+    segPanelEl = document.createElement('div');
+    segPanelEl.id = 'segPanel';
+    document.body.appendChild(segPanelEl);
+  }
+  const word = where === 'end' ? 'نهاية' : 'بداية';
+  const mid = [];
+  if (S) mid.push(word + ' سورة ' + SURAH_NAMES[S]);
+  if (J) mid.push(word + ' الجزء ' + toArabicDigits(J));
+  const btn = (k, n, t) => '<button class="seg-btn" data-k="' + k + '" data-n="' + n + '">' + t + '</button>';
+  let right = '', left = '';
+  if (S && S > 1) right += btn('s', S - 1, 'السورة السابقة');
+  if (J && J > 1) right += btn('j', J - 1, 'الجزء السابق');
+  if (S && S < 114) left += btn('s', S + 1, 'السورة التالية');
+  if (J && J < 30) left += btn('j', J + 1, 'الجزء التالي');
+  segPanelEl.innerHTML = '<div class="seg-side">' + right + '</div><div class="seg-mid">' + mid.join('<br>و') + '</div><div class="seg-side">' + left + '</div>';
+  segPanelEl.querySelectorAll('.seg-btn').forEach((x) => x.addEventListener('click', (e) => {
+    e.stopPropagation();
+    segGo(x.dataset.k, parseInt(x.dataset.n, 10));
+  }));
+  segEngaged = { lim, where, y: b.natural ? null : b.y };
+  segPanelEl.style.display = 'flex';
+  positionSegPanel();
+}
+function positionSegPanel() {
+  if (!segPanelEl || !segEngaged) return;
+  const wrap = segWrap();
+  const wrapTop = wrap.offsetTop;
+  const V = wrap.clientHeight;
+  const h = segPanelEl.offsetHeight || 64;
+  let topPx = wrapTop + V - h - 6; // just above the bottom toolbar
+  if (segEngaged.where === 'end' && segEngaged.y !== null) {
+    const by = wrapTop + (segEngaged.y - wrap.scrollTop);
+    if (by > wrapTop + 40 && by < wrapTop + V - h - 6) topPx = by - 4; // over the next surah's bar
+  }
+  segPanelEl.style.top = Math.round(topPx) + 'px';
+}
+
 function scrollToSurahHeader(sid) {
   const el = document.querySelector('.qheader[data-surah="' + sid + '"], .qcombo[data-surah="' + sid + '"]');
   if (el) el.scrollIntoView({ block: 'start', behavior: 'instant' });
@@ -31381,7 +31613,7 @@ function maybeSnapBound() {
     });
     if (best === null) return;
     snapping = true;
-    wrap.scrollTo({ top: Math.max(0, Math.min(st + best, wrap.scrollHeight - V)), behavior: 'smooth' });
+    wrap.scrollTo({ top: segClampTarget(Math.max(0, Math.min(st + best, wrap.scrollHeight - V))), behavior: 'smooth' });
     setTimeout(() => { snapping = false; }, 450);
     return;
   }
@@ -31394,7 +31626,7 @@ function maybeSnapBound() {
   if (target === null) return;
   target = Math.max(0, Math.min(target, wrap.scrollHeight - wrap.clientHeight));
   snapping = true;
-  wrap.scrollTo({ top: target, behavior: 'smooth' });
+  wrap.scrollTo({ top: segClampTarget(target), behavior: 'smooth' });
   setTimeout(() => { snapping = false; }, 450);
 }
 function freeSnapThreshold() { return (typeof freeFontPx === 'number' ? freeFontPx * 1.0 : 24) + 16; }
@@ -31416,7 +31648,7 @@ function maybeSnapFree() {
   }
   if (best === null) return;
   snapping = true;
-  wrap.scrollTo({ top: Math.max(0, top + best), behavior: 'smooth' });
+  wrap.scrollTo({ top: segClampTarget(Math.max(0, top + best)), behavior: 'smooth' });
   setTimeout(() => { snapping = false; }, 450);
 }
 function scheduleSnap(fn) {
@@ -32372,6 +32604,7 @@ function renderGuideTab() {
     ]},
     { title: '٦. صفحة النص القرآني', items: [
       'ميزة النسخ الحر بالضغط المطوّل على أي موضع من الصفحة.',
+      'يتوقف التمرير اليدوي والتلقائي (في الوضعين القياسي والحر، صعوداً ونزولاً) عند نهاية السورة أو بدايتها، وعند نهاية الجزء أو بدايته، وتظهر ثلاثة مستطيلات: في الوسط مكان التوقف (نهاية السورة أو الجزء أو بدايتهما)، وعلى يمينه <b>السورة السابقة</b> أو <b>الجزء السابق</b>، وعلى يساره <b>السورة التالية</b> أو <b>الجزء التالي</b>. ويكون الانتقال بالنقر على أحدها، ثم يُختار التمرير اليدوي أو التلقائي.',
       'خط أخضر داكن سميك على أحد جانبي الصفحة للدلالة على كونها صفحة يمنى أو يسرى.',
       'علامة الربع ' + rubGridSvg(3) + ': تظهر داخل النص عند بداية كل ربع حزب، بدلاً من العلامة الدائرية التقليدية. وهي شبكة صغيرة من ٨ مربعات (عمودان × ٤ صفوف) تمثّل أثمان الجزء الحالي الثمانية - العمود الأيمن لحزبه الأول والأيسر لحزبه الثاني، كل عمود من الأعلى للأسفل. تُملأ المربعات تدريجياً (كما في المثال المجاور، وفيه ٣ من ٨) بعدد الأرباع التي وصلت إليها القراءة من الجزء، فتُعرف دفعة واحدة أي ربع أنت فيه من الجزء دون حساب.',
     ]},
@@ -32454,7 +32687,9 @@ function renderSurahTab() {
       '<span class="pg">' + SURAH_PAGES[sid] + '</span>';
     row.addEventListener('click', () => {
       const needsPageChange = SURAH_PAGES[sid] !== pageNum;
+      segHint = { s: sid }; segStartId = null;
       centerOn(SURAH_PAGES[sid]);
+      setTimeout(() => { segHint = { s: sid }; segStartId = null; segGuard(); }, needsPageChange ? 320 : 60);
       // Landing on the destination page alone often leaves the surah's own
       // name bar (.qheader/.qcombo) out of view - a surah can start mid-page
       // or near its end - so this scrolls that bar itself into view right
@@ -32490,7 +32725,7 @@ function renderJuzTab() {
     const row = document.createElement('button');
     row.className = 'surah-row';
     row.innerHTML = '<span class="rowName"><span class="nm">الجزء ' + j + '</span></span><span class="pg">' + JUZ_PAGES[j] + '</span>';
-    row.addEventListener('click', () => { centerOn(JUZ_PAGES[j]); closeSidebar(); });
+    row.addEventListener('click', () => { segHint = { j }; segStartId = null; centerOn(JUZ_PAGES[j]); setTimeout(() => { segHint = { j }; segStartId = null; segGuard(); }, 120); closeSidebar(); });
     sidebarBody.appendChild(row);
   }
 }
