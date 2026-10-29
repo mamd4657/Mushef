@@ -839,7 +839,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
     <button id="reciteModeBarPlayBtn" style="background:transparent;border:none;color:#F6EFDC;font-size:32px;cursor:pointer;line-height:1;padding:0 4px;min-width:36px;" aria-label="تشغيل/إيقاف التلاوة">▶</button>
     <div class="rb-frame" style="display:flex;align-items:center;gap:var(--rbGap);border:1.5px solid #F6EFDC;border-radius:16px;padding:5px 12px;">
       <label class="rb-opt"><input type="radio" name="reciteModeRadio" id="reciteModeRadioOnce" value="single" checked>مرة</label>
-      <label class="rb-opt" id="reciteModeRepeatLabel"><input type="radio" name="reciteModeRadio" id="reciteModeRadioRepeat" value="repeat">تكرار</label>
+      <label class="rb-opt" id="reciteModeRepeatLabel"><input type="radio" name="reciteModeRadio" id="reciteModeRadioRepeat" value="repeat"><span id="reciteRepeatWord">تكرار</span></label>
       <label class="rb-opt" id="reciteModeContLabel"><input type="radio" name="reciteModeRadio" id="reciteModeRadioContinue" value="continuous">استمرار</label>
     </div>
   </div>
@@ -30200,6 +30200,15 @@ function renderContDialog() {
 }
 
 // ---- تكرار: choose how many times (2-7) ----
+// Once a count has been chosen, the bar shows its word (مرتين، ثلاث...)
+// in place of «تكرار» until it is changed.
+function syncRepeatWord() {
+  const el = document.getElementById('reciteRepeatWord');
+  if (!el) return;
+  const c = store.get('repeat-count') ? REPEAT_CHOICES.find(([n]) => n === repeatCount) : null;
+  el.textContent = c ? c[1] : 'تكرار';
+}
+syncRepeatWord();
 let repeatMenuEl = null;
 function closeRepeatMenuLayer() { if (repeatMenuEl) repeatMenuEl.style.display = 'none'; }
 function openRepeatMenu() {
@@ -30215,6 +30224,7 @@ function openRepeatMenu() {
     e.stopPropagation();
     repeatCount = parseInt(b.dataset.n, 10);
     store.set('repeat-count', String(repeatCount));
+    syncRepeatWord();
     reciteRepeatLeft = Math.min(reciteRepeatLeft, repeatCount - 1);
     closeSpecificLayer(closeRepeatMenuLayer);
   }));
@@ -32340,7 +32350,7 @@ function renderGuideTab() {
       'تُفتح نافذة الآية بالنقر على <b>أي كلمة من الآية أو على رقمها</b> عدا الكلمات الخضراء (والتمرير التلقائي غير مفعّل)، وتُغلق مع تظليل الآية بالنقر على أي موضع من النص (حتى لو كان كلمة خضراء)، أو بالرجوع، أو بالانتقال إلى أي عمل آخر. وتبدأ التلاوة الصوتية من النافذة.',
       '<b>تلاوة</b>: الاستماع لتلاوة الآية بصوت القارئ المختار. يظهر شريط التلاوة فوق نافذة الآية مباشرة، وفيه زر التشغيل والإيقاف، واختيارات قراءة الآية <b>مرة</b> واحدة أو <b>تكرارها</b> أو <b>الاستمرار</b>.',
       'يمكن تحريك شريط التلاوة بالإصبع إلى أي موضع في الشاشة، ويعود إلى مكانه فوق النافذة عند فتحه من جديد. وأثناء التلاوة لا يختفي الشريط بالرجوع، بل يغلق الرجوع النافذة التي تحته، ويختفي الشريط بالرجوع بعد إيقاف التلاوة.',
-      'عند اختيار <b>تكرار</b> تظهر قائمة لعدد مرات قراءة الآية (من مرتين إلى سبع)، ويبقى العدد المختار محفوظاً حتى يُغيَّر.',
+      'عند اختيار <b>تكرار</b> تظهر قائمة لعدد مرات قراءة الآية (من مرتين إلى سبع)، ويظهر العدد المختار في الشريط مكان كلمة «تكرار»، ويبقى محفوظاً حتى يُغيَّر.',
       'عند اختيار <b>استمرار</b> تظهر نافذة فيها أربعة خيارات منفصلة، يتفعّل واحد منها فقط: <b>حسب الوقت</b> (تستمر التلاوة من الآية المختارة حتى ينتهي الوقت المحدد، من خمس دقائق إلى خمس ساعات، ويبقى الوقت المحدد محفوظاً حتى يُغيَّر)، أو <b>ابتداءً من الآية المختارة حتى نهاية السورة</b>، أو <b>ابتداءً من بداية السورة حتى نهايتها</b>، أو <b>سور وآيات مختارة</b>. ويبقى آخر ما اختير من الخيارات الثلاثة الأولى مفعّلاً، وعليه يكون التشغيل من شريط التلاوة.',
       'في <b>سور وآيات مختارة</b>: يُكتب اسم السورة؛ فإن وُضعت علامة في مربع <b>سورة</b> قُرئت السورة كاملة وتفعّل عدد مرات تكرارها، وإلا كُتبت أرقام آيات منها (مثل: ٥ أو ١-٧ أو ٣، ٩)، ويتفعّل عدد تكرارها بوضع علامة في مربع <b>الآية</b>. ويمكن إضافة سور أخرى، و<b>حفظ</b> الاختيار في المرجعيات باسم «تلاوة». ويكون التشغيل وفق هذا الخيار عند اختياره أو عند اختيار تلاوة من المرجعيات، وبعد انتهائه يعود التشغيل إلى آخر ما اختير من الخيارات الثلاثة الأولى.',
       '<b>نسخ الآية</b>: نسخ نص الآية.',
