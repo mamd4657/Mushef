@@ -185,7 +185,9 @@ body.dark-mode .ayah-popup-title:active{background:#232922;}
 #sidebar{position:fixed;top:var(--sidebarTop,0px);right:0;bottom:0;height:auto;width:min(420px,96vw);background:#FBF5E4;z-index:40;transform:translateX(100%);transition:transform .25s ease;box-shadow:-8px 0 24px rgba(0,0,0,.2);display:flex;flex-direction:column;}
 #sidebar.open{transform:translateX(0);}
 #overlay.show{display:block;}
-.sidebar-colheader{display:flex;flex-shrink:0;border-bottom:2.5px solid #7B2E2E;min-height:34px;}
+.sidebar-colheader{position:relative;display:flex;flex-shrink:0;border-bottom:2.5px solid #7B2E2E;min-height:34px;}
+#resumeBox{display:none;position:absolute;top:3px;bottom:3px;right:6px;z-index:2;align-items:center;justify-content:center;background:#C9A227;color:#0E4433;border:2px solid #0E4433;border-radius:10px;font-family:sans-serif;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;padding:0 8px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25);}
+body.dark-mode #resumeBox{background:#E8B84B;color:#0E1A15;border-color:#F6EFDC;}
 .sidebar-colheader-spacer{width:104px;flex-shrink:0;border-left:2.5px solid #7B2E2E;}
 .sidebar-colheader-labels{flex:1;min-width:0;display:flex;justify-content:flex-start;align-items:center;gap:8px;padding:6px 12px;font-family:sans-serif;font-size:16px;font-weight:700;color:#3D2E1C;}
 .sidebar-colheader-labels .rowName{flex:1;min-width:0;}
@@ -522,9 +524,9 @@ body.dark-mode .cd-btn{background:#F6EFDC;color:#0E4433;}
 body.dark-mode .cd-btn.light{background:transparent;color:#F6EFDC;}
 body.dark-mode .cd-head input,body.dark-mode .cd-row input,body.dark-mode .cd-chk input,body.dark-mode .cd-chip input{accent-color:#F6EFDC;}
 #segPanel{display:none;position:fixed;left:6px;right:6px;z-index:48;align-items:stretch;justify-content:center;gap:5px;max-width:748px;margin:0 auto;direction:rtl;}
-#segPanel .seg-mid{flex:1.25;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:#0E4433;color:#F6EFDC;border:2px solid #C9A227;border-radius:10px;padding:4px 4px;font-family:sans-serif;font-weight:700;font-size:13px;line-height:1.5;white-space:nowrap;overflow:hidden;}
+#segPanel .seg-mid{flex:1.25;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:#0E4433;color:#F6EFDC;border:2px solid #C9A227;border-radius:10px;padding:4px 4px;font-family:sans-serif;font-weight:700;font-size:16px;line-height:1.45;white-space:nowrap;overflow:hidden;}
 #segPanel .seg-side{flex:1;display:flex;flex-direction:column;gap:4px;min-width:0;}
-#segPanel .seg-btn{flex:1;background:#FBF6E8;color:#0E4433;border:2px solid #0E4433;border-radius:10px;padding:5px 3px;font-family:sans-serif;font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;cursor:pointer;}
+#segPanel .seg-btn{flex:1;background:#FBF6E8;color:#0E4433;border:2px solid #0E4433;border-radius:10px;padding:5px 3px;font-family:sans-serif;font-weight:700;font-size:16px;white-space:nowrap;overflow:hidden;cursor:pointer;}
 body.dark-mode #segPanel .seg-btn{background:#14231D;color:#F6EFDC;border-color:#F6EFDC;}
 .rb-opt{display:flex;align-items:center;gap:7px;color:#F6EFDC;font-family:sans-serif;font-size:18px;font-weight:700;cursor:pointer;white-space:nowrap;}
 .rb-opt input{-webkit-appearance:none;appearance:none;width:22px;height:22px;margin:0;border:2px solid #F6EFDC;border-radius:50%;background:transparent;display:grid;place-content:center;flex-shrink:0;cursor:pointer;}
@@ -31463,7 +31465,8 @@ function segPanelCovered() {
     (typeof ayahPopupEl !== 'undefined' && ayahPopupEl.style.display !== 'none') ||
     (typeof searchPageEl !== 'undefined' && searchPageEl.style.display === 'block') ||
     (typeof bookReaderEl !== 'undefined' && bookReaderEl.style.display !== 'none') ||
-    (typeof contDialogEl !== 'undefined' && contDialogEl && contDialogEl.style.display !== 'none');
+    (typeof contDialogEl !== 'undefined' && contDialogEl && contDialogEl.style.display !== 'none') ||
+    (document.activeElement && /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)); // typing a search
 }
 function positionSegPanel() {
   if (!segPanelEl || !segEngaged) return;
@@ -32531,6 +32534,8 @@ window.addEventListener('popstate', () => {
 function closeSidebarLayer() {
   sidebar.classList.remove('open');
   overlay.classList.remove('show');
+  homeSidebarShowing = false;
+  if (typeof updateResumeBox === 'function') updateResumeBox();
 }
 // Measures the actual rendered height of whichever bottom control bar is
 // currently showing and reserves that much clearance (plus a safety
@@ -32573,6 +32578,8 @@ function openSidebar(tab, asHome) {
   overlay.classList.add('show');
   setActiveTab(tab || 'surah');
   applySidebarBottomClearance();
+  homeSidebarShowing = !!asHome;
+  updateResumeBox();
   if (asHome) return; // the index the app opens on: Back from it leaves the app
   if (searchWasOpen) {
     swapTopBackLayer(closeSearchPageLayer, closeSidebarLayer);
@@ -32585,7 +32592,34 @@ function openSidebar(tab, asHome) {
 // steps out one thing at a time as before, and its last step returns to
 // the index (instead of leaving the app); Back from there leaves the app.
 let homeArmed = false;
+let homeSidebarShowing = false; // the index is open as the app's home (not opened from the text)
 function homeBackLayer() { openSidebar('surah', true); }
+// «العودة إلى آخر صفحة»: on the home index only (السور tab), a box that
+// goes straight back to the page that was open; gone once any page is entered.
+function updateResumeBox() {
+  const head = document.querySelector('.sidebar-colheader');
+  if (!head) return;
+  let box = document.getElementById('resumeBox');
+  if (!box) {
+    box = document.createElement('button');
+    box.id = 'resumeBox';
+    box.addEventListener('click', (e) => { e.stopPropagation(); closeSidebar(); });
+    head.appendChild(box);
+  }
+  const show = homeSidebarShowing && sidebar.classList.contains('open') && currentTab === 'surah';
+  if (!show) { box.style.display = 'none'; return; }
+  box.textContent = '↩ العودة إلى آخر صفحة: ' + toArabicDigits(pageNum);
+  // from the right edge of the app up to just before the «آيات» label
+  const lbl = document.querySelector('#sidebarColHeaderLabels .ayahCount');
+  const hr = head.getBoundingClientRect();
+  if (lbl && !landscapeMode) {
+    const lr = lbl.getBoundingClientRect();
+    box.style.left = Math.max(4, Math.round(lr.right - hr.left + 6)) + 'px';
+  } else {
+    box.style.left = '40%';
+  }
+  box.style.display = 'flex';
+}
 function closeSidebar() {
   if (backLayerStack.lastIndexOf(closeSidebarLayer) === -1 && sidebar.classList.contains('open')) {
     closeSidebarLayer(); // the home index has no Back step of its own
@@ -32609,6 +32643,7 @@ function setActiveTab(tab) {
   document.getElementById('headerSearch').value = '';
   document.querySelectorAll('.tab').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
   renderTabContent();
+  if (typeof updateResumeBox === 'function') setTimeout(updateResumeBox, 0);
 }
 // Back from any non-home tab returns straight to the home tab in exactly
 // one step, no matter how many different tabs were visited in between -
@@ -32711,7 +32746,7 @@ function renderGuideTab() {
     { title: '٦. صفحة النص القرآني', items: [
       'ميزة النسخ الحر بالضغط المطوّل على أي موضع من الصفحة.',
       'في الوضع الحر، يتوقف التمرير اليدوي والتلقائي عند نهاية السورة وعند نهاية الجزء، وكذلك عند بدايتهما في التمرير المعاكس. وعند النهاية تظهر فوق الشريط السفلي ثلاثة مستطيلات: في الوسط <b>نهاية السورة</b> أو <b>الجزء</b>، وعلى يمينه <b>السورة السابقة</b> أو <b>الجزء السابق</b>، وعلى يساره <b>السورة التالية</b> أو <b>الجزء التالي</b>. ويكون الانتقال بالنقر على أحدها، ثم يُختار التمرير اليدوي أو التلقائي.',
-      'يفتح المصحف على القائمة الجانبية (عنوان السور)، وعند الرجوع بالإيماءة أو بسهم الرجوع يعود البرنامج خطوة خطوة، وآخر خطوة قبل الخروج تعيد إلى القائمة الجانبية.',
+      'يفتح المصحف على القائمة الجانبية (عنوان السور)، وفي أعلاها إطار <b>العودة إلى آخر صفحة</b> للرجوع مباشرة إلى الصفحة التي كانت مفتوحة، وعند الرجوع بالإيماءة أو بسهم الرجوع يعود البرنامج خطوة خطوة، وآخر خطوة قبل الخروج تعيد إلى القائمة الجانبية.',
       'خط أخضر داكن سميك على أحد جانبي الصفحة للدلالة على كونها صفحة يمنى أو يسرى.',
       'علامة الربع ' + rubGridSvg(3) + ': تظهر داخل النص عند بداية كل ربع حزب، بدلاً من العلامة الدائرية التقليدية. وهي شبكة صغيرة من ٨ مربعات (عمودان × ٤ صفوف) تمثّل أثمان الجزء الحالي الثمانية - العمود الأيمن لحزبه الأول والأيسر لحزبه الثاني، كل عمود من الأعلى للأسفل. تُملأ المربعات تدريجياً (كما في المثال المجاور، وفيه ٣ من ٨) بعدد الأرباع التي وصلت إليها القراءة من الجزء، فتُعرف دفعة واحدة أي ربع أنت فيه من الجزء دون حساب.',
     ]},
