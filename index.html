@@ -29989,10 +29989,13 @@ function parseAyahSpec(spec, max) {
 function contItemPlan(it) {
   const hasName = String(it.surah || '').trim() !== '';
   const ayahsTyped = String(it.ayahs || '').trim() !== '';
-  if (!hasName) return null;
-  if (it.whole) return { whole: true, rep: Math.max(1, parseInt(latinDigits(it.wholeRep), 10) || 1) };
-  if (ayahsTyped) return { whole: false, rep: it.ayahOn ? Math.max(1, parseInt(latinDigits(it.ayahRep), 10) || 1) : 1 };
-  return null;
+  if (!hasName || (!it.whole && !ayahsTyped)) return null;
+  return {
+    whole: !!it.whole,
+    wholeRep: it.whole ? Math.max(1, parseInt(latinDigits(it.wholeRep), 10) || 1) : 0,
+    ayahs: ayahsTyped,
+    ayahRep: ayahsTyped ? (it.ayahOn ? Math.max(1, parseInt(latinDigits(it.ayahRep), 10) || 1) : 1) : 0
+  };
 }
 // Builds the play order of a list, or returns an Arabic error message.
 function buildContListQueue(items) {
@@ -30004,12 +30007,14 @@ function buildContListQueue(items) {
     const s = resolveSurah(it.surah);
     if (!s) return 'لم يُعرف اسم السورة «' + String(it.surah).trim() + '»';
     const max = SURAH_AYAH_COUNT[s] || 0;
+    // the whole surah first, then the chosen ayahs from it
     if (plan.whole) {
-      for (let r = 0; r < plan.rep; r++) for (let a = 1; a <= max; a++) q.push([s, a]);
-    } else {
+      for (let r = 0; r < plan.wholeRep; r++) for (let a = 1; a <= max; a++) q.push([s, a]);
+    }
+    if (plan.ayahs) {
       const list = parseAyahSpec(it.ayahs, max);
       if (!list) return 'أرقام الآيات غير صحيحة في سورة ' + SURAH_NAMES[s] + ' (عدد آياتها ' + toArabicDigits(max) + ')';
-      for (let r = 0; r < plan.rep; r++) list.forEach((a) => q.push([s, a]));
+      for (let r = 0; r < plan.ayahRep; r++) list.forEach((a) => q.push([s, a]));
     }
   }
   if (!q.length) return 'اكتب اسم سورة، ثم اختر السورة كاملة أو اكتب أرقام آيات منها';
@@ -30051,9 +30056,9 @@ function contListLabel(items) {
     const plan = contItemPlan(it);
     const s = plan && resolveSurah(it.surah);
     if (!s) return;
-    const times = plan.rep > 1 ? ' ×' + toArabicDigits(plan.rep) : '';
-    if (plan.whole) parts.push(SURAH_NAMES[s] + times);
-    else parts.push(SURAH_NAMES[s] + ' (' + toArabicDigits(latinDigits(it.ayahs).replace(/\s+/g, '')) + ')' + times);
+    const times = (n) => n > 1 ? ' ×' + toArabicDigits(n) : '';
+    if (plan.whole) parts.push(SURAH_NAMES[s] + times(plan.wholeRep));
+    if (plan.ayahs) parts.push(SURAH_NAMES[s] + ' (' + toArabicDigits(latinDigits(it.ayahs).replace(/\s+/g, '')) + ')' + times(plan.ayahRep));
   });
   return parts.join('، ');
 }
@@ -30159,17 +30164,14 @@ function renderContDialog() {
       const on = (el, yes) => { el.disabled = !yes; el.closest('label') ? el.closest('label').classList.toggle('dis', !yes) : el.classList.toggle('dis', !yes); };
       on(f('whole'), hasName);
       on(f('wholeRep'), hasName && it.whole);
-      on(f('ayahOn'), hasName && !it.whole);
-      on(f('ayahs'), hasName && !it.whole);
-      on(f('ayahRep'), hasName && !it.whole && it.ayahOn && ayahsTyped);
+      on(f('ayahOn'), hasName);
+      on(f('ayahs'), hasName);
+      on(f('ayahRep'), hasName && it.ayahOn && ayahsTyped);
     };
     row.querySelectorAll('[data-f]').forEach((inp) => {
       const name = inp.dataset.f;
       inp.addEventListener(inp.type === 'checkbox' ? 'change' : 'input', () => {
         contList[i][name] = inp.type === 'checkbox' ? inp.checked : inp.value;
-        // the whole surah, or ayahs from it - not both
-        if (name === 'whole' && inp.checked) { contList[i].ayahOn = false; f('ayahOn').checked = false; }
-        if (name === 'ayahOn' && inp.checked) { contList[i].whole = false; f('whole').checked = false; }
         contPlanBuiltFor = null;
         saveContSettings();
         sync();
@@ -32338,7 +32340,7 @@ function renderGuideTab() {
     ]},
     { title: '٣. القائمة الجانبية (تُفتح بزر القائمة أعلى يمين الشاشة)', items: [
       '<b>التخطيط</b>: الاختيار بين نص المصحف (عثماني برسم المصحف، أو إملائي بتشكيل كامل، أو مجرَّد بدون تشكيل)، والاختيار بين الوضع القياسي المطابق للمصحف الورقي (١٥ سطراً في الصفحة) والوضع الحر القابل للتكبير والتصغير بحرية، وإظهار تلوين معاني الكلمات أو إخفاؤه.',
-      '<b>التلاوة</b>: اختيار القارئ لتلاوة الآيات صوتياً (وفيها أربعة قرّاء، ويمكن إضافة قرّاء آخرين أو حذف أيٍّ منهم).',
+      '<b>التلاوة</b>: اختيار القارئ لتلاوة الآيات صوتياً (وفيها أربعة قرّاء، ويمكن إضافة قرّاء آخرين من حقل البحث، أو حذف أيٍّ منهم).',
       '<b>الأدعية</b>: مجموعة أدعية مأثورة خاصة بالتلاوة.',
       '<b>السور</b>: فهرس كامل لسور القرآن، للانتقال المباشر لأي سورة. ويمكن البحث عن سورة ما في حقل البحث الموجود في أعلى قائمة السور بإسمها أو تسلسلها.',
       '<b>الأجزاء</b>: فهرس الأجزاء الثلاثين.',
@@ -32352,7 +32354,7 @@ function renderGuideTab() {
       'يمكن تحريك شريط التلاوة بالإصبع إلى أي موضع في الشاشة، ويعود إلى مكانه فوق النافذة عند فتحه من جديد. وأثناء التلاوة لا يختفي الشريط بالرجوع، بل يغلق الرجوع النافذة التي تحته، ويختفي الشريط بالرجوع بعد إيقاف التلاوة.',
       'عند اختيار <b>تكرار</b> تظهر قائمة لعدد مرات قراءة الآية (من مرتين إلى سبع)، ويظهر العدد المختار في الشريط مكان كلمة «تكرار»، ويبقى محفوظاً حتى يُغيَّر.',
       'عند اختيار <b>استمرار</b> تظهر نافذة فيها أربعة خيارات منفصلة، يتفعّل واحد منها فقط: <b>حسب الوقت</b> (تستمر التلاوة من الآية المختارة حتى ينتهي الوقت المحدد، من خمس دقائق إلى خمس ساعات، ويبقى الوقت المحدد محفوظاً حتى يُغيَّر)، أو <b>ابتداءً من الآية المختارة حتى نهاية السورة</b>، أو <b>ابتداءً من بداية السورة حتى نهايتها</b>، أو <b>سور وآيات مختارة</b>. ويبقى آخر ما اختير من الخيارات الثلاثة الأولى مفعّلاً، وعليه يكون التشغيل من شريط التلاوة.',
-      'في <b>سور وآيات مختارة</b>: يُكتب اسم السورة؛ فإن وُضعت علامة في مربع <b>سورة</b> قُرئت السورة كاملة وتفعّل عدد مرات تكرارها، وإلا كُتبت أرقام آيات منها (مثل: ٥ أو ١-٧ أو ٣، ٩)، ويتفعّل عدد تكرارها بوضع علامة في مربع <b>الآية</b>. ويمكن إضافة سور أخرى، و<b>حفظ</b> الاختيار في المرجعيات باسم «تلاوة». ويكون التشغيل وفق هذا الخيار عند اختياره أو عند اختيار تلاوة من المرجعيات، وبعد انتهائه يعود التشغيل إلى آخر ما اختير من الخيارات الثلاثة الأولى.',
+      'في <b>سور وآيات مختارة</b>: يُكتب اسم السورة؛ فإن وُضعت علامة في مربع <b>سورة</b> قُرئت السورة كاملة وتفعّل عدد مرات تكرارها، وتُكتب أرقام آيات منها (مثل: ٥ أو ١-٧ أو ٣، ٩) ويتفعّل عدد تكرارها بوضع علامة في مربع <b>الآية</b>. ويمكن الجمع بين المربعين، فتُقرأ السورة كاملة ثم الآيات المختارة منها. ويمكن إضافة سور أخرى، و<b>حفظ</b> الاختيار في المرجعيات باسم «تلاوة». ويكون التشغيل وفق هذا الخيار عند اختياره أو عند اختيار تلاوة من المرجعيات، وبعد انتهائه يعود التشغيل إلى آخر ما اختير من الخيارات الثلاثة الأولى.',
       '<b>نسخ الآية</b>: نسخ نص الآية.',
       '<b>حفظ الآية</b>: وضع علامة مرجعية على آية بعينها.',
       '<b>تفسير القرآن</b> و<b>اللغة</b> و<b>الإعراب</b>: تفتح كلٌّ منها صفحة خاصة على الآية نفسها (انظر الفقرة التالية).',
@@ -32862,31 +32864,7 @@ function renderRecitationTab() {
     sidebarBody.appendChild(row);
   });
 
-  const remaining = Object.keys(RECITERS_CATALOG).filter((id) => !activeReciterIds.includes(id));
-  if (remaining.length) {
-    const addWrap = document.createElement('div');
-    addWrap.style.cssText = 'margin-top:16px;';
-    const addLabel = document.createElement('div');
-    addLabel.className = 'strong-note';
-    addLabel.style.cssText = 'font-family:sans-serif;font-size:17px;font-weight:700;padding:4px;margin-bottom:4px;';
-    addLabel.textContent = 'إضافة قارئ إلى القائمة:';
-    addWrap.appendChild(addLabel);
-    remaining.forEach((id) => {
-      const r = RECITERS_CATALOG[id];
-      const addRow = document.createElement('button');
-      addRow.className = 'recite-add-row';
-      addRow.style.cssText = 'width:100%;display:flex;align-items:center;justify-content:space-between;background:transparent;border:none;border-bottom:1px solid #EDE3C6;padding:9px 4px;cursor:pointer;text-align:right;font-family:sans-serif;font-size:17px;';
-      addRow.innerHTML = '<span>' + r.name + '</span><span class="recite-add-plus" style="font-size:18px;font-weight:700;">+</span>';
-      addRow.addEventListener('click', () => {
-        activeReciterIds.push(id);
-        saveActiveReciterIds();
-        renderRecitationTab();
-      });
-      addWrap.appendChild(addRow);
-    });
-    sidebarBody.appendChild(addWrap);
-  }
-
+  // Reciters not in the list are added only from the search box below.
   sidebarBody.appendChild(searchWrap);
 }
 
