@@ -489,6 +489,37 @@ body.landscape-lock #boundPagesContainer .qcombo .cname{font-size:19px !importan
 body.landscape-lock #boundPagesContainer .qbsm,
 body.landscape-lock #boundPagesContainer .qcombo .cbsm{font-size:calc(var(--global-font-px, 22) * 1px) !important;}
 html,body{overflow:hidden;}
+#contDialog{display:none;position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:12px;box-sizing:border-box;}
+.cd-card{background:#FBF6E8;color:#0E4433;border:2px solid #0E4433;border-radius:16px;width:100%;max-width:440px;max-height:calc(100% - 8px);overflow-y:auto;padding:12px 14px;box-sizing:border-box;font-family:sans-serif;direction:rtl;}
+.cd-title{font-size:20px;font-weight:700;text-align:center;margin-bottom:8px;}
+.cd-sec{border-top:1px solid #D9CBA3;padding:8px 0;}
+.cd-head{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:700;margin-bottom:6px;}
+.cd-head input,.cd-row input,.cd-chk input,.cd-chip input{accent-color:#0E4433;width:20px;height:20px;margin:0;flex-shrink:0;}
+.cd-chips{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.cd-chips.off{opacity:.45;}
+.cd-chip{display:flex;align-items:center;gap:6px;font-size:16px;font-weight:700;border:1.5px solid #0E4433;border-radius:10px;padding:6px 8px;}
+.cd-row{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;padding:5px 0;}
+.cd-item{border:1.5px solid #0E4433;border-radius:12px;padding:6px;margin:6px 0;}
+.cd-line{display:flex;align-items:center;gap:6px;margin:4px 0;}
+.cd-chk{display:flex;align-items:center;gap:5px;font-size:16px;font-weight:700;min-width:64px;}
+.cd-in{border:1.5px solid #0E4433;border-radius:8px;padding:5px 6px;font-size:16px;font-family:sans-serif;background:#fff;color:#0E4433;min-width:0;box-sizing:border-box;}
+.cd-name{flex:1;}
+.cd-num{width:44px;text-align:center;}
+.cd-lbl{font-size:15px;font-weight:700;}
+.cd-del{background:transparent;border:none;color:#7B2E2E;font-size:16px;padding:4px;cursor:pointer;}
+.cd-actions{display:flex;gap:8px;justify-content:center;margin-top:8px;}
+.cd-btn{flex:1;border:2px solid #0E4433;background:#0E4433;color:#F6EFDC;border-radius:12px;padding:8px 10px;font-size:17px;font-weight:700;font-family:sans-serif;cursor:pointer;}
+.cd-btn.light{background:transparent;color:#0E4433;}
+body.dark-mode .cd-card{background:#14231D;color:#F6EFDC;border-color:#F6EFDC;}
+body.dark-mode .cd-chip,body.dark-mode .cd-item,body.dark-mode .cd-in,body.dark-mode .cd-btn{border-color:#F6EFDC;}
+body.dark-mode .cd-in{background:#0E1A15;color:#F6EFDC;}
+body.dark-mode .cd-btn{background:#F6EFDC;color:#0E4433;}
+body.dark-mode .cd-btn.light{background:transparent;color:#F6EFDC;}
+body.dark-mode .cd-head input,body.dark-mode .cd-row input,body.dark-mode .cd-chk input,body.dark-mode .cd-chip input{accent-color:#F6EFDC;}
+.rb-opt{display:flex;align-items:center;gap:7px;color:#F6EFDC;font-family:sans-serif;font-size:18px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.rb-opt input{-webkit-appearance:none;appearance:none;width:22px;height:22px;margin:0;border:2px solid #F6EFDC;border-radius:50%;background:transparent;display:grid;place-content:center;flex-shrink:0;cursor:pointer;}
+.rb-opt input::before{content:'';width:10px;height:10px;border-radius:50%;background:#F6EFDC;transform:scale(0);transition:transform .12s;}
+.rb-opt input:checked::before{transform:scale(1);}
 body.landscape-lock{position:fixed;top:100vh;left:0;width:100vh;height:100vw;transform-origin:left top;transform:rotate(-90deg);overflow:hidden;}
 body.landscape-lock{top:100dvh;width:100dvh;height:100dvw;}
 /* Mirrored rotation for the opposite physical landscape orientation, e.g.
@@ -799,17 +830,13 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
 </div>
 
 <div id="reciteModeBar" style="display:none;position:fixed;bottom:52px;left:0;right:0;z-index:49;background:#0E443300;pointer-events:none;">
-  <div style="pointer-events:auto;max-width:340px;margin:0 auto;background:#7B2E2E;border-radius:20px;box-shadow:0 -2px 10px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;gap:14px;padding:8px 14px;">
-    <button id="reciteModeBarPlayBtn" style="background:transparent;border:none;color:#F6EFDC;font-size:22px;cursor:pointer;line-height:1;padding:2px 4px;" aria-label="تشغيل/إيقاف التلاوة">▶</button>
-    <label style="display:flex;align-items:center;gap:5px;color:#F6EFDC;font-family:sans-serif;font-size:16px;cursor:pointer;">
-      <input type="radio" name="reciteModeRadio" id="reciteModeRadioOnce" value="single" checked style="accent-color:#F6EFDC;">مرة
-    </label>
-    <label style="display:flex;align-items:center;gap:5px;color:#F6EFDC;font-family:sans-serif;font-size:16px;cursor:pointer;">
-      <input type="radio" name="reciteModeRadio" id="reciteModeRadioRepeat" value="repeat" style="accent-color:#F6EFDC;">تكرار
-    </label>
-    <label style="display:flex;align-items:center;gap:5px;color:#F6EFDC;font-family:sans-serif;font-size:16px;cursor:pointer;">
-      <input type="radio" name="reciteModeRadio" id="reciteModeRadioContinue" value="continuous" style="accent-color:#F6EFDC;">استمرار
-    </label>
+  <div id="reciteModeBarInner" style="pointer-events:auto;touch-action:none;width:max-content;max-width:calc(100% - 12px);margin:0 auto;background:#7B2E2E;border-radius:22px;box-shadow:0 -2px 10px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;gap:10px;padding:4px 10px;box-sizing:border-box;--rbGap:22px;">
+    <button id="reciteModeBarPlayBtn" style="background:transparent;border:none;color:#F6EFDC;font-size:32px;cursor:pointer;line-height:1;padding:0 4px;min-width:36px;" aria-label="تشغيل/إيقاف التلاوة">▶</button>
+    <div class="rb-frame" style="display:flex;align-items:center;gap:var(--rbGap);border:1.5px solid #F6EFDC;border-radius:16px;padding:5px 12px;">
+      <label class="rb-opt"><input type="radio" name="reciteModeRadio" id="reciteModeRadioOnce" value="single" checked>مرة</label>
+      <label class="rb-opt"><input type="radio" name="reciteModeRadio" id="reciteModeRadioRepeat" value="repeat">تكرار</label>
+      <label class="rb-opt" id="reciteModeContLabel"><input type="radio" name="reciteModeRadio" id="reciteModeRadioContinue" value="continuous">استمرار</label>
+    </div>
   </div>
 </div>
 
@@ -29242,7 +29269,7 @@ function handleTextTap(target, wasMoving) {
 function handleTapOnAyah(target) {
   const found = findAyahSegAt(target);
   if (reciting) {
-    if (found) playAyah(found.surah, found.ayah);
+    if (found) { syncContQueueTo(found.surah, found.ayah); playAyah(found.surah, found.ayah); }
     return;
   }
   if (getTapSelectedAyah()) {
@@ -29349,7 +29376,7 @@ rebuildRecitersLookup();
 function reciterKind(r) { return (r && r.kind) || 'ayah'; }
 function nextCustomReciterId() { return 'custom_' + Date.now() + '_' + Math.floor(Math.random() * 1000); }
 
-let activeReciterIds = ['minshawi', 'abdulbasit', 'maher', 'sudais', 'alafasy', 'husary', 'shuraym', 'ajamy'];
+let activeReciterIds = ['minshawi', 'abdulbasit', 'maher', 'husary'];
 try {
   const savedList = store.get('reciters-list');
   if (savedList) {
@@ -29367,6 +29394,16 @@ try {
     });
     store.set('reciters-list', JSON.stringify(activeReciterIds));
     store.set('reciters-migrated-v2', '1');
+  }
+  // One-time trim (v3): the default list is now four reciters. Remove the
+  // other four catalog reciters once; anyone can add them back from the
+  // التلاوة tab, and reciters the person added themselves are left alone.
+  if (!store.get('reciters-trimmed-v3')) {
+    const dropped = ['sudais', 'alafasy', 'shuraym', 'ajamy'];
+    const kept = activeReciterIds.filter((id) => dropped.indexOf(id) === -1);
+    if (kept.length) activeReciterIds = kept;
+    store.set('reciters-list', JSON.stringify(activeReciterIds));
+    store.set('reciters-trimmed-v3', '1');
   }
 } catch (e) { /* ignore malformed saved list, keep the default set */ }
 
@@ -29717,6 +29754,19 @@ function handleAyahAudioEnded() {
     else stopRecitation();
     return;
   }
+  if (contStopAt && Date.now() >= contStopAt) {
+    contStopAt = null;
+    stopRecitation();
+    toast('انتهى الوقت المحدد للتلاوة');
+    return;
+  }
+  if (contQueue) {
+    contQueuePos++;
+    const q = contQueue[contQueuePos];
+    if (!q) { finishContPlan(); return; }
+    playAyah(q[0], q[1]);
+    return;
+  }
   const next = searchIndex[reciteGlobalIndex + 1];
   if (!next) { stopRecitation(); return; }
   playAyah(next.surah, next.ayah);
@@ -29744,19 +29794,35 @@ function syncRecitePlayButtons() {
 
 function startRecitation() {
   let start;
+  let fresh = true;
   const tapSelected = getTapSelectedAyah();
-  if (tapSelected) {
-    // A tap-selected ayah always takes priority as the starting point.
+  const resumeItem = (reciteGlobalIndex !== null && searchIndex) ? searchIndex[reciteGlobalIndex] : null;
+  const selKey = tapSelected ? tapSelected.surah + ':' + tapSelected.ayah : null;
+  if (tapSelected && !(selKey === reciteStartKey && resumeItem && !contForceFresh)) {
+    // A newly tap-selected ayah always takes priority as the starting point.
     start = tapSelected;
+    reciteStartKey = selKey;
     if (ayahPopupEl.style.display === 'none') clearAyahTapSelection();
-  } else if (reciteGlobalIndex !== null && searchIndex && searchIndex[reciteGlobalIndex]) {
-    // No new selection since the last stop - resume exactly where playback
-    // left off rather than restarting from the page's first ayah every time.
-    start = searchIndex[reciteGlobalIndex];
+  } else if (resumeItem && !contForceFresh) {
+    // Same selection as before (the ayah window stays open while reciting),
+    // or none - resume exactly where playback was paused.
+    start = resumeItem;
+    fresh = false;
   } else {
-    start = firstAyahOnPage(pageNum);
+    start = tapSelected || firstAyahOnPage(pageNum);
+    reciteStartKey = selKey;
   }
+  contForceFresh = false;
   if (!start) return;
+  if (reciteMode === 'continuous') {
+    if (fresh || contPlanBuiltFor !== contKind) {
+      start = beginContPlan(start);
+      if (!start) return;
+    }
+    contStopAt = contTimeOn ? Date.now() + contTimeMin * 60000 : null;
+  } else {
+    contQueue = null; contPlanBuiltFor = null; contStopAt = null;
+  }
   reciting = true;
   syncRecitePlayButtons();
   playAyah(start.surah, start.ayah);
@@ -29811,6 +29877,8 @@ function closeReciteModeBarLayer() {
   reciteModeBarEl.style.display = 'none';
 }
 function openReciteModeBar() {
+  reciteBarDX = 0; reciteBarDY = 0;
+  document.getElementById('reciteModeBarInner').style.transform = '';
   reciteModeBarEl.style.display = 'block';
   reciteModeBarEl.style.zIndex = '56';
   positionReciteModeBar();
@@ -29832,10 +29900,283 @@ document.querySelectorAll('input[name="reciteModeRadio"]').forEach((radio) => {
     if (radio.checked) reciteMode = radio.value;
   });
 });
+// Tapping «استمرار» (even when it is already chosen) opens its options.
+document.getElementById('reciteModeContLabel').addEventListener('click', (e) => {
+  if (reciteBarJustDragged) return;
+  // a tap on the word reaches the radio as a second click - react once
+  if (e.target.tagName === 'INPUT') setTimeout(openContDialog, 0);
+});
 window.addEventListener('resize', () => {
   if (ayahPopupEl && ayahPopupEl.style.display !== 'none') positionAyahPopup();
   if (reciteModeBarEl.style.display !== 'none') positionReciteModeBar();
 });
+
+// ---------------- استمرار: time limit + what to read ----------------
+// contKind: 'toEnd' (from the chosen ayah to the end of its surah),
+// 'surah' (the whole surah from its start), 'continuous' (on and on until
+// stopped by hand or by the time limit) or 'list' (the person's own list
+// of surahs/ayahs with repeat counts). The time limit can be combined
+// with any of them; every choice is remembered for next time.
+const CONT_TIMES = [[5, 'خمس دقائق'], [10, 'عشر دقائق'], [15, 'ربع ساعة'], [20, 'ثلث ساعة'], [30, 'نصف ساعة'], [60, 'ساعة'], [120, 'ساعتان'], [180, 'ثلاث ساعات'], [240, 'أربع ساعات'], [300, 'خمس ساعات']];
+let contTimeOn = store.get('cont-time-on') === '1';
+let contTimeMin = parseInt(store.get('cont-time') || '30', 10) || 30;
+let contKind = store.get('cont-kind') || 'continuous';
+let contList = [];
+try { contList = JSON.parse(store.get('cont-list') || '[]') || []; } catch (e) { contList = []; }
+if (!Array.isArray(contList) || !contList.length) contList = [blankContItem()];
+let contQueue = null, contQueuePos = 0, contPlanBuiltFor = null, contStopAt = null;
+let contForceFresh = false;
+let reciteStartKey = null;
+function blankContItem() { return { surah: '', whole: false, wholeRep: 1, ayahOn: false, ayahs: '', ayahRep: 1 }; }
+function saveContSettings() {
+  store.set('cont-time-on', contTimeOn ? '1' : '0');
+  store.set('cont-time', String(contTimeMin));
+  store.set('cont-kind', contKind);
+  store.set('cont-list', JSON.stringify(contList));
+}
+function latinDigits(t) {
+  return String(t == null ? '' : t).replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x660)).replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x6F0));
+}
+function normSurahName(t) {
+  return String(t || '').replace(/[ً-ٰٟـ]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/^\s*سوره\s+/, '').replace(/\s+/g, ' ').trim();
+}
+function resolveSurah(t) {
+  const raw = latinDigits(t).trim();
+  if (/^\d+$/.test(raw)) { const n = parseInt(raw, 10); return n >= 1 && n <= 114 ? n : null; }
+  const want = normSurahName(raw);
+  if (!want) return null;
+  for (let i = 1; i <= 114; i++) if (normSurahName(SURAH_NAMES[i]) === want) return i;
+  for (let i = 1; i <= 114; i++) if (normSurahName(SURAH_NAMES[i]).replace(/^ال/, '') === want.replace(/^ال/, '')) return i;
+  return null;
+}
+// "5" / "1-7" / "3، 9، 12-15" -> [3, 9, 12, 13, 14, 15]
+function parseAyahSpec(spec, max) {
+  const out = [];
+  const parts = latinDigits(spec).split(/[,،؛;\s]+/).filter(Boolean);
+  if (!parts.length) return null;
+  for (const part of parts) {
+    const m = part.match(/^(\d+)(?:[-–ـ](\d+))?$/);
+    if (!m) return null;
+    let a = parseInt(m[1], 10), b = m[2] ? parseInt(m[2], 10) : a;
+    if (a > b) { const t = a; a = b; b = t; }
+    if (a < 1 || b > max) return null;
+    for (let i = a; i <= b; i++) out.push(i);
+  }
+  return out;
+}
+// Builds the play order of a list, or returns an Arabic error message.
+function buildContListQueue(items) {
+  const q = [];
+  for (let i = 0; i < items.length; i++) {
+    const it = items[i];
+    if (!it.whole && !it.ayahOn) continue;
+    const s = resolveSurah(it.surah);
+    if (!s) return 'لم يُعرف اسم السورة في السطر ' + toArabicDigits(i + 1);
+    const max = SURAH_AYAH_COUNT[s] || 0;
+    if (it.whole) {
+      const n = Math.max(1, parseInt(latinDigits(it.wholeRep), 10) || 1);
+      for (let r = 0; r < n; r++) for (let a = 1; a <= max; a++) q.push([s, a]);
+    }
+    if (it.ayahOn) {
+      const list = parseAyahSpec(it.ayahs, max);
+      if (!list) return 'أرقام الآيات غير صحيحة في سورة ' + SURAH_NAMES[s] + ' (عدد آياتها ' + toArabicDigits(max) + ')';
+      const n = Math.max(1, parseInt(latinDigits(it.ayahRep), 10) || 1);
+      for (let r = 0; r < n; r++) list.forEach((a) => q.push([s, a]));
+    }
+  }
+  if (!q.length) return 'اختر سورة أو آيات أولاً (بوضع علامة في المربع)';
+  return q;
+}
+function beginContPlan(start) {
+  contPlanBuiltFor = contKind;
+  contQueuePos = 0;
+  if (contKind === 'toEnd' || contKind === 'surah') {
+    const s = start.surah, max = SURAH_AYAH_COUNT[s] || 0;
+    contQueue = [];
+    for (let a = contKind === 'surah' ? 1 : start.ayah; a <= max; a++) contQueue.push([s, a]);
+  } else if (contKind === 'list') {
+    const q = buildContListQueue(contList);
+    if (typeof q === 'string') { toast(q); contPlanBuiltFor = null; contQueue = null; return null; }
+    contQueue = q;
+  } else {
+    contQueue = null;
+    return start;
+  }
+  return { surah: contQueue[0][0], ayah: contQueue[0][1] };
+}
+function finishContPlan() {
+  contQueue = null; contPlanBuiltFor = null; contStopAt = null;
+  stopRecitation();
+  reciteGlobalIndex = null;
+}
+function syncContQueueTo(surah, ayah) {
+  if (!contQueue) return;
+  for (let i = contQueuePos; i < contQueue.length; i++) if (contQueue[i][0] === surah && contQueue[i][1] === ayah) { contQueuePos = i; return; }
+  for (let i = 0; i < contQueuePos; i++) if (contQueue[i][0] === surah && contQueue[i][1] === ayah) { contQueuePos = i; return; }
+  contQueue = null; // an ayah outside the plan: carry on from it in order
+}
+function contListLabel(items) {
+  const parts = [];
+  items.forEach((it) => {
+    const s = resolveSurah(it.surah);
+    if (!s) return;
+    if (it.whole) parts.push(SURAH_NAMES[s] + (parseInt(latinDigits(it.wholeRep), 10) > 1 ? ' ×' + toArabicDigits(parseInt(latinDigits(it.wholeRep), 10)) : ''));
+    if (it.ayahOn && it.ayahs) parts.push(SURAH_NAMES[s] + ' (' + toArabicDigits(latinDigits(it.ayahs).replace(/\s+/g, '')) + ')' + (parseInt(latinDigits(it.ayahRep), 10) > 1 ? ' ×' + toArabicDigits(parseInt(latinDigits(it.ayahRep), 10)) : ''));
+  });
+  return parts.join('، ');
+}
+
+// ---- saved recitation lists (shown under «تلاوة» in المرجعيات) ----
+let reciteBookmarks = [];
+try { reciteBookmarks = JSON.parse(store.get('recite-bookmarks') || '[]') || []; } catch (e) { reciteBookmarks = []; }
+function saveReciteBookmarks() { store.set('recite-bookmarks', JSON.stringify(reciteBookmarks)); }
+function playReciteBookmark(bm) {
+  contList = JSON.parse(JSON.stringify(bm.items));
+  contKind = 'list';
+  saveContSettings();
+  reciteMode = 'continuous';
+  document.getElementById('reciteModeRadioContinue').checked = true;
+  if (reciting) stopRecitation();
+  closeSidebar();
+  setTimeout(() => {
+    if (reciteModeBarEl.style.display === 'none') openReciteModeBar();
+    contForceFresh = true;
+    reciteGlobalIndex = null;
+    startRecitation();
+  }, 350);
+}
+
+// ---- the options window ----
+let contDialogEl = null;
+function closeContDialogLayer() { if (contDialogEl) contDialogEl.style.display = 'none'; }
+function openContDialog() {
+  if (!contDialogEl) {
+    contDialogEl = document.createElement('div');
+    contDialogEl.id = 'contDialog';
+    contDialogEl.addEventListener('click', (e) => { if (e.target === contDialogEl) closeSpecificLayer(closeContDialogLayer); });
+    document.body.appendChild(contDialogEl);
+  }
+  renderContDialog();
+  // In landscape the whole page is rotated, so give the window the rotated
+  // page's own size explicitly (as the other landscape overlays do).
+  if (landscapeMode) {
+    const vp = trueViewportSize();
+    contDialogEl.style.inset = 'auto';
+    contDialogEl.style.top = '0'; contDialogEl.style.left = '0';
+    contDialogEl.style.width = vp.h + 'px'; contDialogEl.style.height = vp.w + 'px';
+  } else {
+    contDialogEl.style.inset = ''; contDialogEl.style.top = ''; contDialogEl.style.left = '';
+    contDialogEl.style.width = ''; contDialogEl.style.height = '';
+  }
+  contDialogEl.style.display = 'flex';
+  pushBackLayer(closeContDialogLayer);
+}
+function renderContDialog() {
+  const d = contDialogEl;
+  const timeChips = CONT_TIMES.map(([m, t]) =>
+    '<label class="cd-chip"><input type="radio" name="cdTime" value="' + m + '"' + (contTimeMin === m ? ' checked' : '') + (contTimeOn ? '' : ' disabled') + '>' + t + '</label>').join('');
+  const kinds = [['toEnd', 'ابتداءً من الآية المختارة حتى نهاية السورة'], ['surah', 'ابتداءً من بداية السورة حتى نهايتها'], ['continuous', 'استمرار حتى يتم الإيقاف (بالوقت المحدد أو يدوياً)'], ['list', 'السور أو الآيات التالية']];
+  const kindRows = kinds.map(([k, t]) => '<label class="cd-row"><input type="radio" name="cdKind" value="' + k + '"' + (contKind === k ? ' checked' : '') + '>' + t + '</label>').join('');
+  const items = contList.map((it, i) =>
+    '<div class="cd-item" data-i="' + i + '">' +
+      '<div class="cd-line"><label class="cd-chk"><input type="checkbox" data-f="whole"' + (it.whole ? ' checked' : '') + '>سورة</label>' +
+      '<input class="cd-in cd-name" data-f="surah" list="cdSurahNames" placeholder="اسم السورة" value="' + escapeHtml(it.surah || '') + '">' +
+      '<span class="cd-lbl">تكرار</span><input class="cd-in cd-num" data-f="wholeRep" inputmode="numeric" value="' + escapeHtml(String(it.wholeRep || 1)) + '">' +
+      (contList.length > 1 ? '<button class="cd-del" data-del="' + i + '" aria-label="حذف">✕</button>' : '') + '</div>' +
+      '<div class="cd-line"><label class="cd-chk"><input type="checkbox" data-f="ayahOn"' + (it.ayahOn ? ' checked' : '') + '>الآية</label>' +
+      '<input class="cd-in cd-name" data-f="ayahs" inputmode="text" placeholder="مثل: ٥ أو ١-٧ أو ٣، ٩" value="' + escapeHtml(it.ayahs || '') + '">' +
+      '<span class="cd-lbl">تكرار</span><input class="cd-in cd-num" data-f="ayahRep" inputmode="numeric" value="' + escapeHtml(String(it.ayahRep || 1)) + '"></div>' +
+    '</div>').join('');
+  let names = '';
+  for (let i = 1; i <= 114; i++) names += '<option value="' + SURAH_NAMES[i] + '">';
+  d.innerHTML = '<div class="cd-card">' +
+    '<div class="cd-title">خيارات الاستمرار</div>' +
+    '<div class="cd-sec"><label class="cd-head"><input type="checkbox" id="cdTimeOn"' + (contTimeOn ? ' checked' : '') + '>أولاً: حسب الوقت</label>' +
+      '<div class="cd-chips' + (contTimeOn ? '' : ' off') + '">' + timeChips + '</div></div>' +
+    '<div class="cd-sec"><div class="cd-head">ثانياً: حسب السور والآيات</div>' + kindRows +
+      '<div id="cdList" style="display:' + (contKind === 'list' ? 'block' : 'none') + ';">' + items +
+        '<div class="cd-actions"><button id="cdAdd" class="cd-btn light">+ إضافة سورة</button><button id="cdSave" class="cd-btn light">حفظ</button></div>' +
+      '</div></div>' +
+    '<datalist id="cdSurahNames">' + names + '</datalist>' +
+    '<div class="cd-actions main"><button id="cdPlay" class="cd-btn">▶ تشغيل</button><button id="cdClose" class="cd-btn light">إغلاق</button></div>' +
+  '</div>';
+  d.querySelector('#cdTimeOn').addEventListener('change', (e) => { contTimeOn = e.target.checked; saveContSettings(); renderContDialog(); });
+  d.querySelectorAll('input[name="cdTime"]').forEach((r) => r.addEventListener('change', () => { contTimeMin = parseInt(r.value, 10); saveContSettings(); }));
+  d.querySelectorAll('input[name="cdKind"]').forEach((r) => r.addEventListener('change', () => {
+    contKind = r.value; contPlanBuiltFor = null; saveContSettings();
+    d.querySelector('#cdList').style.display = contKind === 'list' ? 'block' : 'none';
+  }));
+  d.querySelectorAll('.cd-item').forEach((row) => {
+    const i = parseInt(row.dataset.i, 10);
+    row.querySelectorAll('[data-f]').forEach((inp) => {
+      const f = inp.dataset.f;
+      const upd = () => { contList[i][f] = inp.type === 'checkbox' ? inp.checked : inp.value; contPlanBuiltFor = null; saveContSettings(); };
+      inp.addEventListener(inp.type === 'checkbox' ? 'change' : 'input', upd);
+    });
+  });
+  d.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => { contList.splice(parseInt(b.dataset.del, 10), 1); saveContSettings(); renderContDialog(); }));
+  d.querySelector('#cdAdd').addEventListener('click', () => { contList.push(blankContItem()); saveContSettings(); renderContDialog(); });
+  d.querySelector('#cdSave').addEventListener('click', () => {
+    const q = buildContListQueue(contList);
+    if (typeof q === 'string') { toast(q); return; }
+    const items = JSON.parse(JSON.stringify(contList.filter((it) => it.whole || it.ayahOn)));
+    reciteBookmarks.push({ id: Date.now(), label: contListLabel(items), items });
+    saveReciteBookmarks();
+    toast('✓ تم الحفظ في المرجعيات باسم «تلاوة»');
+  });
+  d.querySelector('#cdClose').addEventListener('click', () => closeSpecificLayer(closeContDialogLayer));
+  d.querySelector('#cdPlay').addEventListener('click', () => {
+    if (contKind === 'list') { const q = buildContListQueue(contList); if (typeof q === 'string') { toast(q); return; } }
+    reciteMode = 'continuous';
+    document.getElementById('reciteModeRadioContinue').checked = true;
+    closeSpecificLayer(closeContDialogLayer);
+    if (reciting) stopRecitation();
+    contForceFresh = true;
+    setTimeout(startRecitation, 60);
+  });
+}
+
+// ---- dragging the recitation bar with a finger ----
+let reciteBarDX = 0, reciteBarDY = 0, reciteBarJustDragged = false;
+(function () {
+  const inner = document.getElementById('reciteModeBarInner');
+  let pid = null, sx = 0, sy = 0, ox = 0, oy = 0, dragging = false;
+  inner.addEventListener('pointerdown', (e) => { pid = e.pointerId; sx = e.clientX; sy = e.clientY; ox = reciteBarDX; oy = reciteBarDY; dragging = false; });
+  inner.addEventListener('pointermove', (e) => {
+    if (e.pointerId !== pid) return;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    if (!dragging) {
+      if (Math.hypot(dx, dy) < 10) return;
+      dragging = true;
+      try { inner.setPointerCapture(pid); } catch (err) { /* ignore */ }
+    }
+    // the screen movement, turned into the page's own (possibly rotated) frame
+    let lx = dx, ly = dy;
+    if (landscapeMode && rotationState === 1) { lx = -dy; ly = dx; }
+    else if (landscapeMode && rotationState === 2) { lx = dy; ly = -dx; }
+    reciteBarDX = ox + lx; reciteBarDY = oy + ly;
+    inner.style.transform = 'translate(' + reciteBarDX + 'px,' + reciteBarDY + 'px)';
+    e.preventDefault();
+  });
+  const end = (e) => {
+    if (e.pointerId !== pid) return;
+    pid = null;
+    if (dragging) {
+      dragging = false;
+      reciteBarJustDragged = true;
+      setTimeout(() => { reciteBarJustDragged = false; }, 350);
+      // keep at least part of the bar on screen
+      const r = inner.getBoundingClientRect();
+      const W = window.innerWidth, H = window.innerHeight;
+      if (r.right < 40 || r.left > W - 40 || r.bottom < 30 || r.top > H - 30) {
+        reciteBarDX = 0; reciteBarDY = 0; inner.style.transform = '';
+      }
+    }
+  };
+  inner.addEventListener('pointerup', end);
+  inner.addEventListener('pointercancel', end);
+  inner.addEventListener('click', (e) => { if (reciteBarJustDragged) { e.preventDefault(); e.stopPropagation(); } }, true);
+})();
 
 // ---------------- ayah popup (تلاوة / نسخ الآية / حفظ الآية + معاني / تفسير / إعراب) ----------------
 let ayahPopupSurah = null, ayahPopupAyah = null;
@@ -29926,7 +30267,7 @@ function showAyahPopup(surah, ayah) {
 function hideAyahPopup() {
   const barAbove = backLayerStack.lastIndexOf(closeReciteModeBarLayer) > backLayerStack.lastIndexOf(closeAyahPopupLayer) && backLayerStack.lastIndexOf(closeAyahPopupLayer) !== -1;
   closeSpecificLayer(closeAyahPopupLayer);
-  if (barAbove) closeReciteModeBar();
+  if (barAbove && !reciting) closeReciteModeBar();
 }
 
 // In landscape, the popup's own footprint (its width pre-rotation becomes
@@ -31745,6 +32086,20 @@ function swapTopBackLayer(oldCloseFn, newCloseFn) {
 window.addEventListener('popstate', () => {
   if (backIgnorePops > 0) { backIgnorePops--; return; }
   const closeFn = backLayerStack.pop();
+  if (closeFn === closeReciteModeBarLayer && reciting) {
+    // While a recitation is playing, Back never hides its bar: it closes
+    // whatever is open beneath the bar instead (the ayah window, ...),
+    // and with nothing beneath it simply does nothing.
+    if (backLayerStack.length) {
+      const below = backLayerStack.pop();
+      below();
+      backLayerStack.push(closeReciteModeBarLayer);
+    } else {
+      pushBackLayer(closeReciteModeBarLayer);
+    }
+    if (typeof ghResumeCheck === 'function') ghResumeCheck();
+    return;
+  }
   if (closeFn) closeFn();
   if (typeof ghResumeCheck === 'function') ghResumeCheck();
 });
@@ -31887,17 +32242,20 @@ function renderGuideTab() {
     ]},
     { title: '٣. القائمة الجانبية (تُفتح بزر القائمة أعلى يمين الشاشة)', items: [
       '<b>التخطيط</b>: الاختيار بين نص المصحف (عثماني برسم المصحف، أو إملائي بتشكيل كامل، أو مجرَّد بدون تشكيل)، والاختيار بين الوضع القياسي المطابق للمصحف الورقي (١٥ سطراً في الصفحة) والوضع الحر القابل للتكبير والتصغير بحرية، وإظهار تلوين معاني الكلمات أو إخفاؤه.',
-      '<b>التلاوة</b>: اختيار القارئ لتلاوة الآيات صوتياً.',
+      '<b>التلاوة</b>: اختيار القارئ لتلاوة الآيات صوتياً (وفيها أربعة قرّاء، ويمكن إضافة قرّاء آخرين أو حذف أيٍّ منهم).',
       '<b>الأدعية</b>: مجموعة أدعية مأثورة خاصة بالتلاوة.',
       '<b>السور</b>: فهرس كامل لسور القرآن، للانتقال المباشر لأي سورة. ويمكن البحث عن سورة ما في حقل البحث الموجود في أعلى قائمة السور بإسمها أو تسلسلها.',
       '<b>الأجزاء</b>: فهرس الأجزاء الثلاثين.',
       '<b>الصفحات</b>: الانتقال المباشر لأي رقم صفحة.',
-      '<b>المرجعيات</b>: قائمة الصفحات والآيات التي وضعت عليها علامة مرجعية.',
+      '<b>المرجعيات</b>: قائمة الصفحات والآيات التي وضعت عليها علامة مرجعية، والتلاوات المحفوظة تحت عنوان «تلاوة» (تبدأ تلاوة أيٍّ منها بالنقر عليها).',
       '<b>تعديل هجري</b>: ضبط دقيق للتاريخ الهجري المعروض (تقديم أو تأخير يوم أو يومين).',
     ]},
     { title: '٤. نافذة الآية (تظهر بالنقر على الآية)', items: [
       'تُفتح نافذة الآية بالنقر على <b>أي كلمة من الآية أو على رقمها</b> عدا الكلمات الخضراء (والتمرير التلقائي غير مفعّل)، وتُغلق مع تظليل الآية بالنقر على أي موضع من النص (حتى لو كان كلمة خضراء)، أو بالرجوع، أو بالانتقال إلى أي عمل آخر. وتبدأ التلاوة الصوتية من النافذة.',
-      '<b>تلاوة</b>: الاستماع لتلاوة الآية بصوت القارئ المختار، مع اختيارات قراءة الآية مرة واحدة أو تكرارها أو الاستمرار.',
+      '<b>تلاوة</b>: الاستماع لتلاوة الآية بصوت القارئ المختار. يظهر شريط التلاوة فوق نافذة الآية مباشرة، وفيه زر التشغيل والإيقاف، واختيارات قراءة الآية <b>مرة</b> واحدة أو <b>تكرارها</b> أو <b>الاستمرار</b>.',
+      'يمكن تحريك شريط التلاوة بالإصبع إلى أي موضع في الشاشة، ويعود إلى مكانه فوق النافذة عند فتحه من جديد. وأثناء التلاوة لا يختفي الشريط بالرجوع، بل يغلق الرجوع النافذة التي تحته، ويختفي الشريط بالرجوع بعد إيقاف التلاوة.',
+      'عند اختيار <b>استمرار</b> تظهر نافذة خياراته، وكل ما يُختار فيها يبقى محفوظاً للمرات القادمة: <b>أولاً حسب الوقت</b> (من خمس دقائق إلى خمس ساعات) فتتوقف التلاوة بعد انتهاء الآية التي يحين عندها الوقت، ويمكن جمعه مع أي خيار من <b>ثانياً حسب السور والآيات</b>: من الآية المختارة حتى نهاية السورة، أو من بداية السورة حتى نهايتها، أو استمرار حتى الإيقاف، أو <b>السور أو الآيات التالية</b>.',
+      'في <b>السور أو الآيات التالية</b>: يُكتب اسم السورة، ثم توضع علامة في مربع <b>سورة</b> لتلاوتها كاملة، أو في مربع <b>الآية</b> مع كتابة رقم آية أو أكثر (مثل: ٥ أو ١-٧ أو ٣، ٩)، ويُكتب بجانب كل منهما عدد مرات التكرار. ويمكن إضافة سور أخرى، و<b>حفظ</b> الاختيار في المرجعيات باسم «تلاوة».',
       '<b>نسخ الآية</b>: نسخ نص الآية.',
       '<b>حفظ الآية</b>: وضع علامة مرجعية على آية بعينها.',
       '<b>تفسير القرآن</b> و<b>اللغة</b> و<b>الإعراب</b>: تفتح كلٌّ منها صفحة خاصة على الآية نفسها (انظر الفقرة التالية).',
@@ -32782,6 +33140,36 @@ function renderBookmarksTab() {
       del.textContent = '✕';
       del.style.cssText = 'background:transparent;border:none;color:#7B2E2E;font-size:15px;padding:8px;cursor:pointer;';
       del.addEventListener('click', (e) => { e.stopPropagation(); removeAyahBookmark(bm.id); });
+      row.appendChild(btn);
+      row.appendChild(del);
+      sidebarBody.appendChild(row);
+    });
+  }
+
+  const recHeader = document.createElement('div');
+  recHeader.className = 'bookmark-section-title';
+  recHeader.style.cssText = 'font-family:sans-serif;font-weight:700;font-size:19px;padding:4px;margin:18px 0 6px;';
+  recHeader.textContent = 'تلاوة';
+  sidebarBody.appendChild(recHeader);
+  if (!reciteBookmarks.length) {
+    const empty3 = document.createElement('div');
+    empty3.className = 'strong-note';
+    empty3.style.cssText = 'font-family:sans-serif;font-weight:700;padding:8px 4px 4px;font-size:17px;';
+    empty3.textContent = 'لا توجد تلاوات محفوظة بعد.';
+    sidebarBody.appendChild(empty3);
+  } else {
+    reciteBookmarks.forEach((bm) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;border-bottom:1px solid #EDE3C6;';
+      const btn = document.createElement('button');
+      btn.className = 'surah-row';
+      btn.style.cssText = 'flex:1;border-bottom:none;';
+      btn.innerHTML = '<span class="rowName"><span class="nm" style="font-family:sans-serif;font-size:18px;white-space:normal;">▶ ' + escapeHtml(bm.label) + '</span></span>';
+      btn.addEventListener('click', () => playReciteBookmark(bm));
+      const del = document.createElement('button');
+      del.textContent = '✕';
+      del.style.cssText = 'background:transparent;border:none;color:#7B2E2E;font-size:15px;padding:8px;cursor:pointer;';
+      del.addEventListener('click', (e) => { e.stopPropagation(); reciteBookmarks = reciteBookmarks.filter((b) => b.id !== bm.id); saveReciteBookmarks(); renderBookmarksTab(); });
       row.appendChild(btn);
       row.appendChild(del);
       sidebarBody.appendChild(row);
