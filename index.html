@@ -28097,6 +28097,7 @@ function renderFreeWindow(centerPage, scrollToCenter) {
   freeWindowStart = start;
   freeWindowEnd = end;
   segRenderCheck = true;
+  segRenderAt = Date.now();
   segLimits = { min: -Infinity, max: Infinity };
   if (typeof hideSegPanel === 'function') { hideSegPanel(); segReleaseLock(); }
   const container = document.getElementById('freePagesContainer');
@@ -30889,6 +30890,7 @@ function renderBoundWindow(centerPage, scrollToCenter) {
   boundWindowStart = start;
   boundWindowEnd = end;
   segRenderCheck = true;
+  segRenderAt = Date.now();
   segLimits = { min: -Infinity, max: Infinity };
   if (typeof hideSegPanel === 'function') { hideSegPanel(); segReleaseLock(); }
   boundPagesContainer.innerHTML = '';
@@ -31179,6 +31181,7 @@ function centerOn(n) {
 // boundary itself (the next surah's bar) when it is on screen, otherwise
 // just above the bottom toolbar.
 const SEG_PANEL_RESERVE = 0;
+var segRenderAt = 0;
 var segShrink = 0; // px taken off the bottom of the text area while the boxes show, so they never cover text
 let segStartId = null;      // the boundary the current stretch begins at ('s12', 'j3', or 'FAR')
 let segRenderCheck = true;  // a jump re-rendered the pages: re-check which stretch we are in
@@ -31320,6 +31323,7 @@ function initSegTouch(wrap) {
     const t = Math.max(segLimits.min, Math.min(segLimits.max, target));
     const over = target - t;
     if (Math.abs(wrap.scrollTop - t) > 0.5) wrap.scrollTop = t;
+    if (over > 4 && !segEngaged) segGuardShowEnd();
     const give = Math.sign(over) * Math.min(26, Math.abs(over) * 0.18);
     const c = segContainer();
     if (c) c.style.transform = give ? 'translateY(' + (-give).toFixed(1) + 'px)' : '';
@@ -31339,6 +31343,15 @@ function initSegTouch(wrap) {
   };
   wrap.addEventListener('touchend', end, { passive: true });
   wrap.addEventListener('touchcancel', end, { passive: true });
+}
+// the boxes for the end the reader is held at (used from the drag handler)
+function segGuardShowEnd() {
+  const wrap = segWrap();
+  const list = collectSegBoundaries();
+  const startB = segFind(list, segStartId);
+  const endB = list.find((b) => b.y > (startB ? startB.y : wrap.scrollTop + 8)) || null;
+  if (endB) showSegPanel('end', endB, startB, wrap, wrap.scrollTop);
+  else if ((freeWindowEnd >= 604)) showSegPanel('end', { s: 115, j: 31, y: wrap.scrollHeight, natural: true }, startB, wrap, wrap.scrollTop);
 }
 function segGuard() {
   if (layoutMode !== 'free') {
@@ -31372,7 +31385,9 @@ function segGuard() {
     segReleaseLock(); // moved away by other means (a jump, recitation...)
   }
   if (top > max + 0.5) {
-    const push = top > max + 6 || segAutoActive();
+    // a small overshoot right after a jump is only the pages settling;
+    // any other reach past the end - even a slow one - shows the boxes
+    const push = top > max + 6 || segAutoActive() || segTouch || (Date.now() - segRenderAt > 900);
     segClampTo(wrap, max);
     if (push) { segStopAuto(); showSegPanel('end', endB, startB, wrap, max); }
   } else if (top < min - 0.5) {
