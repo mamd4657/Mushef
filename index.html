@@ -28096,7 +28096,7 @@ function renderFreeWindow(centerPage, scrollToCenter) {
   freeWindowEnd = end;
   segRenderCheck = true;
   segLimits = { min: -Infinity, max: Infinity };
-  if (typeof hideSegPanel === 'function') hideSegPanel();
+  if (typeof hideSegPanel === 'function') { hideSegPanel(); segReleaseLock(); }
   const container = document.getElementById('freePagesContainer');
   container.innerHTML = '';
   for (let p = start; p <= end; p++) {
@@ -28481,6 +28481,7 @@ function noteFreeScrollActivity() {
 function initFreeScrollTracking() {
   const wrap = document.getElementById('freeScrollWrap');
   if (!wrap) return;
+  initSegTouch(wrap);
   wrap.addEventListener('scroll', () => {
     if (freeSuppressScrollTracking) return;
     extendFreeWindowIfNeeded();
@@ -30887,7 +30888,7 @@ function renderBoundWindow(centerPage, scrollToCenter) {
   boundWindowEnd = end;
   segRenderCheck = true;
   segLimits = { min: -Infinity, max: Infinity };
-  if (typeof hideSegPanel === 'function') hideSegPanel();
+  if (typeof hideSegPanel === 'function') { hideSegPanel(); segReleaseLock(); }
   boundPagesContainer.innerHTML = '';
   boundPagesContainer.appendChild(boundTopSpacer);
   let firstEl = null;
@@ -31068,6 +31069,7 @@ function noteBoundScrollActivity() {
 function initBoundScrollTracking() {
   const wrap = vScrollWrap;
   if (!wrap) return;
+  initSegTouch(wrap);
   wrap.addEventListener('scroll', () => {
     if (boundSuppressScrollTracking) return;
     reconcileBoundWindow();
@@ -31269,14 +31271,71 @@ function segStopAuto() {
   if (layoutMode === 'free') { if (freeAutoScrolling || freeTapPaused) { freeTapPaused = false; pauseFreeAutoScroll(); } }
   else if (autoPlaying) stopAutoScroll();
 }
-function segClampTo(wrap, v) {
-  // stop any finger fling / momentum right at the limit
+// At a limit the scroll area is locked (overflow:hidden), which stops any
+// finger drag or fling dead instead of letting it fight the correction
+// every frame (that fight was the shaking/blurring). While locked, finger
+// drags are applied by hand: back into the stretch they scroll normally,
+// past the limit they only nudge the page a little (a soft give that
+// springs back on release).
+let segLock = null; // { lim }
+function segSetOverflow(wrap, hidden) {
   if (!wrap.dataset.segOv) wrap.dataset.segOv = wrap.style.overflowY || '-';
   const prev = wrap.dataset.segOv;
-  wrap.style.overflowY = 'hidden';
+  wrap.style.overflowY = hidden ? 'hidden' : (prev === '-' ? '' : prev);
+}
+function segClampTo(wrap, v) {
+  segSetOverflow(wrap, true);
   wrap.scrollTo({ top: v, behavior: 'instant' }); // also cancels a smooth snap in flight
   if (layoutMode === 'free') freeAutoScrollAccum = v; else autoScrollAccum = v;
-  requestAnimationFrame(() => { wrap.style.overflowY = prev === '-' ? '' : prev; });
+  segLock = { lim: v };
+}
+function segReleaseLock() {
+  const wrap = segWrap();
+  segLock = null;
+  if (wrap) segSetOverflow(wrap, false);
+  const c = segContainer();
+  if (c) { c.style.transition = ''; c.style.transform = ''; }
+}
+// finger position along the page's own (possibly rotated) vertical axis
+function segLocalY(t) {
+  if (landscapeMode && rotationState === 1) return t.clientX;
+  if (landscapeMode && rotationState === 2) return -t.clientX;
+  return t.clientY;
+}
+let segTouch = null;
+function initSegTouch(wrap) {
+  wrap.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) { segTouch = null; return; }
+    segTouch = { y0: segLocalY(e.touches[0]), top0: wrap.scrollTop, moved: false };
+    const c = segContainer();
+    if (c) c.style.transition = '';
+  }, { passive: true });
+  wrap.addEventListener('touchmove', (e) => {
+    if (!segTouch || !segLock || reciting || e.touches.length !== 1) return;
+    if (layoutMode !== 'free' && landscapeMode) return; // landscape standard mode drags by its own code
+    const target = segTouch.top0 + (segTouch.y0 - segLocalY(e.touches[0]));
+    const t = Math.max(segLimits.min, Math.min(segLimits.max, target));
+    const over = target - t;
+    if (Math.abs(wrap.scrollTop - t) > 0.5) wrap.scrollTop = t;
+    const give = Math.sign(over) * Math.min(26, Math.abs(over) * 0.18);
+    const c = segContainer();
+    if (c) c.style.transform = give ? 'translateY(' + (-give).toFixed(1) + 'px)' : '';
+    segTouch.moved = true;
+    if (e.cancelable) e.preventDefault();
+  }, { passive: false });
+  const end = () => {
+    const c = segContainer();
+    if (c && c.style.transform) {
+      c.style.transition = 'transform .25s ease-out';
+      c.style.transform = '';
+      setTimeout(() => { c.style.transition = ''; }, 280);
+    }
+    // dragged back into the stretch: hand scrolling back to the browser
+    if (segLock && segTouch && segTouch.moved && Math.abs(wrap.scrollTop - segLock.lim) > 20) segReleaseLock();
+    segTouch = null;
+  };
+  wrap.addEventListener('touchend', end, { passive: true });
+  wrap.addEventListener('touchcancel', end, { passive: true });
 }
 function segGuard() {
   if (reciting) return;
@@ -31301,12 +31360,20 @@ function segGuard() {
     (wrap.scrollHeight - top - wrap.clientHeight) < 2;
   // a few px off the limit (rounding while the pages settle) is corrected
   // quietly; a real push past it stops scrolling and shows the boxes
+  if (segLock && !segTouch && Math.abs(top - segLock.lim) > 20 && top >= min - 0.5 && top <= max + 0.5) {
+    segReleaseLock(); // moved away by other means (a jump, recitation...)
+  }
   if (top > max + 0.5) {
+    const push = top > max + 6 || segAutoActive();
     segClampTo(wrap, max);
-    if (top > max + 6 || segAutoActive()) { segStopAuto(); showSegPanel('end', endB, startB, wrap, max); }
+    if (push) { segStopAuto(); showSegPanel('end', endB, startB, wrap, max); }
   } else if (top < min - 0.5) {
+    // the start of the stretch: stop here, without the boxes
     segClampTo(wrap, min);
-    if (top < min - 6 || segAutoActive()) { segStopAuto(); showSegPanel('start', startB, startB, wrap, min); }
+    segStopAuto();
+    if (segEngaged) hideSegPanel();
+  } else if (segLock && segAutoActive() && Math.abs(top - max) < 1) {
+    segStopAuto(); showSegPanel('end', endB, startB, wrap, max);
   } else if (atNaturalEnd && !segEngaged) {
     segStopAuto();
     showSegPanel('end', { s: 115, j: 31, y: wrap.scrollHeight, natural: true }, startB, wrap, top);
@@ -32349,6 +32416,10 @@ function retireOrphanBackSteps() {
 }
 
 function pushBackLayer(closeFn) {
+  if (homeArmed && closeFn !== homeBackLayer && !backLayerStack.length &&
+      typeof sidebar !== 'undefined' && !sidebar.classList.contains('open')) {
+    pushBackLayer(homeBackLayer);
+  }
   backLayerStack.push(closeFn);
   if (window.ghResumeArmedAt && Date.now() - window.ghResumeArmedAt < 1500) window.ghResumeLayer = closeFn;
   window.ghResumeArmedAt = 0;
@@ -32464,7 +32535,7 @@ function applySidebarTopOffset() {
   }
   document.documentElement.style.setProperty('--sidebarTop', Math.round(top) + 'px');
 }
-function openSidebar(tab) {
+function openSidebar(tab, asHome) {
   if (typeof hideGharib === 'function') hideGharib();
   if (typeof ayahPopupEl !== 'undefined' && ayahPopupEl.style.display !== 'none') {
     ayahPopupEl.style.display = 'none';
@@ -32479,13 +32550,25 @@ function openSidebar(tab) {
   overlay.classList.add('show');
   setActiveTab(tab || 'surah');
   applySidebarBottomClearance();
+  if (asHome) return; // the index the app opens on: Back from it leaves the app
   if (searchWasOpen) {
     swapTopBackLayer(closeSearchPageLayer, closeSidebarLayer);
   } else {
     pushBackLayer(closeSidebarLayer);
   }
 }
+// ---- the index (السور) is the app's home ----
+// The app opens on the index. Once the reader goes into the text, Back
+// steps out one thing at a time as before, and its last step returns to
+// the index (instead of leaving the app); Back from there leaves the app.
+let homeArmed = false;
+function homeBackLayer() { openSidebar('surah', true); }
 function closeSidebar() {
+  if (backLayerStack.lastIndexOf(closeSidebarLayer) === -1 && sidebar.classList.contains('open')) {
+    closeSidebarLayer(); // the home index has no Back step of its own
+    if (homeArmed && !backLayerStack.length) pushBackLayer(homeBackLayer);
+    return;
+  }
   closeSpecificLayer(closeSidebarLayer);
 }
 // The ☰ button stays visible now that the header isn't covered - pressing
@@ -32604,7 +32687,8 @@ function renderGuideTab() {
     ]},
     { title: '٦. صفحة النص القرآني', items: [
       'ميزة النسخ الحر بالضغط المطوّل على أي موضع من الصفحة.',
-      'يتوقف التمرير اليدوي والتلقائي (في الوضعين القياسي والحر، صعوداً ونزولاً) عند نهاية السورة أو بدايتها، وعند نهاية الجزء أو بدايته، وتظهر ثلاثة مستطيلات: في الوسط مكان التوقف (نهاية السورة أو الجزء أو بدايتهما)، وعلى يمينه <b>السورة السابقة</b> أو <b>الجزء السابق</b>، وعلى يساره <b>السورة التالية</b> أو <b>الجزء التالي</b>. ويكون الانتقال بالنقر على أحدها، ثم يُختار التمرير اليدوي أو التلقائي.',
+      'يتوقف التمرير اليدوي والتلقائي (في الوضعين القياسي والحر) عند نهاية السورة وعند نهاية الجزء، وكذلك عند بدايتهما في التمرير المعاكس. وعند النهاية تظهر ثلاثة مستطيلات: في الوسط <b>نهاية السورة</b> أو <b>الجزء</b>، وعلى يمينه <b>السورة السابقة</b> أو <b>الجزء السابق</b>، وعلى يساره <b>السورة التالية</b> أو <b>الجزء التالي</b>. ويكون الانتقال بالنقر على أحدها، ثم يُختار التمرير اليدوي أو التلقائي.',
+      'يفتح المصحف على القائمة الجانبية (عنوان السور)، وعند الرجوع بالإيماءة أو بسهم الرجوع يعود البرنامج خطوة خطوة، وآخر خطوة قبل الخروج تعيد إلى القائمة الجانبية.',
       'خط أخضر داكن سميك على أحد جانبي الصفحة للدلالة على كونها صفحة يمنى أو يسرى.',
       'علامة الربع ' + rubGridSvg(3) + ': تظهر داخل النص عند بداية كل ربع حزب، بدلاً من العلامة الدائرية التقليدية. وهي شبكة صغيرة من ٨ مربعات (عمودان × ٤ صفوف) تمثّل أثمان الجزء الحالي الثمانية - العمود الأيمن لحزبه الأول والأيسر لحزبه الثاني، كل عمود من الأعلى للأسفل. تُملأ المربعات تدريجياً (كما في المثال المجاور، وفيه ٣ من ٨) بعدد الأرباع التي وصلت إليها القراءة من الجزء، فتُعرف دفعة واحدة أي ربع أنت فيه من الجزء دون حساب.',
     ]},
@@ -34900,6 +34984,8 @@ setTimeout(() => {
   }
   centerOn(start);
   initSucceeded = true;
+  openSidebar('surah', true);
+  homeArmed = true;
   setTimeout(precomputeOtherOrientationInBackground, 600);
  } catch (e) {
   // Whatever failed, this is the one place that guarantees the person
