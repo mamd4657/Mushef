@@ -132,15 +132,18 @@ body.landscape-lock .rotateFabBtn{right:auto;left:8px;}
 .fab-frame{display:flex;align-items:center;gap:7px;border:1.5px solid #F6EFDC;border-radius:12px;padding:2px 9px;height:42.8px;box-sizing:border-box;background:#ffffff0d;}
 #rotateFrameBound,#rotateFrameFree{padding:2px 5px;}
 /* bottom bar: one row that always fits; its outer frames line up with the page's own edges */
-#autoFab,#freeAutoFab{flex-wrap:nowrap !important;justify-content:space-between !important;gap:4px !important;padding-left:max(8px, calc((100% - 744px) / 2)) !important;padding-right:max(8px, calc((100% - 744px) / 2)) !important;}
+#autoFab,#freeAutoFab{flex-wrap:nowrap !important;justify-content:flex-start !important;gap:var(--hdrGap) !important;padding-left:max(8px, calc((100% - 744px) / 2)) !important;padding-right:max(8px, calc((100% - 744px) / 2)) !important;}
 #rotateFrameBound,#rotateFrameFree,#backFrameBound,#backFrameFree{width:var(--hdrDarkW);flex:0 0 auto;padding:0 !important;justify-content:center;}
 #rotateFrameBound .fab-btn,#rotateFrameFree .fab-btn,#backFrameBound .fab-btn,#backFrameFree .fab-btn{padding:0;}
 #autoFab .fab-frame,#freeAutoFab .fab-frame{min-width:0;}
+/* the middle frames grow (or shrink) to fill the bar, contents spread evenly */
+#autoFab .fab-frame-scroll,#freeAutoFab .fab-frame-scroll,#freeAutoFab .fab-frame-size,#segStopFrame{flex:1 1 auto;justify-content:space-evenly;}
+#segStopFrame{padding:0 4px !important;}
 #autoFab .fab-frame-scroll,#freeAutoFab .fab-frame-scroll,#freeAutoFab .fab-frame-size{padding-left:5px;padding-right:5px;}
 #autoFab .fab-btn-round,#freeAutoFab .fab-btn-round{width:clamp(27px, 8.4vw, 36px);height:clamp(27px, 8.4vw, 36px);}
 #freeAutoFab .fab-frame-size{gap:clamp(5px, 2.4vw, 12px);}
 #freeAutoFab .fab-frame-scroll,#autoFab .fab-frame-scroll{gap:clamp(2px, 1vw, 5px);}
-#segStopBtn{color:#E8B84B;padding:3px 0 3px 2px;border-right:1.5px solid #F6EFDC55;margin-right:1px;padding-right:5px;border-radius:0;height:30px;}
+#segStopBtn{color:#E8B84B;padding:3px;}
 #segStopBtn.off{color:#F6EFDC;opacity:.4;}
 #segStopBtn.off svg{stroke-dasharray:none;}
 .fab-frame-scroll{gap:5px;padding:1px 7px;}
@@ -944,6 +947,8 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
         <span id="freeSpeedNum" class="speed-num" aria-label="سرعة التمرير"></span>
       </div>
       <button id="freeSpeedUpBtn" class="fab-btn fab-btn-round" aria-label="أسرع التمرير">+</button>
+    </div>
+    <div class="fab-frame" id="segStopFrame">
       <button class="fab-btn" id="segStopBtn" aria-label="التوقف في أواخر السور والأجزاء" title="التوقف في أواخر السور والأجزاء"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="4" x2="20" y2="4"/><line x1="12" y1="21" x2="12" y2="9"/><polyline points="7,13 12,8 17,13"/></svg></button>
     </div>
     <div class="fab-frame fab-frame-size">
