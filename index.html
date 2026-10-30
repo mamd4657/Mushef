@@ -147,8 +147,11 @@ body.landscape-lock .rotateFabBtn{right:auto;left:8px;}
 .ayah-content-tab.active{background:#F3E9D1;color:#7B2E2E;border-color:#7B2E2E;}
 #ayahPopupContent{flex:1;overflow-y:auto;padding:14px;font-family:sans-serif;font-weight:700;font-size:19px;color:#211C14;min-height:90px;line-height:1.85;}
 #bookReader{position:fixed;top:0;left:0;right:0;bottom:calc(var(--floatBarH) + var(--navInset));z-index:56;background:#FBF5E4;flex-direction:column;color:#211C14;overflow:hidden;}
-#bookReaderHead{background:#0E4433;color:#F6EFDC;padding:8px 10px 6px;padding-top:calc(8px + var(--topInset));flex:0 0 auto;}
+#bookReaderHead{position:relative;background:#0E4433;color:#F6EFDC;padding:8px 10px 6px;padding-top:calc(8px + var(--topInset));flex:0 0 auto;}
 #bookReaderTitle{font-family:'Amiri',serif;font-weight:700;font-size:20px;text-align:center;line-height:1.5;}
+#bookFontBtns{position:absolute;left:8px;top:calc(6px + var(--topInset));display:flex;gap:5px;}
+#bookFontBtns button{direction:ltr;background:transparent;border:1.5px solid #FFFFFF;border-radius:8px;color:#FFFFFF;font-family:sans-serif;font-weight:700;font-size:14px;line-height:1;padding:5px 6px;cursor:pointer;}
+#bookReaderTitle{padding-left:84px;padding-right:84px;}
 #bookReaderNav{display:flex;align-items:center;justify-content:center;margin-top:4px;}
 #bookReaderWhere{font-family:'Amiri',serif;font-weight:700;font-size:15px;color:#FFFFFF;text-align:center;flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px;}
 .book-hbox{flex:0 0 auto;box-sizing:border-box;border:1.5px solid #FFFFFF;border-radius:9px;background:transparent;color:#E8B84B;font-family:'Amiri',serif;font-weight:700;font-size:15px;line-height:1.5;padding:2px 7px;white-space:nowrap;text-align:center;}
@@ -156,12 +159,12 @@ body.landscape-lock .rotateFabBtn{right:auto;left:8px;}
 #bookIntroToggle{cursor:pointer;}
 #bookIntroToggle.on{background:#E8B84B;color:#0E4433;border-color:#E8B84B;}
 #bookIntroToggle.off{visibility:hidden;}
-#bookReaderBody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px 24px;font-family:'Amiri',serif;font-weight:700;font-size:20px;line-height:1.95;text-align:justify;max-width:760px;margin:0 auto;width:100%;box-sizing:border-box;}
+#bookReaderBody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px 24px;font-family:'Amiri',serif;font-weight:700;font-size:var(--bookFontPx,24px);line-height:1.95;text-align:justify;max-width:760px;margin:0 auto;width:100%;box-sizing:border-box;}
 #bookReaderBody p{margin:0 0 10px;}
 #bookReaderBody p.qa{text-align:center;margin:6px 0 12px;}
 #bookReaderBody q{quotes:none;color:#A50021;font-weight:700;}
 #bookReaderBody i{font-style:normal;font-family:sans-serif;font-size:12px;color:#8A7A55;border:1px solid #D9C99E;border-radius:6px;padding:0 4px;margin-left:4px;vertical-align:2px;}
-#bookReaderBody h4{font-size:19px;color:#7B2E2E;margin:16px 0 8px;text-align:center;}
+#bookReaderBody h4{font-size:.95em;color:#7B2E2E;margin:16px 0 8px;text-align:center;}
 .book-seg{border-bottom:1px dashed #CDBB8C;padding-bottom:6px;margin-bottom:14px;}
 .book-seg-label{display:block;text-align:center;font-family:sans-serif;font-weight:700;font-size:14px;color:#7B2E2E;margin:0 0 6px;}
 .book-note{text-align:center !important;font-family:sans-serif;font-weight:700;font-size:16px;color:#6B5E40;margin:18px 6px;line-height:1.8;}
@@ -303,7 +306,7 @@ main{max-width:760px;margin:0 auto;padding:0 8px;}
 #vScrollWrap *{overflow-anchor:none;}
 .vSlot{box-sizing:border-box;padding:0 7px 6px;}
 body.landscape-lock .vSlot{padding:0 26px 14px;}
-.page-frame{background:#FBF5E4;border:2px solid #0E4433;border-radius:14px;box-shadow:inset 0 0 0 4px #F6EFDC, 0 10px 30px rgba(14,68,51,.15);padding:4px;min-height:480px;position:relative;}
+.page-frame{background:var(--pageBg,#FBF5E4);border:2px solid #0E4433;border-radius:14px;box-shadow:inset 0 0 0 4px var(--pageRing,#F6EFDC), 0 10px 30px rgba(14,68,51,.15);padding:4px;min-height:480px;position:relative;}
 .pageSideLine{position:absolute;top:6px;bottom:6px;width:6px;background:#0E4433;border-radius:4px;right:-3px;}
 .pageSideLine.side-left{right:auto;left:-3px;}
 /* A translucent gold band inside the dark side line, 5mm full then fading
@@ -642,7 +645,7 @@ body.dark-mode .sajdah-side-bar{fill:#EFE8D6;}
    decorative ring around a number that's really just plain metadata here.
    Sized/weighted to match the floating frame bar's own page-number badge
    (.side-slot) for a consistent, plainly legible digit style across the app. */
-.qheader .qh-meta .qh-num{font-family:sans-serif;font-size:1.35em;font-weight:800;}
+.qheader .qh-meta .qh-num{font-family:sans-serif;font-size:1.35em;font-weight:500;}
 /* Every surah name bar: "سورة …" exactly at the bar's centre (a 3-column
    grid with equal outer columns), ترتيبها 5mm from the right edge and the
    ayah count 5mm from the left; the two small labels in a plain bold face
@@ -652,7 +655,8 @@ body.dark-mode .sajdah-side-bar{fill:#EFE8D6;}
 .qheader .qh-meta:last-child,.qcombo .cname .qh-meta:last-child{justify-self:end;}
 .qheader .qh-name,.qcombo .cname .qh-name{min-width:0;}
 .qheader .qh-meta,.qcombo .cname .qh-meta{min-width:0 !important;align-items:center !important;gap:4px !important;}
-.qheader .qh-meta .qh-label,.qcombo .cname .qh-meta .qh-label{font-family:sans-serif !important;font-weight:700;font-size:.62em !important;letter-spacing:.02em;line-height:1;}
+.qheader .qh-meta .qh-label,.qcombo .cname .qh-meta .qh-label{font-family:sans-serif !important;font-weight:500;font-size:.72em !important;letter-spacing:.02em;line-height:1;}
+.qheader .qh-meta,.qcombo .cname .qh-meta{-webkit-text-stroke:0 !important;}
 .qbsm{font-family:var(--quran-font,'QuranHafs'),serif;font-weight:400;-webkit-text-stroke:max(0.023em, 0.5px) currentColor;text-align:center;text-align-last:center;font-size:1.2rem;color:#0E4433;margin-bottom:2px;white-space:nowrap;overflow:hidden;}
 /* Al-Fatiha's own ayah 1 (the basmala itself, isolated onto its own line -
    see buildFreePageContent). Deliberately does NOT set its own font-size
@@ -668,7 +672,7 @@ body.dark-mode .fatiha-ayah1-bsm{color:#EFE8D6;}
 .qcombo .cname .qh-name{flex:1;text-align:center;text-align-last:center;overflow:hidden;text-overflow:ellipsis;font-size:1.15em;}
 .qcombo .cname .qh-meta{font-family:'Amiri',serif;color:#F6EFDC;font-weight:700;flex-shrink:0;white-space:nowrap;display:flex;align-items:baseline;gap:2px;min-width:3.1em;font-size:1.1em;}
 .qcombo .cname .qh-meta .qh-label{font-size:.72em;}
-.qcombo .cname .qh-meta .qh-num{font-family:sans-serif;font-size:1.35em;font-weight:800;}
+.qcombo .cname .qh-meta .qh-num{font-family:sans-serif;font-size:1.35em;font-weight:500;}
 .qcombo .cbsm{font-family:var(--quran-font,'QuranHafs'),serif;font-weight:400;-webkit-text-stroke:max(0.023em, 0.5px) currentColor;font-size:.95rem;color:#0E4433;white-space:nowrap;overflow:hidden;text-align:center;text-align-last:center;}
 .controls{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap;}
 .btn{background:#0E4433;color:#F6EFDC;border:none;border-radius:10px;padding:8px 14px;cursor:pointer;font-size:16px;font-weight:700;font-family:sans-serif;}
@@ -815,6 +819,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
 <div id="bookReader" style="display:none;">
   <div id="bookReaderHead">
     <div id="bookReaderTitle"></div>
+    <div id="bookFontBtns"><button id="bookFontDown" aria-label="تصغير خط التفسير">A−</button><button id="bookFontUp" aria-label="تكبير خط التفسير">A+</button></div>
     <div id="bookReaderNav">
       <span id="bookReaderSurah" class="book-hbox"></span>
       <span id="bookReaderWhere"></span>
@@ -878,6 +883,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
   <div class="sidebar-main">
     <div class="tabs" id="indexTabs">
       <button class="tab" data-tab="font">التخطيط</button>
+      <button class="tab" data-tab="pagebg">خلفية النص</button>
       <button class="tab" data-tab="recitation">التلاوة</button>
       <button class="tab" data-tab="duas">الأدعية</button>
       <button class="tab" data-tab="surah">السور</button>
@@ -30451,6 +30457,13 @@ const bookMemCache = {}; // `${kind}:${surah}` -> parsed JSON
 let bookReaderKind = null, bookReaderSurah = null, bookReaderAyah = null;
 const bookReaderEl = document.getElementById('bookReader');
 const bookReaderBodyEl = document.getElementById('bookReaderBody');
+// Text size of the tafsir / اللغة / الإعراب reader (A− / A+), remembered.
+let bookFontPx = parseInt(store.get('book-font-px') || '24', 10);
+if (!(bookFontPx >= 16 && bookFontPx <= 40)) bookFontPx = 24;
+function applyBookFont() { document.documentElement.style.setProperty('--bookFontPx', bookFontPx + 'px'); store.set('book-font-px', String(bookFontPx)); }
+applyBookFont();
+document.getElementById('bookFontDown').addEventListener('click', (e) => { e.stopPropagation(); bookFontPx = Math.max(16, bookFontPx - 2); applyBookFont(); });
+document.getElementById('bookFontUp').addEventListener('click', (e) => { e.stopPropagation(); bookFontPx = Math.min(40, bookFontPx + 2); applyBookFont(); });
 
 function bookFileUrl(kind, surah) {
   return new URL(BOOKS[kind].dir + String(surah).padStart(3, '0') + '.json', location.href).href;
@@ -32788,11 +32801,48 @@ function renderTabContent() {
   else if (currentTab === 'page') renderPageTab();
   else if (currentTab === 'bookmarks') renderBookmarksTab();
   else if (currentTab === 'font') renderFontTab();
+  else if (currentTab === 'pagebg') renderPageBgTab();
   else if (currentTab === 'recitation') renderRecitationTab();
   else if (currentTab === 'duas') renderDuasTab();
   else if (currentTab === 'hijri') renderHijriAdjustTab();
   else if (currentTab === 'guide') renderGuideTab();
   else if (currentTab === 'share') renderShareTab();
+}
+
+// ---- خلفية النص: seven page colours, cream (as before) to dark gold ----
+const PAGE_BGS = [
+  ['#FBF5E4', '#F6EFDC', 'كريمي (الأصلي)'],
+  ['#F7ECCD', '#F2E6C4', 'كريمي داكن'],
+  ['#F2E2B5', '#ECDBAA', 'رملي'],
+  ['#ECD69C', '#E5CE90', 'ذهبي فاتح'],
+  ['#E4C882', '#DCBF75', 'ذهبي'],
+  ['#D9B768', '#D0AD5B', 'ذهبي متوسط'],
+  ['#CBA44E', '#C19A43', 'ذهبي غامق'],
+];
+let pageBgIdx = parseInt(store.get('page-bg') || '0', 10);
+if (!(pageBgIdx >= 0 && pageBgIdx < PAGE_BGS.length)) pageBgIdx = 0;
+function applyPageBg() {
+  const [bg, ring] = PAGE_BGS[pageBgIdx];
+  document.documentElement.style.setProperty('--pageBg', bg);
+  document.documentElement.style.setProperty('--pageRing', ring);
+}
+applyPageBg();
+function renderPageBgTab() {
+  sidebarBody.innerHTML = '';
+  const intro = document.createElement('div');
+  intro.className = 'strong-note';
+  intro.style.cssText = 'font-family:sans-serif;font-weight:700;font-size:16px;padding:4px 4px 10px;line-height:1.6;';
+  intro.textContent = 'اختر لون خلفية صفحات المصحف (في الوضع النهاري؛ أما الوضع الليلي فخلفيته داكنة دائماً).';
+  sidebarBody.appendChild(intro);
+  PAGE_BGS.forEach(([bg, ring, name], i) => {
+    const row = document.createElement('button');
+    row.className = 'font-opt' + (i === pageBgIdx ? ' active' : '');
+    row.innerHTML = '<span class="fo-check">✓</span>' +
+      '<span style="flex:1;display:flex;align-items:center;gap:10px;"><span style="flex:0 0 auto;width:74px;height:40px;border-radius:8px;border:2px solid #0E4433;box-shadow:inset 0 0 0 3px ' + ring + ';background:' + bg + ';display:flex;align-items:center;justify-content:center;font-family:var(--quran-font),serif;font-size:20px;color:#211C14;">بِسۡمِ</span></span>' +
+      '<span class="fo-label">' + name + '</span>';
+    row.addEventListener('click', () => { pageBgIdx = i; store.set('page-bg', String(i)); applyPageBg(); renderPageBgTab(); });
+    sidebarBody.appendChild(row);
+  });
 }
 
 function renderGuideTab() {
@@ -32817,6 +32867,7 @@ function renderGuideTab() {
     ]},
     { title: '٣. القائمة الجانبية (تُفتح بزر القائمة أعلى يمين الشاشة)', items: [
       '<b>التخطيط</b>: الاختيار بين نص المصحف (عثماني برسم المصحف، أو إملائي بتشكيل كامل، أو مجرَّد بدون تشكيل)، والاختيار بين الوضع القياسي المطابق للمصحف الورقي (١٥ سطراً في الصفحة) والوضع الحر القابل للتكبير والتصغير بحرية، وإظهار تلوين معاني الكلمات أو إخفاؤه.',
+      '<b>خلفية النص</b>: اختيار لون خلفية صفحات المصحف من سبعة ألوان، تتدرج من الكريمي إلى الذهبي الغامق.',
       '<b>التلاوة</b>: اختيار القارئ لتلاوة الآيات صوتياً (وفيها أربعة قرّاء، ويمكن إضافة قرّاء آخرين من حقل البحث، أو حذف أيٍّ منهم).',
       '<b>الأدعية</b>: مجموعة أدعية مأثورة خاصة بالتلاوة.',
       '<b>السور</b>: فهرس كامل لسور القرآن، للانتقال المباشر لأي سورة. ويمكن البحث عن سورة ما في حقل البحث الموجود في أعلى قائمة السور بإسمها أو تسلسلها.',
@@ -32838,6 +32889,7 @@ function renderGuideTab() {
     ]},
     { title: '٥. التفسير واللغة والإعراب (من نافذة الآية)', items: [
       '<b>تفسير القرآن</b>: تفسير البرهان للسيد هاشم البحراني، مرتّباً حسب السور والآيات.',
+      'في أعلى صفحة التفسير واللغة والإعراب زرّان (A− و A+) لتصغير الخط وتكبيره، ويبقى الحجم المختار محفوظاً.',
       '<b>اللغة</b> و<b>الإعراب</b>: فقرتا «اللغة» و«الإعراب» من تفسير مجمع البيان للشيخ الطبرسي، مربوطتان بآيات كل مقطع.',
       '<b>الشريط العلوي</b>: اسم الكتاب ومؤلفه، وتحته من اليمين إطار فيه اسم السورة، وفي الوسط الآية أو الآيات التي يشرحها النص المعروض («الآية ٥»، أو «الآيتان ١ - ٢»، أو «الآيات ١ - ٥»)، وعلى اليسار إطار «فضل السورة وخواصّها» (في التفسير وحده).',
       '<b>التقليب</b>: سحب النص بالإصبع يميناً ينقل إلى الآية التالية، وسحبه يساراً إلى السابقة، والنص يتبع الإصبع أثناء السحب. والتمرير لأعلى وأسفل لقراءة النص الطويل.',
