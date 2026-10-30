@@ -28107,6 +28107,7 @@ function renderFreeWindow(centerPage, scrollToCenter) {
   freeWindowEnd = end;
   segRenderCheck = true;
   segPassFloor = false;
+  segArmed = null;
   segRenderAt = Date.now();
   segLimits = { min: -Infinity, max: Infinity };
   if (typeof hideSegPanel === 'function') { hideSegPanel(); segReleaseLock(); }
@@ -30910,6 +30911,7 @@ function renderBoundWindow(centerPage, scrollToCenter) {
   boundWindowEnd = end;
   segRenderCheck = true;
   segPassFloor = false;
+  segArmed = null;
   segRenderAt = Date.now();
   segLimits = { min: -Infinity, max: Infinity };
   if (typeof hideSegPanel === 'function') { hideSegPanel(); segReleaseLock(); }
@@ -31384,6 +31386,9 @@ function initSegTouch(wrap) {
     segTouch = { y0: segLocalY(e.touches[0]), top0: wrap.scrollTop, moved: false };
     const c = segContainer();
     if (c) c.style.transition = '';
+    // Held at the end of a surah/juz: the stop has done its job - a new
+    // touch scrolls freely and smoothly both ways, like anywhere else.
+    if (segLock && segEngaged && segEngaged.where === 'end' && !reciting && layoutMode === 'free') segArmPass();
   }, { passive: true });
   wrap.addEventListener('touchmove', (e) => {
     if (!segTouch || !segLock || reciting || e.touches.length !== 1) return;
@@ -31412,8 +31417,15 @@ function initSegTouch(wrap) {
     // dragged back into the stretch: hand scrolling back to the browser
     if (segLock && segTouch && segTouch.moved && Math.abs(wrap.scrollTop - segLock.lim) > 20) segReleaseLock();
     const pass = segTouch && segTouch.pass;
+    const armed = segArmed;
     segTouch = null;
     if (pass) segPassOn();
+    if (armed) {
+      // moved on up past the end: a switched-on auto-scroll carries on
+      setTimeout(() => {
+        if (armed.passed && scrollEnabled() && !scrollMoving() && layoutMode === 'free') startFreeAutoScroll();
+      }, 120);
+    }
   };
   wrap.addEventListener('touchend', end, { passive: true });
   wrap.addEventListener('touchcancel', end, { passive: true });
@@ -31422,6 +31434,18 @@ function initSegTouch(wrap) {
 // the current stretch (its own start is not a stop while arriving there),
 // and a switched-on auto-scroll starts moving again.
 let segPassFloor = false;
+function segArmPass() {
+  const wrap = segWrap();
+  const list = collectSegBoundaries();
+  const startB = segFind(list, segStartId);
+  const endB = list.find((b) => b.y > (startB ? startB.y : wrap.scrollTop + 8)) || null;
+  const lim = wrap.scrollTop;
+  segReleaseLock();
+  // moving up past here carries on into the next surah/juz (see segGuard);
+  // moving down is ordinary scrolling, and the stop stays where it is
+  segArmed = endB ? { lim, endId: endB.id, passed: false } : null;
+}
+let segArmed = null;
 function segPassOn() {
   const wrap = segWrap();
   const list = collectSegBoundaries();
@@ -31454,6 +31478,14 @@ function segGuard() {
   if (reciting) return;
   const wrap = segWrap();
   if (!wrap || !wrap.clientHeight) return;
+  if (segEngaged && Math.abs(wrap.scrollTop - segEngaged.lim) > 30) hideSegPanel();
+  if (segArmed && !segArmed.passed) {
+    if (wrap.scrollTop > segArmed.lim + 1) {
+      segStartId = segArmed.endId; segPassFloor = true; segRenderCheck = false; segArmed.passed = true;
+    } else if (wrap.scrollTop < segArmed.lim - 1) {
+      segArmed = null;
+    }
+  }
   const list = collectSegBoundaries();
   const top = wrap.scrollTop;
   if (segHint) { segStartId = segHint.s ? 's' + segHint.s : 'j' + segHint.j; segHint = null; segRenderCheck = false; segPassFloor = false; }
@@ -32904,7 +32936,7 @@ function renderGuideTab() {
     ]},
     { title: '٦. صفحة النص القرآني', items: [
       'ميزة النسخ الحر بالضغط المطوّل على أي موضع من الصفحة.',
-      'في الوضع الحر، يتوقف التمرير اليدوي والتلقائي عند آخر السورة وعند آخر الجزء، وكذلك عند بدايتهما في التمرير المعاكس. وعند الآخر تظهر فوق الشريط السفلي ثلاثة مستطيلات: في الوسط <b>آخر سورة ...</b> أو <b>آخر الجزء ...</b>، وعلى يمينه <b>السورة السابقة</b> أو <b>الجزء السابق</b>، وعلى يساره <b>السورة التالية</b> أو <b>الجزء التالي</b>، ويكون الانتقال بالنقر على أحدها. ولمتابعة القراءة فيما بعد ذلك مباشرة، تُسحب الصفحة إلى أعلى بالإصبع سحبةً واضحة، فيستمر النص يدوياً، أو تلقائياً إن كان التمرير التلقائي مفعّلاً.',
+      'في الوضع الحر، يتوقف التمرير اليدوي والتلقائي عند آخر السورة وعند آخر الجزء، وكذلك عند بدايتهما في التمرير المعاكس. وعند الآخر تظهر فوق الشريط السفلي ثلاثة مستطيلات: في الوسط <b>آخر سورة ...</b> أو <b>آخر الجزء ...</b>، وعلى يمينه <b>السورة السابقة</b> أو <b>الجزء السابق</b>، وعلى يساره <b>السورة التالية</b> أو <b>الجزء التالي</b>، ويكون الانتقال بالنقر على أحدها. وبعد التوقف يبقى التمرير اليدوي سهلاً إلى أعلى وإلى أسفل، فبسحبة خفيفة إلى أعلى يستمر النص فيما بعد ذلك، ويعود التمرير التلقائي إلى الحركة إن كان مفعّلاً.',
       'يفتح المصحف على القائمة الجانبية (عنوان السور)، وفي أعلاها إطار <b>العودة إلى آخر صفحة</b> للرجوع مباشرة إلى الصفحة التي كانت مفتوحة، وعند الرجوع بالإيماءة أو بسهم الرجوع يعود البرنامج خطوة خطوة، وآخر خطوة قبل الخروج تعيد إلى القائمة الجانبية.',
       'خط أخضر داكن سميك على أحد جانبي الصفحة للدلالة على كونها صفحة يمنى أو يسرى.',
       'علامة الربع ' + rubGridSvg(3) + ': تظهر داخل النص عند بداية كل ربع حزب، بدلاً من العلامة الدائرية التقليدية. وهي شبكة صغيرة من ٨ مربعات (عمودان × ٤ صفوف) تمثّل أثمان الجزء الحالي الثمانية - العمود الأيمن لحزبه الأول والأيسر لحزبه الثاني، كل عمود من الأعلى للأسفل. تُملأ المربعات تدريجياً (كما في المثال المجاور، وفيه ٣ من ٨) بعدد الأرباع التي وصلت إليها القراءة من الجزء، فتُعرف دفعة واحدة أي ربع أنت فيه من الجزء دون حساب.',
