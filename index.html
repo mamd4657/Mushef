@@ -27798,6 +27798,9 @@ function fitFloatingFrameBar(bar, scaleMul, depth) {
   const rub = barEl.querySelector('.fbRub');
   const nameGroup = barEl.querySelector('.fbNameGroup');
   if (!middle || !bookmarkSlot || !circleSlot || !fromTo || !juz || !hizb || !rub || !nameGroup) return;
+  // Hidden (e.g. behind the search page): nothing can be measured - sizing
+  // now would squash everything to nothing. It is redone when shown again.
+  if (!barEl.offsetWidth) return;
   const brackets = nameGroup.querySelectorAll('.surah-bracket');
   const rightBracket = brackets[0], leftBracket = brackets[1];
   const orderNum = nameGroup.querySelector('.fbNum-order');
@@ -34273,6 +34276,7 @@ function closeSearchPageLayer() {
     document.getElementById('autoFab').style.display = 'flex';
   }
   document.getElementById('floatingFrameBar').style.display = '';
+  updateFloatingFrameBar(pageNum); // re-sized now that it can be measured again
   positionFloatingFrameBar();
   requestAnimationFrame(kickBoundFit);
 }

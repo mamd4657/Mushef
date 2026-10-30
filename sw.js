@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mushaf-cache-v77';
+const CACHE_NAME = 'mushaf-cache-v78';
 // Book files (books/<id>/NNN.json - تفسير البرهان etc.), one per surah: served
 // cache-first from their own cache, which app updates never clear.
 const BOOKS_CACHE_NAME = 'mushaf-books-v1';
