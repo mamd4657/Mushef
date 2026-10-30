@@ -133,7 +133,7 @@ body.landscape-lock .rotateFabBtn{right:auto;left:8px;}
 #rotateFrameBound,#rotateFrameFree{padding:2px 5px;}
 .fab-frame-scroll{gap:5px;padding:1px 7px;}
 /* the three-arrow play button sits flush against the frame's top edge, with the current scroll speed (a plain number) in the small space beneath it */
-.fab-arrow-col{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;height:100%;}
+.fab-arrow-col{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;height:100%;padding:0 7px;margin:0 -4px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .fab-arrow-col .fab-btn-arrow{padding:0;height:21px;}
 .speed-num{font-family:Arial,Helvetica,sans-serif;font-size:12.5px;line-height:13px;font-weight:700;color:#F6EFDC;margin-top:1px;min-width:21px;text-align:center;direction:ltr;font-variant-numeric:tabular-nums;pointer-events:none;}
 .fab-frame-size{gap:16px;}
@@ -523,11 +523,11 @@ body.dark-mode .cd-in{background:#0E1A15;color:#F6EFDC;}
 body.dark-mode .cd-btn{background:#F6EFDC;color:#0E4433;}
 body.dark-mode .cd-btn.light{background:transparent;color:#F6EFDC;}
 body.dark-mode .cd-head input,body.dark-mode .cd-row input,body.dark-mode .cd-chk input,body.dark-mode .cd-chip input{accent-color:#F6EFDC;}
-#segPanel{display:none;position:fixed;left:6px;right:6px;z-index:48;align-items:stretch;justify-content:center;gap:5px;max-width:748px;margin:0 auto;direction:rtl;}
-#segPanel .seg-mid{flex:1.25;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:#0E4433;color:#F6EFDC;border:2px solid #C9A227;border-radius:10px;padding:4px 4px;font-family:sans-serif;font-weight:700;font-size:16px;line-height:1.45;white-space:nowrap;overflow:hidden;}
-#segPanel .seg-side{flex:1;display:flex;flex-direction:column;gap:4px;min-width:0;}
-#segPanel .seg-btn{flex:1;background:#FBF6E8;color:#0E4433;border:2px solid #0E4433;border-radius:10px;padding:5px 3px;font-family:sans-serif;font-weight:700;font-size:16px;white-space:nowrap;overflow:hidden;cursor:pointer;}
-body.dark-mode #segPanel .seg-btn{background:#14231D;color:#F6EFDC;border-color:#F6EFDC;}
+.segp{display:none;position:fixed;left:6px;right:6px;z-index:48;align-items:stretch;justify-content:center;gap:5px;max-width:748px;margin:0 auto;direction:rtl;}
+.segp .seg-mid{flex:1.3;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:#0E4433;color:#F6EFDC;border:2px solid #C9A227;border-radius:10px;padding:4px 1px;font-family:sans-serif;font-weight:700;font-size:min(15.5px,3.8vw);line-height:1.45;white-space:nowrap;overflow:hidden;}
+.segp .seg-side{flex:1;display:flex;flex-direction:column;gap:4px;min-width:0;}
+.segp .seg-btn{flex:1;background:#FBF6E8;color:#0E4433;border:2px solid #0E4433;border-radius:10px;padding:5px 2px;font-family:sans-serif;font-weight:700;font-size:min(16px,3.9vw);white-space:nowrap;overflow:hidden;cursor:pointer;}
+body.dark-mode .segp .seg-btn{background:#14231D;color:#F6EFDC;border-color:#F6EFDC;}
 .rb-opt{display:flex;align-items:center;gap:7px;color:#F6EFDC;font-family:sans-serif;font-size:18px;font-weight:700;cursor:pointer;white-space:nowrap;}
 .rb-opt input{-webkit-appearance:none;appearance:none;width:22px;height:22px;margin:0;border:2px solid #F6EFDC;border-radius:50%;background:transparent;display:grid;place-content:center;flex-shrink:0;cursor:pointer;}
 .rb-opt input::before{content:'';width:10px;height:10px;border-radius:50%;background:#F6EFDC;transform:scale(0);transition:transform .12s;}
@@ -28097,6 +28097,7 @@ function renderFreeWindow(centerPage, scrollToCenter) {
   freeWindowStart = start;
   freeWindowEnd = end;
   segRenderCheck = true;
+  segPassFloor = false;
   segRenderAt = Date.now();
   segLimits = { min: -Infinity, max: Infinity };
   if (typeof hideSegPanel === 'function') { hideSegPanel(); segReleaseLock(); }
@@ -28493,7 +28494,7 @@ function initFreeScrollTracking() {
     noteFreeScrollActivity(); // resets the settle timer while momentum scrolling is still happening
     if (freeAutoScrolling && freeWindowEnd >= 604 &&
         (wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight) < 2) {
-      pauseFreeAutoScroll();
+      pauseFreeAutoScroll(true); freeTapPaused = true;
     }
   }, { passive: true });
   if (SUPPORTS_SCROLLEND) {
@@ -28637,16 +28638,9 @@ function initFreeSwipe() {
     if (freeTouchOnControl) { freeTouchOnControl = false; return; }
     if (freeTouchStartX === null) { catchUpFreeWindow(); return; }
     if (freeSwipeAxis === 'x') {
-      freeTapPaused = false; // a genuine drag, not a tap - any earlier tap-pause is no longer relevant
-      // A page turn is a deliberate action, not a momentary interruption -
-      // touch-down already paused the animation but deliberately left the
-      // icon showing pause in case this turned out to be just a tap; now
-      // that it's clearly a swipe instead, reset it back to play for real.
-      if (freeWasAutoScrollingBeforeTouch) {
-        const btn = document.getElementById('freePlayPauseBtn');
-        if (btn) btn.innerHTML = PLAY_ARROW_SVG;
-      }
-      dropBackLayer(closeScrollLayer); // auto-scroll is now off - nothing left for Back to stop
+      // A page turn stops auto-scroll, which stays switched on (only its
+      // own button switches it off).
+      if (freeWasAutoScrollingBeforeTouch) freeTapPaused = true;
       const p = localPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
       const dx = p.x - freeTouchStartX;
       if (swipeState) swipeEnd(dx);
@@ -28769,10 +28763,19 @@ function initFreeAutoScrollControls() {
   const upBtn = document.getElementById('freeSpeedUpBtn');
   if (playBtn) playBtn.innerHTML = PLAY_ARROW_SVG;
   updateFreeSpeedLabel();
-  if (playBtn) playBtn.addEventListener('click', () => { freeTapPaused = false; if (freeAutoScrolling) pauseFreeAutoScroll(); else startFreeAutoScroll(); });
+  if (playBtn) playBtn.addEventListener('click', () => { if (freeAutoScrolling || freeTapPaused) { freeTapPaused = false; pauseFreeAutoScroll(); } else startFreeAutoScroll(); });
   if (downBtn) downBtn.addEventListener('click', () => setFreeAutoSpeed(freeSpeedPxPerSec - FREE_SPEED_STEP));
   if (upBtn) upBtn.addEventListener('click', () => setFreeAutoSpeed(freeSpeedPxPerSec + FREE_SPEED_STEP));
 }
+// The whole column - the arrow, the speed number under it and a little
+// space either side - works the auto-scroll on/off button.
+document.querySelectorAll('.fab-arrow-col').forEach((col) => {
+  col.addEventListener('click', (e) => {
+    const btn = col.querySelector('.fab-btn-arrow');
+    // (the path, not contains(): the button's icon is replaced as it is pressed)
+    if (btn && !e.composedPath().includes(btn)) btn.click();
+  });
+});
 initFreeSwipe();
 initFreeAutoScrollControls();
 initFreeScrollTracking();
@@ -29127,7 +29130,7 @@ function highlightSearchMatchInAyah(surah, ayah, query, noBackLayer) {
   // same letters elsewhere in the ayah.
   const requireLeadingBoundary = /^\s/.test(query);
   const requireTrailingBoundary = /\s$/.test(query);
-  const wholeRange = findRawMatchRange(concatText, query, requireLeadingBoundary, requireTrailingBoundary);
+  const wholeRange = findImlaMatchRange(concatText, surah, ayah, query, requireLeadingBoundary, requireTrailingBoundary);
   if (wholeRange) {
     highlightOneRange(wholeRange, highlighted);
   } else {
@@ -29137,7 +29140,7 @@ function highlightSearchMatchInAyah(surah, ayah, query, noBackLayer) {
     const words = query.trim().split(/\s+/).filter(Boolean);
     if (words.length > 1) {
       words.forEach((w) => {
-        const wRange = findRawMatchRange(concatText, w, requireLeadingBoundary, requireTrailingBoundary);
+        const wRange = findImlaMatchRange(concatText, surah, ayah, w, requireLeadingBoundary, requireTrailingBoundary);
         if (wRange) highlightOneRange(wRange, highlighted);
       });
     }
@@ -30890,6 +30893,7 @@ function renderBoundWindow(centerPage, scrollToCenter) {
   boundWindowStart = start;
   boundWindowEnd = end;
   segRenderCheck = true;
+  segPassFloor = false;
   segRenderAt = Date.now();
   segLimits = { min: -Infinity, max: Infinity };
   if (typeof hideSegPanel === 'function') { hideSegPanel(); segReleaseLock(); }
@@ -31190,7 +31194,7 @@ let segPanelEl = null;
 let segEngaged = null;      // { lim } while the boxes are showing
 let segLimits = { min: -Infinity, max: Infinity };
 // page snapping settles inside the current stretch too
-function segClampTarget(t) { return (reciting || layoutMode !== 'free') ? t : Math.max(segLimits.min, Math.min(segLimits.max, t)); }
+function segClampTarget(t) { return (reciting || layoutMode !== 'free' || segPassFloor) ? t : Math.max(segLimits.min, Math.min(segLimits.max, t)); }
 function segWrap() { return layoutMode === 'free' ? document.getElementById('freeScrollWrap') : vScrollWrap; }
 function segContainer() { return layoutMode === 'free' ? document.getElementById('freePagesContainer') : boundPagesContainer; }
 function segPageFit() { return layoutMode !== 'free' && !!boundRowH; } // portrait standard: one page = one screen
@@ -31202,10 +31206,18 @@ function yInWrap(el, wrap) {
 function segPageEl(container, n) {
   return container.querySelector(layoutMode === 'free' ? '.page-frame[data-page="' + n + '"]' : '.vSlot[data-page="' + n + '"]');
 }
+// First ayah of each juz (checked against JUZ_PAGES and the ۞ marks).
+const JUZ_START = [null, [1, 1], [2, 142], [2, 253], [3, 93], [4, 24], [4, 148], [5, 82], [6, 111], [7, 88], [8, 41], [9, 93], [11, 6], [12, 53], [15, 1], [17, 1], [18, 75], [21, 1], [23, 1], [25, 21], [27, 56], [29, 46], [33, 31], [36, 28], [39, 32], [41, 47], [46, 1], [51, 31], [58, 1], [67, 1], [78, 1]];
+function juzOfAyah(s, a) {
+  let j = 1;
+  for (let k = 1; k <= 30; k++) { const [js, ja] = JUZ_START[k]; if (s > js || (s === js && a >= ja)) j = k; }
+  return j;
+}
 // Every surah/juz start currently on the page, top to bottom.
 function collectSegBoundaries() {
   const wrap = segWrap(), container = segContainer();
   const map = {};
+  const hdrKey = {};
   const add = (page, atTop, y, pageTop, s, j) => {
     const k = atTop ? 'p' + page : 'y' + Math.round(y);
     const b = map[k] || (map[k] = { y, pageTop, atTop, page, s: null, j: null });
@@ -31221,22 +31233,61 @@ function collectSegBoundaries() {
     if (pageTop === null || hy === null) return;
     const firstSeg = pageEl.querySelector('.ayah-seg');
     const atTop = !firstSeg || !!(h.compareDocumentPosition(firstSeg) & Node.DOCUMENT_POSITION_FOLLOWING);
-    add(page, atTop, atTop ? pageTop : hy, pageTop, parseInt(h.dataset.surah, 10), null);
+    const sid = parseInt(h.dataset.surah, 10);
+    add(page, atTop, atTop ? pageTop : hy, pageTop, sid, null);
+    hdrKey[sid] = atTop ? 'p' + page : 'y' + Math.round(hy);
   });
   for (let j = 1; j <= 30; j++) {
-    const pageEl = segPageEl(container, JUZ_PAGES[j]);
-    if (!pageEl) continue;
-    const y = yInWrap(pageEl, wrap);
-    if (y !== null) add(JUZ_PAGES[j], true, y, y, null, j);
+    const [js, ja] = JUZ_START[j];
+    if (ja === 1) {
+      // starts with a surah: the same boundary as that surah's own
+      if (hdrKey[js] && map[hdrKey[js]]) map[hdrKey[js]].j = j;
+      continue;
+    }
+    // mid-surah: at the juz's first ayah. If that ayah shares its first line
+    // with the end of the previous one, the stop is under that whole line.
+    const seg = container.querySelector('.ayah-seg[data-surah="' + js + '"][data-ayah="' + ja + '"]');
+    if (!seg) continue;
+    const segY = yInWrap(seg, wrap);
+    if (segY === null) continue;
+    const prevSegs = container.querySelectorAll('.ayah-seg[data-surah="' + js + '"][data-ayah="' + (ja - 1) + '"]');
+    const prev = prevSegs[prevSegs.length - 1];
+    const prevEnd = prev ? yInWrap(prev, wrap) + prev.offsetHeight : null;
+    const y = prevEnd !== null && prevEnd > segY + 2 ? prevEnd : segY;
+    const pageEl = seg.closest('.page-frame[data-page]');
+    const pg = pageEl ? parseInt(pageEl.dataset.page, 10) : JUZ_PAGES[j];
+    const k = 'y' + Math.round(y);
+    if (!map[k]) map[k] = { y, pageTop: pageEl ? yInWrap(pageEl, wrap) : y, atTop: false, page: pg, s: null, j: null };
+    map[k].j = j;
+    map[k].yTop = segY;
   }
   const list = Object.values(map).sort((a, b) => a.y - b.y);
   list.forEach((b) => { b.id = b.s ? 's' + b.s : 'j' + b.j; });
   return list;
 }
-function segLimMin(b) { return b.atTop ? b.pageTop : (segPageFit() ? b.pageTop : b.y); }
+function segLimMin(b) { return b.atTop ? b.pageTop : (segPageFit() ? b.pageTop : (b.yTop != null ? b.yTop : b.y)); }
 function segLimMax(b, wrap) {
   if (segPageFit()) return b.atTop ? b.pageTop - boundSlotH : b.pageTop;
-  return b.y - (wrap.clientHeight - SEG_PANEL_RESERVE);
+  // stop where the end sits just above the room the boxes will take, so
+  // showing them needs no scroll at all (that was the jump)
+  const fullV = wrap.clientHeight + segShrink;
+  return b.y - (fullV - segPanelHeightFor(b));
+}
+const segPanelHCache = {};
+function segPanelHeightFor(b) {
+  const two = !!(b && b.s && b.j && b.s > 1 && b.j > 1);
+  const key = two ? '2' : '1';
+  if (segPanelHCache[key]) return segPanelHCache[key];
+  const m = document.createElement('div');
+  m.className = 'segp';
+  m.style.cssText = 'display:flex;visibility:hidden;';
+  m.innerHTML = '<div class="seg-side"><button class="seg-btn">س</button>' + (two ? '<button class="seg-btn">س</button>' : '') +
+    '</div><div class="seg-mid"><div>آخر</div>' + (two ? '<div>آخر</div>' : '') + '</div><div class="seg-side"><button class="seg-btn">س</button></div>';
+  document.body.appendChild(m);
+  const h = m.offsetHeight;
+  m.remove();
+  if (!h) return 60;
+  return (segPanelHCache[key] = h + 8);
 }
 function segFind(list, id) {
   if (!id) return null;
@@ -31268,14 +31319,16 @@ function segIdAtTop(top) {
     return SURAH_PAGES[surahAtPage(nx)] >= JUZ_PAGES[juzAtPage(nx)] ? 's' + surahAtPage(nx) : 'j' + juzAtPage(nx);
   }
   const S = parseInt(seg.dataset.surah, 10);
-  const segPage = parseInt((seg.closest('[data-page]') || pageEl).dataset.page, 10);
-  const J = juzAtPage(segPage);
-  return SURAH_PAGES[S] >= JUZ_PAGES[J] ? 's' + S : 'j' + J;
+  const A = parseInt(seg.dataset.ayah, 10);
+  const J = juzOfAyah(S, A);
+  const [js, ja] = JUZ_START[J];
+  return (S > js || ja === 1) ? 's' + S : 'j' + J;
 }
 function segAutoActive() { return layoutMode === 'free' ? freeAutoScrolling : autoPlaying; }
 function segStopAuto() {
-  if (layoutMode === 'free') { if (freeAutoScrolling || freeTapPaused) { freeTapPaused = false; pauseFreeAutoScroll(); } }
-  else if (autoPlaying) stopAutoScroll();
+  // stopped, but stays switched on (only its button switches it off)
+  if (layoutMode === 'free') { if (freeAutoScrolling) { pauseFreeAutoScroll(true); freeTapPaused = true; } }
+  else if (autoPlaying) pauseAutoScroll();
 }
 // At a limit the scroll area is locked (overflow:hidden), which stops any
 // finger drag or fling dead instead of letting it fight the correction
@@ -31324,7 +31377,10 @@ function initSegTouch(wrap) {
     const over = target - t;
     if (Math.abs(wrap.scrollTop - t) > 0.5) wrap.scrollTop = t;
     if (over > 4 && !segEngaged) segGuardShowEnd();
-    const give = Math.sign(over) * Math.min(26, Math.abs(over) * 0.18);
+    // a firm push past the end (about 120px of finger) carries on into the
+    // next surah/juz when the finger is lifted
+    segTouch.pass = over > 120 && !!segEngaged;
+    const give = segTouch.pass ? -Math.min(70, 26 + (over - 120) * 0.4) * -1 : Math.sign(over) * Math.min(26, Math.abs(over) * 0.18);
     const c = segContainer();
     if (c) c.style.transform = give ? 'translateY(' + (-give).toFixed(1) + 'px)' : '';
     segTouch.moved = true;
@@ -31339,10 +31395,30 @@ function initSegTouch(wrap) {
     }
     // dragged back into the stretch: hand scrolling back to the browser
     if (segLock && segTouch && segTouch.moved && Math.abs(wrap.scrollTop - segLock.lim) > 20) segReleaseLock();
+    const pass = segTouch && segTouch.pass;
     segTouch = null;
+    if (pass) segPassOn();
   };
   wrap.addEventListener('touchend', end, { passive: true });
   wrap.addEventListener('touchcancel', end, { passive: true });
+}
+// Carry on past the end the reader is held at: the next surah/juz becomes
+// the current stretch (its own start is not a stop while arriving there),
+// and a switched-on auto-scroll starts moving again.
+let segPassFloor = false;
+function segPassOn() {
+  const wrap = segWrap();
+  const list = collectSegBoundaries();
+  const startB = segFind(list, segStartId);
+  const endB = list.find((b) => b.y > (startB ? startB.y : wrap.scrollTop + 8)) || null;
+  hideSegPanel();
+  segReleaseLock();
+  if (!endB) return;
+  segStartId = endB.id;
+  segPassFloor = true;
+  segRenderCheck = false;
+  wrap.scrollTo({ top: wrap.scrollTop + 90, behavior: 'smooth' });
+  if (scrollEnabled() && !scrollMoving()) setTimeout(() => { if (layoutMode === 'free') startFreeAutoScroll(); }, 350);
 }
 // the boxes for the end the reader is held at (used from the drag handler)
 function segGuardShowEnd() {
@@ -31364,7 +31440,7 @@ function segGuard() {
   if (!wrap || !wrap.clientHeight) return;
   const list = collectSegBoundaries();
   const top = wrap.scrollTop;
-  if (segHint) { segStartId = segHint.s ? 's' + segHint.s : 'j' + segHint.j; segHint = null; segRenderCheck = false; }
+  if (segHint) { segStartId = segHint.s ? 's' + segHint.s : 'j' + segHint.j; segHint = null; segRenderCheck = false; segPassFloor = false; }
   if (!segStartId || segRenderCheck) {
     // after a jump (or at first) take the stretch of the ayah at the top
     segRenderCheck = false;
@@ -31377,6 +31453,7 @@ function segGuard() {
   let max = endB ? segLimMax(endB, wrap) : Infinity;
   if (max < min) max = min;
   segLimits = { min, max };
+  if (segPassFloor && top >= min) segPassFloor = false;
   const atNaturalEnd = !endB && (layoutMode === 'free' ? freeWindowEnd : boundWindowEnd) >= 604 &&
     (wrap.scrollHeight - top - wrap.clientHeight) < 2;
   // a few px off the limit (rounding while the pages settle) is corrected
@@ -31390,6 +31467,9 @@ function segGuard() {
     const push = top > max + 6 || segAutoActive() || segTouch || (Date.now() - segRenderAt > 900);
     segClampTo(wrap, max);
     if (push) { segStopAuto(); showSegPanel('end', endB, startB, wrap, max); }
+  } else if (segPassFloor && top < min - 0.5) {
+    // just carried on past an end: still arriving at this stretch's start
+    if (top < min - wrap.clientHeight * 1.5) { segPassFloor = false; segStartId = null; segRenderCheck = true; }
   } else if (top < min - 0.5) {
     // the start of the stretch: stop here, without the boxes
     segClampTo(wrap, min);
@@ -31439,11 +31519,12 @@ function showSegPanel(where, b, startB, wrap, lim) {
   if (!segPanelEl) {
     segPanelEl = document.createElement('div');
     segPanelEl.id = 'segPanel';
+    segPanelEl.className = 'segp';
     document.body.appendChild(segPanelEl);
   }
   const mid = [];
-  if (S) mid.push('<div>نهاية ' + SURAH_NAMES[S] + '</div>');
-  if (J) mid.push('<div>نهاية الجزء ' + toArabicDigits(J) + '</div>');
+  if (S) mid.push('<div>آخر سورة ' + SURAH_NAMES[S] + '</div>');
+  if (J) mid.push('<div>آخر الجزء ' + toArabicDigits(J) + '</div>');
   const btn = (k, n, t) => '<button class="seg-btn" data-k="' + k + '" data-n="' + n + '">' + t + '</button>';
   let right = '', left = '';
   if (S && S > 1) right += btn('s', S - 1, 'السورة السابقة');
@@ -31458,8 +31539,8 @@ function showSegPanel(where, b, startB, wrap, lim) {
   segEngaged = { lim, where, y: b.natural ? null : b.y };
   segPanelEl.style.visibility = 'hidden';
   segPanelEl.style.display = 'flex';
-  // take the boxes' height off the bottom of the text area, and keep the
-  // end of the surah/juz right above them
+  // take the boxes' height off the bottom of the text area; the stop was
+  // already placed so the end sits right above them - no scroll needed
   const h = segPanelEl.offsetHeight + 8;
   if (h !== segShrink) {
     segShrink = h;
@@ -31467,7 +31548,7 @@ function showSegPanel(where, b, startB, wrap, lim) {
     const nl = b.natural ? Math.max(0, wrap.scrollHeight - wrap.clientHeight)
       : Math.max(segLimits.min, b.y - wrap.clientHeight);
     segLimits = { min: segLimits.min, max: nl };
-    segClampTo(wrap, nl);
+    if (Math.abs(wrap.scrollTop - nl) > 1) segClampTo(wrap, nl);
     segEngaged.lim = nl;
   }
   segPanelEl.style.visibility = '';
@@ -32367,8 +32448,13 @@ function scrollDisable() {
 // (if it's moving), a further Back switches it off.
 function closeScrollLayer() {
   if (!scrollEnabled()) return;
-  if (scrollMoving()) { scrollPause(); pushBackLayer(closeScrollLayer); }
-  else scrollDisable();
+  if (scrollMoving()) { scrollPause(); pushBackLayer(closeScrollLayer); return; }
+  // Stopped but switched on: it stays on (only its own button switches it
+  // off), so this Back goes on to whatever is open beneath it.
+  if (!backLayerStack.length) return;
+  const below = backLayerStack.pop();
+  below();
+  if (below !== homeBackLayer) backLayerStack.push(closeScrollLayer);
 }
 function ensureScrollLayer() {
   if (backLayerStack.lastIndexOf(closeScrollLayer) === -1) pushBackLayer(closeScrollLayer);
@@ -32714,7 +32800,7 @@ function renderGuideTab() {
   const SECTIONS = [
     { title: '١. شريط الرأس (أعلى الشاشة)', items: [
       'الساعة واليوم والتاريخ (الهجري والميلادي).',
-      'حقل "بحث" للبحث عن أي كلمة أو عبارة أو جملة في القرآن الكريم. وعند ترك مسافة قبل الكلمة التي يراد بحثها -وذلك باستعمال مفتاح المسافة من لوحة المفاتيح- فلن تظهر النتائج التي تكون فيها هذه الكلمة مسبوقة بحرف أو أكثر في نفس الكلمة، وعند ترك مسافة بعد الكلمة فلن تظهر النتائج التي تكون فيها هذه الكلمة ملحقة بحرف أو أكثر في نفس الكلمة، وعند ترك مسافة قبل الكلمة وبعدها فستظهر النتائج التي تكون فيها الكلمة نفسها بلا زيادة. ويمكن بحث كلمتين من نفس الآية في نفس الوقت، بترك مسافة واحدة بينهما إذا كانتا متجاورتين في الآية، ومسافتين إذا كانتا غير متجاورتين.',
+      'حقل "بحث" للبحث عن أي كلمة أو عبارة أو جملة في القرآن الكريم، ويكون البحث بالكتابة الإملائية لا بالرسم العثماني (فتُكتب «الصلاة» لا «الصلوة»، وكلمة «بلغ» لا تُظهر «بلاغ» ولا «بالغ»). وعند ترك مسافة قبل الكلمة التي يراد بحثها -وذلك باستعمال مفتاح المسافة من لوحة المفاتيح- فلن تظهر النتائج التي تكون فيها هذه الكلمة مسبوقة بحرف أو أكثر في نفس الكلمة، وعند ترك مسافة بعد الكلمة فلن تظهر النتائج التي تكون فيها هذه الكلمة ملحقة بحرف أو أكثر في نفس الكلمة، وعند ترك مسافة قبل الكلمة وبعدها فستظهر النتائج التي تكون فيها الكلمة نفسها بلا زيادة. ويمكن بحث كلمتين من نفس الآية في نفس الوقت، بترك مسافة واحدة بينهما إذا كانتا متجاورتين في الآية، ومسافتين إذا كانتا غير متجاورتين.',
       'زر الهلال/الشمس لتبديل الوضع الليلي والنهاري.',
       'زر القائمة (' + document.getElementById('menuBtn').innerHTML.replace('width="22" height="22"', 'width="16" height="16" style="vertical-align:middle"') + ') لفتح القائمة الجانبية.',
     ]},
@@ -32760,14 +32846,14 @@ function renderGuideTab() {
     ]},
     { title: '٦. صفحة النص القرآني', items: [
       'ميزة النسخ الحر بالضغط المطوّل على أي موضع من الصفحة.',
-      'في الوضع الحر، يتوقف التمرير اليدوي والتلقائي عند نهاية السورة وعند نهاية الجزء، وكذلك عند بدايتهما في التمرير المعاكس. وعند النهاية تظهر فوق الشريط السفلي ثلاثة مستطيلات: في الوسط <b>نهاية السورة</b> أو <b>الجزء</b>، وعلى يمينه <b>السورة السابقة</b> أو <b>الجزء السابق</b>، وعلى يساره <b>السورة التالية</b> أو <b>الجزء التالي</b>. ويكون الانتقال بالنقر على أحدها، ثم يُختار التمرير اليدوي أو التلقائي.',
+      'في الوضع الحر، يتوقف التمرير اليدوي والتلقائي عند آخر السورة وعند آخر الجزء، وكذلك عند بدايتهما في التمرير المعاكس. وعند الآخر تظهر فوق الشريط السفلي ثلاثة مستطيلات: في الوسط <b>آخر سورة ...</b> أو <b>آخر الجزء ...</b>، وعلى يمينه <b>السورة السابقة</b> أو <b>الجزء السابق</b>، وعلى يساره <b>السورة التالية</b> أو <b>الجزء التالي</b>، ويكون الانتقال بالنقر على أحدها. ولمتابعة القراءة فيما بعد ذلك مباشرة، تُسحب الصفحة إلى أعلى بالإصبع سحبةً واضحة، فيستمر النص يدوياً، أو تلقائياً إن كان التمرير التلقائي مفعّلاً.',
       'يفتح المصحف على القائمة الجانبية (عنوان السور)، وفي أعلاها إطار <b>العودة إلى آخر صفحة</b> للرجوع مباشرة إلى الصفحة التي كانت مفتوحة، وعند الرجوع بالإيماءة أو بسهم الرجوع يعود البرنامج خطوة خطوة، وآخر خطوة قبل الخروج تعيد إلى القائمة الجانبية.',
       'خط أخضر داكن سميك على أحد جانبي الصفحة للدلالة على كونها صفحة يمنى أو يسرى.',
       'علامة الربع ' + rubGridSvg(3) + ': تظهر داخل النص عند بداية كل ربع حزب، بدلاً من العلامة الدائرية التقليدية. وهي شبكة صغيرة من ٨ مربعات (عمودان × ٤ صفوف) تمثّل أثمان الجزء الحالي الثمانية - العمود الأيمن لحزبه الأول والأيسر لحزبه الثاني، كل عمود من الأعلى للأسفل. تُملأ المربعات تدريجياً (كما في المثال المجاور، وفيه ٣ من ٨) بعدد الأرباع التي وصلت إليها القراءة من الجزء، فتُعرف دفعة واحدة أي ربع أنت فيه من الجزء دون حساب.',
     ]},
     { title: '٧. شريط الأدوات السفلي', items: [
       'زرا تكبير/تصغير حجم الخط (' + roundBadge('A', 12) + ' / ' + roundBadge('A', 19) + ').',
-      'زر تشغيل/إيقاف التمرير التلقائي (' + badge(PLAY_ARROW_SVG) + '/' + badge('⏸') + ')، مع زري إبطاء (' + roundBadge('−', 18) + ') وتسريع (' + roundBadge('+', 18) + ') التمرير.',
+      'زر تشغيل/إيقاف التمرير التلقائي (' + badge(PLAY_ARROW_SVG) + '/' + badge('⏸') + ')، ويُضغط عليه أو على الرقم الذي تحته أو بجانبيه، مع زري إبطاء (' + roundBadge('−', 18) + ') وتسريع (' + roundBadge('+', 18) + ') التمرير. ويبقى التمرير مفعّلاً حتى لو توقفت حركة النص مؤقتاً (بالنقر على النص، أو بالوصول إلى آخر سورة أو جزء، أو بالانتقال إلى عمل آخر)، ولا يُلغى تفعيله إلا بالضغط على زره.',
       'أثناء التمرير التلقائي: النقر في أي موضع من النص يوقفه، والنقر بعدها على أي موضع من الصفحة عدا الكلمات الخضراء يعيده (والسحب بالإصبع يحرّك الصفحة يدوياً والتمرير متوقف). وزر الرجوع أو إيماءته: الأولى توقف التمرير إن كان متحركاً، والثانية تلغي تفعيله.',
       'زر تبديل اتجاه العرض بين الوضعين الأفقي والعمودي (' + badge(document.getElementById('rotateBtn').innerHTML) + ')؛ بالنقرة الأولى يتحول المصحف إلى الاتجاه الأفقي، وبالنقرة الثانية يعود إلى الاتجاه العمودي مباشرة، أياً كانت الجهة الأفقية الحالية. أما التنقل بين الجهتين الأفقيتين فيكون بالتدوير التلقائي للجهاز فقط.',
       'زر رجوع (' + badge(document.getElementById('backBtn').innerHTML) + ') يقوم بعمل إيماءة الرجوع نفسها (العودة خطوة للخلف في البرنامج، كإغلاق نافذة أو نتائج بحث)، تسهيلاً على من لا تتوفر لديه إيماءة الرجوع في نظام جهازه. وفي الاتجاه الأفقي يعيد هو (وكذلك إيماءة الرجوع) إلى الاتجاه العمودي مباشرة، أياً كانت الجهة الأفقية الحالية.',
@@ -33714,7 +33800,8 @@ function buildSearchIndex() {
         if (isMarkerTok(tok)) {
           const ayahNo = markerValue(tok);
           const text = buffer.join(' ');
-          idx.push({ page: startPage, surah: currentSurah, ayah: ayahNo, text, norm: normalizeArabic(text), alts: searchAltTexts(currentSurah, ayahNo) });
+          const alts = searchAltTexts(currentSurah, ayahNo);
+          idx.push({ page: startPage, surah: currentSurah, ayah: ayahNo, text, norm: normalizeArabic(text), alts, imla: alts[alts.length - 1] || null });
           buffer = [];
         } else {
           buffer.push(tok);
@@ -33889,7 +33976,79 @@ const STRICT_FORMS = [normalizeArabicMapChar, normalizeArabicMapCharNoDagger, no
 // picked the very first raw occurrence of the substring to highlight -
 // including one glued onto another word, e.g. the ا that opens "ٱللَّهِ" -
 // which is exactly backwards from what leaving that space asked for.
-function findRawMatchRange(rawText, query, requireLeadingBoundary, requireTrailingBoundary) {
+// The match is found in the imla'i text (as runSearch does) and shown on
+// the same words of the Uthmani text on screen, word for word. When the
+// two spellings don't have the same number of words (يا أيها, say) it
+// falls back to finding the query in the Uthmani text itself.
+const WAQF_ONLY_RE = /^[ۖ-ۜ۞۩۝]+$/;
+// The imla'i text keeps a dagger alef only in words normally written
+// without one (ذٰلك، هٰذا، الرحمٰن، لٰكن) - so it is read both with and
+// without it; and داوود (as it is spelled there) also answers to داود.
+function imlaWawFold(f) {
+  const g = (str, i) => {
+    if (str[i] === 'و') { const pb = prevBaseIdx(str, i); if (pb >= 0 && str[pb] === 'و') return ''; }
+    return f(str, i);
+  };
+  Object.defineProperty(g, 'name', { value: 'imla_' + f.name });
+  return g;
+}
+const IMLA_FORMS = [imlaWawFold(normalizeArabicMapChar), imlaWawFold(normalizeArabicMapCharNoDagger)];
+function imlaFindRange(text, query, lead, trail) {
+  const q0 = normalizeArabic(query.trim());
+  for (const f of IMLA_FORMS) {
+    const { norm, map } = withPositionMap(text, f);
+    const nq = withPositionMap(q0, f).norm;
+    if (!nq) continue;
+    let from = 0;
+    while (true) {
+      const idx = norm.indexOf(nq, from);
+      if (idx === -1) break;
+      const st = map[idx];
+      let en = map[idx + nq.length - 1] + 1;
+      while (en < text.length && DIACRITICS_TEST_RE.test(text[en])) en++;
+      if ((!lead || isRawBoundaryBefore(text, st)) && (!trail || isRawBoundaryAfter(text, en))) return { start: st, end: en };
+      from = idx + 1;
+    }
+  }
+  return null;
+}
+// Pairs the imla'i words with the Uthmani words on screen. Mostly one to
+// one; يا أيها (two words) is one Uthmani word يٰٓأيها, and the like.
+function alignImlaToUthmani(iw, ut) {
+  const key = (w) => normalizeArabicLoose(w).replace(/[ويىءئؤ]/g, '').replace(/ة/g, 'ه').replace(/[^ء-ي]/g, '');
+  const m = [];
+  let i = 0, t = 0;
+  while (i < iw.length && t < ut.length) {
+    const ki = key(iw[i]), kt = key(ut[t]);
+    if (ki === kt) { m[i] = { a: t, b: t }; i++; t++; continue; }
+    if (i + 1 < iw.length && key(iw[i] + iw[i + 1]) === kt) { m[i] = m[i + 1] = { a: t, b: t }; i += 2; t++; continue; }
+    if (t + 1 < ut.length && key(ut[t] + ut[t + 1]) === ki) { m[i] = { a: t, b: t + 1 }; i++; t += 2; continue; }
+    m[i] = { a: t, b: t }; i++; t++;
+  }
+  return (i === iw.length && t === ut.length) ? m : null;
+}
+// The match is found in the imla'i text (as runSearch does) and shown on
+// the matching words of the Uthmani text on screen.
+function findImlaMatchRange(rawText, surah, ayah, query, lead, trail) {
+  const alts = searchAltTexts(surah, ayah);
+  const imla = alts[alts.length - 1];
+  if (imla) {
+    const iw = imla.text.split(' ').filter(Boolean);
+    const toks = [];
+    let pos = 0;
+    rawText.split(' ').forEach((t) => { if (t && !WAQF_ONLY_RE.test(t) && !isMarkerTok(t)) toks.push({ start: pos, end: pos + t.length, w: t }); pos += t.length + 1; });
+    const m = alignImlaToUthmani(iw, toks.map((x) => x.w));
+    if (m) {
+      const r = imlaFindRange(iw.join(' '), query, lead, trail);
+      if (!r) return null;
+      const wordAt = (ci) => { let c = 0; for (let n = 0; n < iw.length; n++) { if (ci < c + iw[n].length + 1) return n; c += iw[n].length + 1; } return iw.length - 1; };
+      const w0 = wordAt(r.start), w1 = wordAt(Math.max(r.start, r.end - 1));
+      return { start: toks[m[w0].a].start, end: toks[m[w1].b].end };
+    }
+  }
+  return findRawMatchRange(rawText, query, lead, trail);
+}
+function findRawMatchRange(rawText, query, requireLeadingBoundary, requireTrailingBoundary, strictOnly) {
   const hasBoundaryReq = requireLeadingBoundary || requireTrailingBoundary;
   const nqTrim = query.trim();
   // Scans one normalized pass (strict or loose) for the first occurrence
@@ -33924,6 +34083,7 @@ function findRawMatchRange(rawText, query, requireLeadingBoundary, requireTraili
   }
   let usedLoose = false;
   let loose = null, nqLoose = null;
+  if (!found && strictOnly) return null;
   if (!found) {
     loose = withPositionMap(rawText, normalizeArabicLooseMapChar);
     nqLoose = normalizeArabicLoose(nqTrim);
@@ -34001,9 +34161,11 @@ function runSearch(qRaw) {
     }
   }
 
-  const matchesAnyStrict = (item, term) =>
-    STRICT_FORMS.some((f) => termMatches(item, term, f)) ||
-    (item.alts || []).some((alt) => STRICT_FORMS.some((f) => termMatches(alt, term, f)));
+  // Searched in the imla'i spelling only (الصلاة، بلاغ، بالغ ...), so a
+  // word matches by how it is really spelled, not by its rasm: «بلغ» no
+  // longer finds بلٰغ or بٰلغ, and «صلاة» finds صلوٰة.
+  const matchesAnyStrict = (item, term) => !!item.imla &&
+    IMLA_FORMS.some((f) => termMatches(item.imla, withPositionMap(term, f).norm, f));
   const out = [];
   // The vocative "يا" + a word (يا أيها, يا أيتها, يا قوم...) is written glued
   // into a single word in the Mushaf for several of its uses, so also accept
@@ -34014,15 +34176,7 @@ function runSearch(qRaw) {
   for (const item of searchIndex) {
     if (matchesAnyStrict(item, nq) || (nqGlued && matchesAnyStrict(item, nqGlued))) out.push(item);
   }
-  if (out.length === 0) {
-    const nqLoose = normalizeArabicLoose(q);
-    if (nqLoose) {
-      for (const item of searchIndex) {
-        if (termMatches(item, nqLoose, normalizeArabicLooseMapChar) ||
-            (item.alts || []).some((alt) => termMatches(alt, nqLoose, normalizeArabicLooseMapChar))) out.push(item);
-      }
-    }
-  }
+
   // Multi-word fallback: if nothing matched as one exact phrase, and the
   // query has more than one word, look for ayat containing every word
   // somewhere - not necessarily adjacent or in that order - rather than
@@ -34201,14 +34355,14 @@ function showSearchPage(q) {
     // rather than re-derived from a single word below) - keeps this list's
     // highlight and the actual in-page highlight always agreeing on which
     // occurrence is the real match.
-    const wholeRange = findRawMatchRange(r.text, q, requireLeadingBoundary, requireTrailingBoundary);
+    const wholeRange = findImlaMatchRange(r.text, r.surah, r.ayah, q, requireLeadingBoundary, requireTrailingBoundary);
     if (wholeRange) {
       ranges = [wholeRange];
     } else {
       const words = q.split(/\s+/).filter(Boolean);
       if (words.length > 1) {
         words.forEach((w) => {
-          const wRange = findRawMatchRange(r.text, w, requireLeadingBoundary, requireTrailingBoundary);
+          const wRange = findImlaMatchRange(r.text, r.surah, r.ayah, w, requireLeadingBoundary, requireTrailingBoundary);
           if (wRange) ranges.push(wRange);
         });
         ranges.sort((a, b) => a.start - b.start);
