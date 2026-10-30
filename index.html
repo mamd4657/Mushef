@@ -131,12 +131,16 @@ body.landscape-lock .rotateFabBtn{right:auto;left:8px;}
 .fab-group-icon{color:#F6EFDC;opacity:0.9;line-height:1;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;}
 .fab-frame{display:flex;align-items:center;gap:7px;border:1.5px solid #F6EFDC;border-radius:12px;padding:2px 9px;height:42.8px;box-sizing:border-box;background:#ffffff0d;}
 #rotateFrameBound,#rotateFrameFree{padding:2px 5px;}
+@media (max-width:395px){#freeAutoFab,#autoFab{gap:5px !important;padding-left:3px !important;padding-right:3px !important;}#freeAutoFab .fab-btn-round,#autoFab .fab-btn-round{width:31px;height:31px;}#freeAutoFab .fab-frame{padding-left:5px;padding-right:5px;}#freeAutoFab .fab-frame-size{gap:7px;}#freeAutoFab .fab-frame-scroll{gap:3px;}}
+#segStopBtn{color:#E8B84B;padding:3px 0 3px 2px;border-right:1.5px solid #F6EFDC55;margin-right:1px;padding-right:5px;border-radius:0;height:30px;}
+#segStopBtn.off{color:#F6EFDC;opacity:.4;}
+#segStopBtn.off svg{stroke-dasharray:none;}
 .fab-frame-scroll{gap:5px;padding:1px 7px;}
 /* the three-arrow play button sits flush against the frame's top edge, with the current scroll speed (a plain number) in the small space beneath it */
 .fab-arrow-col{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;height:100%;padding:0 7px;margin:0 -4px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .fab-arrow-col .fab-btn-arrow{padding:0;height:21px;}
 .speed-num{font-family:Arial,Helvetica,sans-serif;font-size:12.5px;line-height:13px;font-weight:700;color:#F6EFDC;margin-top:1px;min-width:21px;text-align:center;direction:ltr;font-variant-numeric:tabular-nums;pointer-events:none;}
-.fab-frame-size{gap:16px;}
+.fab-frame-size{gap:12px;}
 .fab-btn{background:transparent;border:none;color:#F6EFDC;font-size:22px;cursor:pointer;line-height:1;padding:4px 5px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;}
 .fab-btn-round{border:1.5px solid #F6EFDC;border-radius:50%;width:36px;height:36px;font-size:20px;padding:0;overflow:hidden;}
 .fab-btn-arrow svg{width:21px;height:21px;}
@@ -919,6 +923,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
         <span id="freeSpeedNum" class="speed-num" aria-label="سرعة التمرير"></span>
       </div>
       <button id="freeSpeedUpBtn" class="fab-btn fab-btn-round" aria-label="أسرع التمرير">+</button>
+      <button class="fab-btn" id="segStopBtn" aria-label="التوقف في أواخر السور والأجزاء" title="التوقف في أواخر السور والأجزاء"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="4" x2="20" y2="4"/><line x1="12" y1="21" x2="12" y2="9"/><polyline points="7,13 12,8 17,13"/></svg></button>
     </div>
     <div class="fab-frame fab-frame-size">
       <button id="freeSizeDownBtn" class="fab-btn fab-btn-round" aria-label="تصغير حجم الخط" title="تصغير حجم الخط"><span style="font-family:sans-serif;font-size:12px;line-height:1;font-weight:700;">A</span></button>
@@ -31469,8 +31474,21 @@ function segGuardShowEnd() {
   if (endB) showSegPanel('end', endB, startB, wrap, wrap.scrollTop);
   else if ((freeWindowEnd >= 604)) showSegPanel('end', { s: 115, j: 31, y: wrap.scrollHeight, natural: true }, startB, wrap, wrap.scrollTop);
 }
+// التوقف في أواخر السور والأجزاء: on/off (bottom-bar button and التخطيط)
+let segStopOn = store.get('seg-stop') !== '0';
+function setSegStop(on, quiet) {
+  segStopOn = !!on;
+  store.set('seg-stop', segStopOn ? '1' : '0');
+  const btn = document.getElementById('segStopBtn');
+  if (btn) btn.classList.toggle('off', !segStopOn);
+  if (!segStopOn) { if (segLock) segReleaseLock(); if (segEngaged) hideSegPanel(); segArmed = null; segPassFloor = false; }
+  else { segStartId = null; segRenderCheck = true; }
+  if (!quiet) toast('التوقف في أواخر السور والأجزاء: ' + (segStopOn ? 'مفعّل' : 'غير مفعّل'));
+}
+document.getElementById('segStopBtn').addEventListener('click', () => setSegStop(!segStopOn));
+setTimeout(() => setSegStop(segStopOn, true), 0);
 function segGuard() {
-  if (layoutMode !== 'free') {
+  if (layoutMode !== 'free' || !segStopOn) {
     if (segLock) segReleaseLock();
     if (segEngaged) hideSegPanel();
     return;
@@ -32936,7 +32954,7 @@ function renderGuideTab() {
     ]},
     { title: '٦. صفحة النص القرآني', items: [
       'ميزة النسخ الحر بالضغط المطوّل على أي موضع من الصفحة.',
-      'في الوضع الحر، يتوقف التمرير اليدوي والتلقائي عند آخر السورة وعند آخر الجزء، وكذلك عند بدايتهما في التمرير المعاكس. وعند الآخر تظهر فوق الشريط السفلي ثلاثة مستطيلات: في الوسط <b>آخر سورة ...</b> أو <b>آخر الجزء ...</b>، وعلى يمينه <b>السورة السابقة</b> أو <b>الجزء السابق</b>، وعلى يساره <b>السورة التالية</b> أو <b>الجزء التالي</b>، ويكون الانتقال بالنقر على أحدها. وبعد التوقف يبقى التمرير اليدوي سهلاً إلى أعلى وإلى أسفل، فبسحبة خفيفة إلى أعلى يستمر النص فيما بعد ذلك، ويعود التمرير التلقائي إلى الحركة إن كان مفعّلاً.',
+      'في الوضع الحر، يتوقف التمرير اليدوي والتلقائي عند آخر السورة وعند آخر الجزء، وكذلك عند بدايتهما في التمرير المعاكس. وعند الآخر تظهر فوق الشريط السفلي ثلاثة مستطيلات: في الوسط <b>آخر سورة ...</b> أو <b>آخر الجزء ...</b>، وعلى يمينه <b>السورة السابقة</b> أو <b>الجزء السابق</b>، وعلى يساره <b>السورة التالية</b> أو <b>الجزء التالي</b>، ويكون الانتقال بالنقر على أحدها. ويُفعَّل هذا التوقف أو يُلغى بزر (' + badge(document.getElementById('segStopBtn').innerHTML) + ') في الشريط السفلي، أو من عنوان <b>التخطيط</b>. وبعد التوقف يبقى التمرير اليدوي سهلاً إلى أعلى وإلى أسفل، فبسحبة خفيفة إلى أعلى يستمر النص فيما بعد ذلك، ويعود التمرير التلقائي إلى الحركة إن كان مفعّلاً.',
       'يفتح المصحف على القائمة الجانبية (عنوان السور)، وفي أعلاها إطار <b>العودة إلى آخر صفحة</b> للرجوع مباشرة إلى الصفحة التي كانت مفتوحة، وعند الرجوع بالإيماءة أو بسهم الرجوع يعود البرنامج خطوة خطوة، وآخر خطوة قبل الخروج تعيد إلى القائمة الجانبية.',
       'خط أخضر داكن سميك على أحد جانبي الصفحة للدلالة على كونها صفحة يمنى أو يسرى.',
       'علامة الربع ' + rubGridSvg(3) + ': تظهر داخل النص عند بداية كل ربع حزب، بدلاً من العلامة الدائرية التقليدية. وهي شبكة صغيرة من ٨ مربعات (عمودان × ٤ صفوف) تمثّل أثمان الجزء الحالي الثمانية - العمود الأيمن لحزبه الأول والأيسر لحزبه الثاني، كل عمود من الأعلى للأسفل. تُملأ المربعات تدريجياً (كما في المثال المجاور، وفيه ٣ من ٨) بعدد الأرباع التي وصلت إليها القراءة من الجزء، فتُعرف دفعة واحدة أي ربع أنت فيه من الجزء دون حساب.',
@@ -33183,6 +33201,22 @@ function renderFontTab() {
   ghNote.style.cssText = 'font-family:sans-serif;font-size:13.5px;font-weight:700;padding:8px 10px 10px;line-height:1.65;';
   ghNote.textContent = 'انقر أي كلمة ملوّنة باللون الأخضر في المصحف ليظهر معناها، وانقر مرة أخرى لإخفائه.';
   card.appendChild(ghNote);
+
+  card = fontTabHeading('٤. التوقف في أواخر السور والأجزاء');
+  [[true, 'مفعّل', 'يتوقف التمرير'], [false, 'غير مفعّل', 'تمرير متصل']].forEach(([on, label, desc]) => {
+    const row = document.createElement('button');
+    row.className = 'font-opt' + (segStopOn === on ? ' active' : '');
+    row.innerHTML = '<span class="fo-check">✓</span>' +
+      '<span class="fo-sample" style="font-size:16px;font-family:sans-serif;font-weight:700;">' + label + '</span>' +
+      '<span class="fo-label" style="text-align:center;line-height:1.35;font-size:14px;">' + desc + '</span>';
+    row.addEventListener('click', () => { setSegStop(on, true); renderFontTab(); });
+    card.appendChild(row);
+  });
+  const stNote = document.createElement('div');
+  stNote.className = 'strong-note';
+  stNote.style.cssText = 'font-family:sans-serif;font-size:13.5px;font-weight:700;padding:8px 10px 10px;line-height:1.65;';
+  stNote.innerHTML = 'في الوضع الحر. ويمكن التبديل بسرعة بالزر ' + '<span style="display:inline-flex;vertical-align:middle;background:#0E4433;color:#E8B84B;border-radius:6px;padding:2px;">' + document.getElementById('segStopBtn').innerHTML.replace('width="24" height="24"', 'width="16" height="16"') + '</span>' + ' في الشريط السفلي: ذهبي عند التفعيل، وباهت عند الإلغاء.';
+  card.appendChild(stNote);
 
   const credit = document.createElement('div');
   credit.className = 'strong-note';
