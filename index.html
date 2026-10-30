@@ -131,7 +131,15 @@ body.landscape-lock .rotateFabBtn{right:auto;left:8px;}
 .fab-group-icon{color:#F6EFDC;opacity:0.9;line-height:1;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;}
 .fab-frame{display:flex;align-items:center;gap:7px;border:1.5px solid #F6EFDC;border-radius:12px;padding:2px 9px;height:42.8px;box-sizing:border-box;background:#ffffff0d;}
 #rotateFrameBound,#rotateFrameFree{padding:2px 5px;}
-@media (max-width:395px){#freeAutoFab,#autoFab{gap:5px !important;padding-left:3px !important;padding-right:3px !important;}#freeAutoFab .fab-btn-round,#autoFab .fab-btn-round{width:31px;height:31px;}#freeAutoFab .fab-frame{padding-left:5px;padding-right:5px;}#freeAutoFab .fab-frame-size{gap:7px;}#freeAutoFab .fab-frame-scroll{gap:3px;}}
+/* bottom bar: one row that always fits; its outer frames line up with the page's own edges */
+#autoFab,#freeAutoFab{flex-wrap:nowrap !important;justify-content:space-between !important;gap:4px !important;padding-left:max(8px, calc((100% - 744px) / 2)) !important;padding-right:max(8px, calc((100% - 744px) / 2)) !important;}
+#rotateFrameBound,#rotateFrameFree,#backFrameBound,#backFrameFree{width:var(--hdrDarkW);flex:0 0 auto;padding:0 !important;justify-content:center;}
+#rotateFrameBound .fab-btn,#rotateFrameFree .fab-btn,#backFrameBound .fab-btn,#backFrameFree .fab-btn{padding:0;}
+#autoFab .fab-frame,#freeAutoFab .fab-frame{min-width:0;}
+#autoFab .fab-frame-scroll,#freeAutoFab .fab-frame-scroll,#freeAutoFab .fab-frame-size{padding-left:5px;padding-right:5px;}
+#autoFab .fab-btn-round,#freeAutoFab .fab-btn-round{width:clamp(27px, 8.4vw, 36px);height:clamp(27px, 8.4vw, 36px);}
+#freeAutoFab .fab-frame-size{gap:clamp(5px, 2.4vw, 12px);}
+#freeAutoFab .fab-frame-scroll,#autoFab .fab-frame-scroll{gap:clamp(2px, 1vw, 5px);}
 #segStopBtn{color:#E8B84B;padding:3px 0 3px 2px;border-right:1.5px solid #F6EFDC55;margin-right:1px;padding-right:5px;border-radius:0;height:30px;}
 #segStopBtn.off{color:#F6EFDC;opacity:.4;}
 #segStopBtn.off svg{stroke-dasharray:none;}
@@ -151,17 +159,18 @@ body.landscape-lock .rotateFabBtn{right:auto;left:8px;}
 .ayah-content-tab.active{background:#F3E9D1;color:#7B2E2E;border-color:#7B2E2E;}
 #ayahPopupContent{flex:1;overflow-y:auto;padding:14px;font-family:sans-serif;font-weight:700;font-size:19px;color:#211C14;min-height:90px;line-height:1.85;}
 #bookReader{position:fixed;top:0;left:0;right:0;bottom:calc(var(--floatBarH) + var(--navInset));z-index:56;background:#FBF5E4;flex-direction:column;color:#211C14;overflow:hidden;}
-#bookReaderHead{position:relative;background:#0E4433;color:#F6EFDC;padding:8px 10px 6px;padding-top:calc(8px + var(--topInset));flex:0 0 auto;}
-#bookReaderTitle{font-family:'Amiri',serif;font-weight:700;font-size:20px;text-align:center;line-height:1.5;}
-#bookFontBtns{position:absolute;left:8px;top:calc(6px + var(--topInset));display:flex;gap:5px;}
-#bookFontBtns button{direction:ltr;background:transparent;border:1.5px solid #FFFFFF;border-radius:8px;color:#FFFFFF;font-family:sans-serif;font-weight:700;font-size:14px;line-height:1;padding:5px 6px;cursor:pointer;}
-#bookReaderTitle{padding-left:84px;padding-right:84px;}
-#bookReaderNav{display:flex;align-items:center;justify-content:center;margin-top:4px;}
-#bookReaderWhere{font-family:'Amiri',serif;font-weight:700;font-size:15px;color:#FFFFFF;text-align:center;flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px;}
-.book-hbox{flex:0 0 auto;box-sizing:border-box;border:1.5px solid #FFFFFF;border-radius:9px;background:transparent;color:#E8B84B;font-family:'Amiri',serif;font-weight:700;font-size:15px;line-height:1.5;padding:2px 7px;white-space:nowrap;text-align:center;}
+#bookReaderHead{position:relative;background:#0E4433;color:#FFFFFF;padding:4px 8px 7px;padding-top:calc(4px + var(--topInset));flex:0 0 auto;}
+#bookReaderTitle{font-family:'Amiri',serif;font-weight:700;font-size:19px;text-align:center;line-height:1.35;color:#FFFFFF;}
+#bookFontBtns{position:absolute;left:8px;right:8px;top:calc(3px + var(--topInset));display:flex;justify-content:space-between;pointer-events:none;}
+#bookFontBtns button{pointer-events:auto;direction:ltr;background:transparent;border:2px solid #E8B84B;border-radius:8px;color:#FFFFFF;font-family:sans-serif;font-weight:700;font-size:17px;line-height:1;padding:6px 8px;cursor:pointer;}
+#bookReaderTitle{padding-left:54px;padding-right:54px;}
+#bookReaderNav{display:flex;align-items:center;justify-content:center;margin-top:5px;gap:4px;}
+#bookReaderWhere{font-family:'Amiri',serif;font-weight:700;font-size:min(16px, 3.9vw);color:#FFFFFF;text-align:center;flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px;}
+.book-hbox{flex:0 0 auto;box-sizing:border-box;border:2px solid #E8B84B;border-radius:9px;background:transparent;color:#FFFFFF;font-family:'Amiri',serif;font-weight:700;font-size:20px;line-height:1.45;padding:2px 7px;white-space:nowrap;text-align:center;}
 #bookReaderSurah{min-width:var(--bookSurahBoxW,96px);}
+@media (max-width:405px){.book-hbox{font-size:4.4vw;padding:2px 6px;}}
 #bookIntroToggle{cursor:pointer;}
-#bookIntroToggle.on{background:#E8B84B;color:#0E4433;border-color:#E8B84B;}
+#bookIntroToggle.on{background:#B8901F;color:#FFFFFF;border-color:#E8B84B;}
 #bookIntroToggle.off{visibility:hidden;}
 #bookReaderBody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px 24px;font-family:'Amiri',serif;font-weight:700;font-size:var(--bookFontPx,24px);line-height:1.95;text-align:justify;max-width:760px;margin:0 auto;width:100%;box-sizing:border-box;}
 #bookReaderBody p{margin:0 0 10px;}
@@ -318,6 +327,17 @@ body.landscape-lock .vSlot{padding:0 26px 14px;}
    the page's text (negative z-index inside the frame's own stacking
    context), so it never tints the letters themselves. */
 .page-frame{isolation:isolate;}
+/* square corners on the side of the thick dark line (right on odd pages,
+   left on even), wider rounded corners on the other side */
+.page-frame:has(> .pageSideLine:not(.side-left)){border-radius:24px 0 0 24px;}
+.page-frame:has(> .pageSideLine.side-left){border-radius:0 24px 24px 0;}
+/* the gold band now runs along the thin side */
+.pageSideLine::before{display:none !important;}
+.page-frame::before{content:'';position:absolute;top:2px;bottom:2px;left:2px;width:10mm;z-index:-1;pointer-events:none;border-radius:22px 0 0 22px;
+  background:linear-gradient(to right,rgba(232,184,75,.30) 0,rgba(232,184,75,.30) 5mm,rgba(232,184,75,0) 10mm);}
+.page-frame:has(> .pageSideLine.side-left)::before{left:auto;right:2px;border-radius:0 22px 22px 0;background:linear-gradient(to left,rgba(232,184,75,.30) 0,rgba(232,184,75,.30) 5mm,rgba(232,184,75,0) 10mm);}
+body.dark-mode .page-frame::before{background:linear-gradient(to right,rgba(201,162,39,.18) 0,rgba(201,162,39,.18) 5mm,rgba(201,162,39,0) 10mm);}
+body.dark-mode .page-frame:has(> .pageSideLine.side-left)::before{background:linear-gradient(to left,rgba(201,162,39,.18) 0,rgba(201,162,39,.18) 5mm,rgba(201,162,39,0) 10mm);}
 .pageSideLine::before{content:'';position:absolute;top:0;bottom:0;right:3px;width:10mm;z-index:-1;pointer-events:none;
   background:linear-gradient(to left,rgba(232,184,75,.30) 0,rgba(232,184,75,.30) 5mm,rgba(232,184,75,0) 10mm);}
 .pageSideLine.side-left::before{right:auto;left:3px;background:linear-gradient(to right,rgba(232,184,75,.30) 0,rgba(232,184,75,.30) 5mm,rgba(232,184,75,0) 10mm);}
@@ -702,6 +722,7 @@ body.dark-mode .search-result mark{background:#FFCA28;color:#1A1A1A;}
 body.dark-mode .search-load-more{background:#232922;color:#8FD9B0;border-color:#8FD9B0;}
 body.dark-mode .search-load-more:hover{background:#2B322A;}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#211C14;color:#F6EFDC;padding:10px 16px;border-radius:10px;font-size:13px;z-index:60;display:none;}
+.toast.toast-big{bottom:calc(var(--floatBarH) + var(--navInset) + 14px);font-family:sans-serif;font-size:19px;font-weight:700;padding:12px 24px;white-space:nowrap;}
 .banner{background:#0E4433;color:#F6EFDC;font-size:12.5px;padding:6px 14px;text-align:center;}
 ::-webkit-scrollbar{width:10px;}
 ::-webkit-scrollbar-thumb{background:#D9C79C;border-radius:8px;}
@@ -25455,8 +25476,9 @@ const sidebarBody = document.getElementById('sidebarBody');
 const vScrollWrap = document.getElementById('vScrollWrap');
 const boundPagesContainer = document.getElementById('boundPagesContainer');
 
-function toast(msg) {
+function toast(msg, big) {
   toastEl.textContent = msg;
+  toastEl.classList.toggle('toast-big', !!big);
   toastEl.style.display = 'block';
   clearTimeout(toast._t);
   toast._t = setTimeout(() => { toastEl.style.display = 'none'; }, 2200);
@@ -31483,7 +31505,7 @@ function setSegStop(on, quiet) {
   if (btn) btn.classList.toggle('off', !segStopOn);
   if (!segStopOn) { if (segLock) segReleaseLock(); if (segEngaged) hideSegPanel(); segArmed = null; segPassFloor = false; }
   else { segStartId = null; segRenderCheck = true; }
-  if (!quiet) toast('التوقف في أواخر السور والأجزاء: ' + (segStopOn ? 'مفعّل' : 'غير مفعّل'));
+  if (!quiet) toast(segStopOn ? 'التوقف مفعّل' : 'عدم التوقف', true);
 }
 document.getElementById('segStopBtn').addEventListener('click', () => setSegStop(!segStopOn));
 setTimeout(() => setSegStop(segStopOn, true), 0);
@@ -32942,7 +32964,7 @@ function renderGuideTab() {
     ]},
     { title: '٥. التفسير واللغة والإعراب (من نافذة الآية)', items: [
       '<b>تفسير القرآن</b>: تفسير البرهان للسيد هاشم البحراني، مرتّباً حسب السور والآيات.',
-      'في أعلى صفحة التفسير واللغة والإعراب زرّان (A− و A+) لتصغير الخط وتكبيره، ويبقى الحجم المختار محفوظاً.',
+      'في أعلى صفحة التفسير واللغة والإعراب زرّان لحجم الخط: (A−) في أقصى اليمين للتصغير، و(A+) في أقصى اليسار للتكبير، ويبقى الحجم المختار محفوظاً.',
       '<b>اللغة</b> و<b>الإعراب</b>: فقرتا «اللغة» و«الإعراب» من تفسير مجمع البيان للشيخ الطبرسي، مربوطتان بآيات كل مقطع.',
       '<b>الشريط العلوي</b>: اسم الكتاب ومؤلفه، وتحته من اليمين إطار فيه اسم السورة، وفي الوسط الآية أو الآيات التي يشرحها النص المعروض («الآية ٥»، أو «الآيتان ١ - ٢»، أو «الآيات ١ - ٥»)، وعلى اليسار إطار «فضل السورة وخواصّها» (في التفسير وحده).',
       '<b>التقليب</b>: سحب النص بالإصبع يميناً ينقل إلى الآية التالية، وسحبه يساراً إلى السابقة، والنص يتبع الإصبع أثناء السحب. والتمرير لأعلى وأسفل لقراءة النص الطويل.',
@@ -32954,9 +32976,9 @@ function renderGuideTab() {
     ]},
     { title: '٦. صفحة النص القرآني', items: [
       'ميزة النسخ الحر بالضغط المطوّل على أي موضع من الصفحة.',
-      'في الوضع الحر، يتوقف التمرير اليدوي والتلقائي عند آخر السورة وعند آخر الجزء، وكذلك عند بدايتهما في التمرير المعاكس. وعند الآخر تظهر فوق الشريط السفلي ثلاثة مستطيلات: في الوسط <b>آخر سورة ...</b> أو <b>آخر الجزء ...</b>، وعلى يمينه <b>السورة السابقة</b> أو <b>الجزء السابق</b>، وعلى يساره <b>السورة التالية</b> أو <b>الجزء التالي</b>، ويكون الانتقال بالنقر على أحدها. ويُفعَّل هذا التوقف أو يُلغى بزر (' + badge(document.getElementById('segStopBtn').innerHTML) + ') في الشريط السفلي، أو من عنوان <b>التخطيط</b>. وبعد التوقف يبقى التمرير اليدوي سهلاً إلى أعلى وإلى أسفل، فبسحبة خفيفة إلى أعلى يستمر النص فيما بعد ذلك، ويعود التمرير التلقائي إلى الحركة إن كان مفعّلاً.',
+      'في الوضع الحر، يتوقف التمرير اليدوي والتلقائي عند آخر السورة وعند آخر الجزء، وكذلك عند بدايتهما في التمرير المعاكس. وعند الآخر تظهر فوق الشريط السفلي ثلاثة مستطيلات: في الوسط <b>آخر سورة ...</b> أو <b>آخر الجزء ...</b>، وعلى يمينه <b>السورة السابقة</b> أو <b>الجزء السابق</b>، وعلى يساره <b>السورة التالية</b> أو <b>الجزء التالي</b>، ويكون الانتقال بالنقر على أحدها. ويُفعَّل هذا التوقف أو يُلغى بزر (' + badge(document.getElementById('segStopBtn').innerHTML) + ') في الشريط السفلي (فتظهر عبارة «التوقف مفعّل» أو «عدم التوقف»)، أو من عنوان <b>التخطيط</b>. وبعد التوقف يبقى التمرير اليدوي سهلاً إلى أعلى وإلى أسفل، فبسحبة خفيفة إلى أعلى يستمر النص فيما بعد ذلك، ويعود التمرير التلقائي إلى الحركة إن كان مفعّلاً.',
       'يفتح المصحف على القائمة الجانبية (عنوان السور)، وفي أعلاها إطار <b>العودة إلى آخر صفحة</b> للرجوع مباشرة إلى الصفحة التي كانت مفتوحة، وعند الرجوع بالإيماءة أو بسهم الرجوع يعود البرنامج خطوة خطوة، وآخر خطوة قبل الخروج تعيد إلى القائمة الجانبية.',
-      'خط أخضر داكن سميك على أحد جانبي الصفحة للدلالة على كونها صفحة يمنى أو يسرى.',
+      'خط أخضر داكن سميك على أحد جانبي الصفحة للدلالة على كونها صفحة يمنى أو يسرى، وزاويتا الصفحة من جهته قائمتان، ومن الجهة الأخرى مقوّستان وعليها شريط ذهبي خفيف.',
       'علامة الربع ' + rubGridSvg(3) + ': تظهر داخل النص عند بداية كل ربع حزب، بدلاً من العلامة الدائرية التقليدية. وهي شبكة صغيرة من ٨ مربعات (عمودان × ٤ صفوف) تمثّل أثمان الجزء الحالي الثمانية - العمود الأيمن لحزبه الأول والأيسر لحزبه الثاني، كل عمود من الأعلى للأسفل. تُملأ المربعات تدريجياً (كما في المثال المجاور، وفيه ٣ من ٨) بعدد الأرباع التي وصلت إليها القراءة من الجزء، فتُعرف دفعة واحدة أي ربع أنت فيه من الجزء دون حساب.',
     ]},
     { title: '٧. شريط الأدوات السفلي', items: [
@@ -33215,7 +33237,7 @@ function renderFontTab() {
   const stNote = document.createElement('div');
   stNote.className = 'strong-note';
   stNote.style.cssText = 'font-family:sans-serif;font-size:13.5px;font-weight:700;padding:8px 10px 10px;line-height:1.65;';
-  stNote.innerHTML = 'في الوضع الحر. ويمكن التبديل بسرعة بالزر ' + '<span style="display:inline-flex;vertical-align:middle;background:#0E4433;color:#E8B84B;border-radius:6px;padding:2px;">' + document.getElementById('segStopBtn').innerHTML.replace('width="24" height="24"', 'width="16" height="16"') + '</span>' + ' في الشريط السفلي: ذهبي عند التفعيل، وباهت عند الإلغاء.';
+  stNote.innerHTML = 'في الوضع الحر. ويمكن التبديل بسرعة بالزر ' + '<span style="display:inline-flex;vertical-align:middle;background:#0E4433;color:#E8B84B;border-radius:6px;padding:2px;">' + document.getElementById('segStopBtn').innerHTML.replace('width="24" height="24"', 'width="16" height="16"') + '</span>' + ' في الشريط السفلي: ذهبي عند التفعيل (وتظهر عبارة «التوقف مفعّل»)، وباهت عند الإلغاء (وتظهر عبارة «عدم التوقف»).';
   card.appendChild(stNote);
 
   const credit = document.createElement('div');
