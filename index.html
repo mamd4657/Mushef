@@ -468,6 +468,7 @@ body.dark-mode .fbNameGroup .surah-place-icon-kaaba{background:#EFE8D6;border-ra
    the same way .pageLinesX's own padding does now; margin trimmed too so
    it isn't adding its own separate gap on top of .page-frame's already
    covering that. */
+.freePageTextBlock > :last-child{margin-bottom:0 !important;} /* same space under the last line as above the first */
 .freePageTextBlock{padding:0 5px;margin:0;font-family:var(--quran-font,'QuranHafs'),serif;font-weight:400;-webkit-text-stroke:max(0.028em, 0.47px) currentColor;text-align:justify;text-align-last:right;line-height:1.9;white-space:normal;word-spacing:0.15em;user-select:text;}
 .freePageTextBlock .qbsm,.freePageTextBlock .qheader,.freePageTextBlock .qcombo{margin:10px 0;}
 .freePageTextBlock .freePara{margin-bottom:0.6em;}
@@ -31239,6 +31240,7 @@ function centerOn(n) {
 // just above the bottom toolbar.
 const SEG_PANEL_RESERVE = 0;
 var segRenderAt = 0;
+var segLastTop = 0;
 var segShrink = 0; // px taken off the bottom of the text area while the boxes show, so they never cover text
 let segStartId = null;      // the boundary the current stretch begins at ('s12', 'j3', or 'FAR')
 let segRenderCheck = true;  // a jump re-rendered the pages: re-check which stretch we are in
@@ -31557,10 +31559,13 @@ function segGuard() {
   if (segLock && !segTouch && Math.abs(top - segLock.lim) > 20 && top >= min - 0.5 && top <= max + 0.5) {
     segReleaseLock(); // moved away by other means (a jump, recitation...)
   }
-  if (top > max + 0.5) {
+  // reaching the end exactly (a page settling right onto it, say) counts too
+  const arrivedAtEnd = max !== Infinity && top >= max - 0.5 && top > segLastTop + 0.5 && !segEngaged && !segArmed && (Date.now() - segRenderAt > 900);
+  segLastTop = top;
+  if (top > max + 0.5 || arrivedAtEnd) {
     // a small overshoot right after a jump is only the pages settling;
     // any other reach past the end - even a slow one - shows the boxes
-    const push = top > max + 6 || segAutoActive() || segTouch || (Date.now() - segRenderAt > 900);
+    const push = arrivedAtEnd || top > max + 6 || segAutoActive() || segTouch || (Date.now() - segRenderAt > 900);
     segClampTo(wrap, max);
     if (push) { segStopAuto(); showSegPanel('end', endB, startB, wrap, max); }
   } else if (segPassFloor && top < min - 0.5) {
