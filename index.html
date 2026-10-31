@@ -324,7 +324,7 @@ main{max-width:760px;margin:0 auto;padding:0 8px;}
 .vSlot{box-sizing:border-box;padding:0 7px 6px;}
 body.landscape-lock .vSlot{padding:0 26px 14px;}
 .page-frame{background:var(--pageBg,#FBF5E4);border:2px solid #0E4433;border-radius:14px;box-shadow:inset 0 0 0 4px var(--pageRing,#F6EFDC), 0 10px 30px rgba(14,68,51,.15);padding:4px;min-height:480px;position:relative;}
-.pageSideLine{position:absolute;top:6px;bottom:6px;width:6px;background:#0E4433;border-radius:4px;right:-3px;}
+.pageSideLine{position:absolute;top:-2px;bottom:-2px;width:6px;background:#0E4433;border-radius:0;right:-3px;}
 .pageSideLine.side-left{right:auto;left:-3px;}
 /* A translucent gold band inside the dark side line, 5mm full then fading
    out over the next 5mm, so a page's side reads at a glance. Painted behind
@@ -337,11 +337,11 @@ body.landscape-lock .vSlot{padding:0 26px 14px;}
 .page-frame:has(> .pageSideLine.side-left){border-radius:0 24px 24px 0;}
 /* the gold band now runs along the thin side */
 .pageSideLine::before{display:none !important;}
-.page-frame::before{content:'';position:absolute;top:2px;bottom:2px;left:2px;width:10mm;z-index:-1;pointer-events:none;border-radius:22px 0 0 22px;
-  background:linear-gradient(to right,rgba(232,184,75,.30) 0,rgba(232,184,75,.30) 5mm,rgba(232,184,75,0) 10mm);}
-.page-frame:has(> .pageSideLine.side-left)::before{left:auto;right:2px;border-radius:0 22px 22px 0;background:linear-gradient(to left,rgba(232,184,75,.30) 0,rgba(232,184,75,.30) 5mm,rgba(232,184,75,0) 10mm);}
-body.dark-mode .page-frame::before{background:linear-gradient(to right,rgba(201,162,39,.18) 0,rgba(201,162,39,.18) 5mm,rgba(201,162,39,0) 10mm);}
-body.dark-mode .page-frame:has(> .pageSideLine.side-left)::before{background:linear-gradient(to left,rgba(201,162,39,.18) 0,rgba(201,162,39,.18) 5mm,rgba(201,162,39,0) 10mm);}
+.page-frame::before{content:'';position:absolute;top:2px;bottom:2px;left:2px;width:15mm;z-index:-1;pointer-events:none;border-radius:22px 0 0 22px;
+  background:linear-gradient(to right,rgba(232,184,75,.30) 0,rgba(232,184,75,.26) 2mm,rgba(232,184,75,.19) 5mm,rgba(232,184,75,.11) 8mm,rgba(232,184,75,.05) 11mm,rgba(232,184,75,.015) 13.5mm,rgba(232,184,75,0) 15mm);}
+.page-frame:has(> .pageSideLine.side-left)::before{left:auto;right:2px;border-radius:0 22px 22px 0;background:linear-gradient(to left,rgba(232,184,75,.30) 0,rgba(232,184,75,.26) 2mm,rgba(232,184,75,.19) 5mm,rgba(232,184,75,.11) 8mm,rgba(232,184,75,.05) 11mm,rgba(232,184,75,.015) 13.5mm,rgba(232,184,75,0) 15mm);}
+body.dark-mode .page-frame::before{background:linear-gradient(to right,rgba(201,162,39,.18) 0,rgba(201,162,39,.155) 2mm,rgba(201,162,39,.115) 5mm,rgba(201,162,39,.065) 8mm,rgba(201,162,39,.03) 11mm,rgba(201,162,39,.01) 13.5mm,rgba(201,162,39,0) 15mm);}
+body.dark-mode .page-frame:has(> .pageSideLine.side-left)::before{background:linear-gradient(to left,rgba(201,162,39,.18) 0,rgba(201,162,39,.155) 2mm,rgba(201,162,39,.115) 5mm,rgba(201,162,39,.065) 8mm,rgba(201,162,39,.03) 11mm,rgba(201,162,39,.01) 13.5mm,rgba(201,162,39,0) 15mm);}
 .pageSideLine::before{content:'';position:absolute;top:0;bottom:0;right:3px;width:10mm;z-index:-1;pointer-events:none;
   background:linear-gradient(to left,rgba(232,184,75,.30) 0,rgba(232,184,75,.30) 5mm,rgba(232,184,75,0) 10mm);}
 .pageSideLine.side-left::before{right:auto;left:3px;background:linear-gradient(to right,rgba(232,184,75,.30) 0,rgba(232,184,75,.30) 5mm,rgba(232,184,75,0) 10mm);}
