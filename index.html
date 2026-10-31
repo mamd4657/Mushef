@@ -31817,6 +31817,7 @@ function freeSwipeEnsureUnder(dir) {
   holder.style.cssText = 'position:absolute;left:' + st.pad + 'px;right:' + st.pad + 'px;top:' + st.pad + 'px;';
   holder.appendChild(buildFreePageFrameElement(st.target));
   st.overlay.insertBefore(holder, st.top);
+  if (window.freeKashidaNow) window.freeKashidaNow(holder.querySelector('.freePageTextBlock'));
   st.under = holder;
 }
 function swipeMove(dx) {
@@ -31856,6 +31857,9 @@ function swipeEnd(dx) {
       setBoundScrollTop((st.target - 1) * boundSlotH);
       reconcileBoundWindow();
       updateBoundCurrentPage();
+      // the page turned to is fitted before it shows, so nothing moves on it
+      const sl = boundPagesContainer.querySelector('.vSlot[data-page="' + st.target + '"]');
+      if (sl) fitBoundSlotNow(sl);
     }
     vScrollWrap.style.visibility = '';
     st.overlay.remove();
@@ -35814,11 +35818,28 @@ function renderShareTab() {
     pending.clear();
   }
   function queue(block) { pending.add(block); if (!raf) raf = requestAnimationFrame(flush); }
+  // Kashida for one page right now, before it is ever painted - used for the
+  // page being turned to (and the page shown under the finger while turning),
+  // so its words never visibly shift or grow kashida after it appears.
+  function processNow(block) {
+    if (!block || !block.isConnected) return;
+    block.querySelectorAll('.freePara').forEach((para) => {
+      const cs = getComputedStyle(para);
+      const key = Math.round(para.clientWidth) + '|' + (parseFloat(cs.fontSize) || 0);
+      if (para.dataset.kx === key) return;
+      try { processParaSafely(para); } catch (e) { removeInsertedKashida(para); }
+    });
+  }
+  window.freeKashidaNow = processNow;
+  // pages on screen (the one being opened and its neighbours) are done at
+  // once; the rest of the window in the next frame
+  const nearNow = (b) => { const n = parseInt((b.id || '').replace('freePageText_', ''), 10); return n && Math.abs(n - pageNum) <= 1; };
+  const take = (b) => { ro.observe(b); if (nearNow(b)) processNow(b); else queue(b); };
   const ro = new ResizeObserver((entries) => entries.forEach((e) => queue(e.target)));
-  const watch = (root) => root.querySelectorAll && root.querySelectorAll('.freePageTextBlock').forEach((b) => { ro.observe(b); queue(b); });
+  const watch = (root) => root.querySelectorAll && root.querySelectorAll('.freePageTextBlock').forEach(take);
   new MutationObserver((muts) => muts.forEach((m) => m.addedNodes.forEach((n) => {
     if (n.nodeType !== 1) return;
-    if (n.classList && n.classList.contains('freePageTextBlock')) { ro.observe(n); queue(n); } else watch(n);
+    if (n.classList && n.classList.contains('freePageTextBlock')) take(n); else watch(n);
   }))).observe(cont, { childList: true, subtree: true });
   watch(cont);
 })();
