@@ -28155,7 +28155,9 @@ function renderFreeWindow(centerPage, scrollToCenter) {
     const frameEl = container.querySelector('[data-page="' + centerPage + '"]');
     if (wrap && frameEl) {
       freeSuppressScrollTracking = true;
-      wrap.scrollTop = frameEl.offsetTop;
+      // the same resting place the edge-settling uses (maybeSnapFree), so
+      // the page never moves again right after it opens
+      wrap.scrollTop = Math.max(0, frameEl.offsetTop - 4);
       requestAnimationFrame(() => { freeSuppressScrollTracking = false; });
     }
   }
@@ -31814,7 +31816,8 @@ function freeSwipeEnsureUnder(dir) {
   st.target = (target >= 1 && target <= 604) ? target : null;
   if (!st.target) return;
   const holder = document.createElement('div');
-  holder.style.cssText = 'position:absolute;left:' + st.pad + 'px;right:' + st.pad + 'px;top:' + st.pad + 'px;';
+  // exactly where the page will rest once turned (see renderFreeWindow)
+  holder.style.cssText = 'position:absolute;left:' + st.pad + 'px;right:' + st.pad + 'px;top:' + (st.pad - 4) + 'px;';
   holder.appendChild(buildFreePageFrameElement(st.target));
   st.overlay.insertBefore(holder, st.top);
   if (window.freeKashidaNow) window.freeKashidaNow(holder.querySelector('.freePageTextBlock'));
