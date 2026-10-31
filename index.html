@@ -231,7 +231,8 @@ body.dark-mode .tabs{border-color:#E8B84B;}
 .surah-row .placeIcon{flex:0 0 22px;display:flex;align-items:center;justify-content:center;}
 .surah-row .placeIcon img{height:20px;width:auto;display:block;}
 .surah-search-wrap{position:sticky;top:-12px;margin:-12px -12px 8px;padding:10px 12px;background:#FBF5E4;border-bottom:1px solid #EDE3C6;z-index:2;}
-.surah-search-input{width:100%;box-sizing:border-box;padding:11px 14px;border:2px solid #B98A2A;border-radius:9px;background:#FFFDF6;color:#211C14;font-family:'Amiri',serif;font-weight:700;font-size:21px;}
+.surah-search-input{width:100%;box-sizing:border-box;height:42.8px;padding:0 12px;border:2px solid #B98A2A;border-radius:9px;background:#FFFDF6;color:#211C14;font-family:'Amiri',serif;font-weight:700;font-size:21px;}
+.surah-search-input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none;width:26px;height:26px;margin-right:6px;cursor:pointer;background:center/26px 26px no-repeat url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M5 5L19 19M19 5L5 19' stroke='%237B2E2E' stroke-width='3' stroke-linecap='round'/></svg>");}
 .surah-search-input::placeholder{color:#6E6650;font-weight:700;}
 body.dark-mode .surah-search-wrap{background:#171C18;border-color:#3A3F38;}
 body.dark-mode .surah-search-input{background:#232922;border-color:#5A6355;color:#EFE8D6;}
@@ -32802,16 +32803,17 @@ function updateResumeBox() {
   }
   const show = homeSidebarShowing && sidebar.classList.contains('open') && currentTab === 'surah';
   if (!show) { box.style.display = 'none'; return; }
-  box.textContent = '↩ العودة إلى آخر صفحة: ' + toArabicDigits(pageNum);
-  // from the right edge of the app up to just before the «آيات» label
-  const lbl = document.querySelector('#sidebarColHeaderLabels .ayahCount');
-  const hr = head.getBoundingClientRect();
-  if (lbl && !landscapeMode) {
-    const lr = lbl.getBoundingClientRect();
-    box.style.left = Math.max(4, Math.round(lr.right - hr.left + 6)) + 'px';
-  } else {
-    box.style.left = '40%';
+  box.textContent = 'العودة إلى آخر صفحة: ' + toArabicDigits(pageNum);
+  // only as wide as its words; its right edge in line with the floating bar's
+  box.style.left = 'auto';
+  const fb = document.querySelector('#floatingFrameBar .frame-bar');
+  let right = 6;
+  if (fb && fb.offsetWidth && !landscapeMode) {
+    // the index sits flush with the screen's right edge once open (it may
+    // still be sliding in right now, so its own position can't be used)
+    right = Math.max(0, Math.round(document.documentElement.clientWidth - fb.getBoundingClientRect().right));
   }
+  box.style.right = right + 'px';
   box.style.display = 'flex';
 }
 function closeSidebar() {
