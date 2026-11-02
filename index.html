@@ -531,7 +531,9 @@ html,body{overflow:hidden;}
 .cd-head input,.cd-row input,.cd-chk input,.cd-chip input{accent-color:#0E4433;width:20px;height:20px;margin:0;flex-shrink:0;}
 .cd-chips{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
 .cd-chips.off,#cdList.off{opacity:.45;}
-.cd-main{font-size:17px;}
+.cd-main{font-size:18.5px;font-weight:800;padding:7px 0;}
+/* what belongs to a main choice starts under its first letter (radio 20px + gap 8px) */
+.cd-sec > .cd-chips,.cd-sec > #cdList{margin-right:28px;}
 .cd-chk.dis,.cd-in.dis{opacity:.4;}
 #repeatMenu{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#7B2E2E;border-radius:16px;padding:6px;gap:6px;box-shadow:0 -2px 10px rgba(0,0,0,.3);}
 #repeatMenu button{background:transparent;border:1.5px solid #F6EFDC;color:#F6EFDC;border-radius:12px;padding:6px 9px;font-size:17px;font-weight:700;font-family:sans-serif;cursor:pointer;white-space:nowrap;}
@@ -29336,7 +29338,7 @@ function handleTextTap(target, wasMoving) {
 function handleTapOnAyah(target) {
   const found = findAyahSegAt(target);
   if (reciting) {
-    if (found) { syncContQueueTo(found.surah, found.ayah); reciteRepeatLeft = repeatCount - 1; playAyah(found.surah, found.ayah); }
+    if (found) { reciteBasmalaThen = null; syncContQueueTo(found.surah, found.ayah); reciteRepeatLeft = repeatCount - 1; playAyah(found.surah, found.ayah); }
     return;
   }
   if (getTapSelectedAyah()) {
@@ -29809,8 +29811,54 @@ async function playSegmentAyah(reciterId, r, surah, ayah, token) {
 // event (ayah-kind reciters, whose file IS one ayah) or by the segment
 // boundary check below (segment-kind reciters, whose file is a whole surah
 // we've been seeking/watching within).
+// ---- البسملة before continuous recitation ----
+// استمرار starts with the basmala in the same reciter's voice (from their
+// al-Fatiha 1, or an-Naml 30 if that fails), wherever in a surah it starts,
+// and each new surah reached while reciting on opens with it too - except
+// at-Tawba, and al-Fatiha whose first ayah is the basmala itself.
+let reciteBasmalaThen = null; // { surah, ayah } to play once the basmala ends
+function needsBasmala(surah, ayah) { return surah !== 9 && !(surah === 1 && ayah === 1); }
+function playWithBasmala(surah, ayah) {
+  if (!needsBasmala(surah, ayah)) { playAyah(surah, ayah); return; }
+  if (!searchIndex) searchIndex = buildSearchIndex();
+  const idx = searchIndex.findIndex((it) => it.surah === surah && it.ayah === ayah);
+  const item = searchIndex[idx];
+  if (!item) { playAyah(surah, ayah); return; }
+  reciteGlobalIndex = idx;
+  reciteBasmalaThen = { surah, ayah };
+  const token = ++reciteRequestToken;
+  segmentBoundaryEndTime = null;
+  if (item.page !== pageNum) centerOn(item.page);
+  const r = RECITERS[currentReciter];
+  if (r && reciterKind(r) === 'segment') {
+    const from = segmentSurahAvailable(r, 1) ? [1, 1] : (segmentSurahAvailable(r, 27) ? [27, 30] : null);
+    if (!from) { reciteBasmalaThen = null; playAyah(surah, ayah); return; }
+    playSegmentAyah(currentReciter, r, from[0], from[1], token);
+    return;
+  }
+  const tries = [reciteAudioUrlPrimary(1, 1)];
+  if (r && r.cdnEdition) tries.push(reciteAudioUrlFallback(1, 1));
+  tries.push(reciteAudioUrlPrimary(27, 30));
+  const attempt = (i) => {
+    if (token !== reciteRequestToken) return;
+    if (i >= tries.length) { reciteBasmalaThen = null; playAyah(surah, ayah); return; }
+    reciteAudio.src = tries[i];
+    reciteAudio.playbackRate = reciteSpeed;
+    reciteAudio.play().catch((err) => {
+      if (token !== reciteRequestToken || (err && err.name === 'AbortError')) return;
+      attempt(i + 1);
+    });
+  };
+  attempt(0);
+}
 function handleAyahAudioEnded() {
   if (!reciting) return;
+  if (reciteBasmalaThen) {
+    const t = reciteBasmalaThen;
+    reciteBasmalaThen = null;
+    playAyah(t.surah, t.ayah);
+    return;
+  }
   if (reciteMode === 'single') {
     stopRecitation();
     return;
@@ -29831,12 +29879,12 @@ function handleAyahAudioEnded() {
     contQueuePos++;
     const q = contQueue[contQueuePos];
     if (!q) { finishContPlan(); return; }
-    playAyah(q[0], q[1]);
+    if (q[1] === 1) playWithBasmala(q[0], q[1]); else playAyah(q[0], q[1]);
     return;
   }
   const next = searchIndex[reciteGlobalIndex + 1];
   if (!next) { stopRecitation(); return; }
-  playAyah(next.surah, next.ayah);
+  if (next.ayah === 1) playWithBasmala(next.surah, next.ayah); else playAyah(next.surah, next.ayah);
 }
 
 reciteAudio.addEventListener('ended', handleAyahAudioEnded);
@@ -29893,10 +29941,12 @@ function startRecitation() {
   }
   reciting = true;
   syncRecitePlayButtons();
-  playAyah(start.surah, start.ayah);
+  if (reciteMode === 'continuous' && fresh) playWithBasmala(start.surah, start.ayah);
+  else playAyah(start.surah, start.ayah);
 }
 
 function stopRecitation() {
+  reciteBasmalaThen = null;
   reciting = false;
   syncRecitePlayButtons();
   reciteAudio.pause();
@@ -32976,6 +33026,7 @@ function renderGuideTab() {
       'يمكن تحريك شريط التلاوة بالإصبع إلى أي موضع في الشاشة، ويعود إلى مكانه فوق النافذة عند فتحه من جديد. وأثناء التلاوة لا يختفي الشريط بالرجوع، بل يغلق الرجوع النافذة التي تحته، ويختفي الشريط بالرجوع بعد إيقاف التلاوة.',
       'عند اختيار <b>تكرار</b> تظهر قائمة لعدد مرات قراءة الآية (من مرتين إلى سبع)، ويظهر العدد المختار في الشريط مكان كلمة «تكرار»، ويبقى محفوظاً حتى يُغيَّر.',
       'عند اختيار <b>استمرار</b> تظهر نافذة فيها أربعة خيارات منفصلة، يتفعّل واحد منها فقط: <b>حسب الوقت</b> (تستمر التلاوة من الآية المختارة حتى ينتهي الوقت المحدد، من خمس دقائق إلى خمس ساعات، ويبقى الوقت المحدد محفوظاً حتى يُغيَّر)، أو <b>ابتداءً من الآية المختارة حتى نهاية السورة</b>، أو <b>ابتداءً من بداية السورة حتى نهايتها</b>، أو <b>سور وآيات مختارة</b>. ويبقى آخر ما اختير من الخيارات الثلاثة الأولى مفعّلاً، وعليه يكون التشغيل من شريط التلاوة.',
+      'وتبدأ تلاوة <b>الاستمرار</b> بالبسملة بصوت القارئ نفسه (من تلاوته للفاتحة)، سواء بدأت من أول السورة أو من وسطها، وكذلك عند الانتقال إلى كل سورة جديدة، عدا سورة التوبة.',
       'في <b>سور وآيات مختارة</b>: يُكتب اسم السورة؛ فإن وُضعت علامة في مربع <b>سورة</b> قُرئت السورة كاملة وتفعّل عدد مرات تكرارها، وتُكتب أرقام آيات منها (مثل: ٥ أو ١-٧ أو ٣، ٩) ويتفعّل عدد تكرارها بوضع علامة في مربع <b>الآية</b>. ويمكن الجمع بين المربعين، فتُقرأ السورة كاملة ثم الآيات المختارة منها. ويمكن إضافة سور أخرى، و<b>حفظ</b> الاختيار في المرجعيات باسم «تلاوة». ويكون التشغيل وفق هذا الخيار عند اختياره أو عند اختيار تلاوة من المرجعيات، وبعد انتهائه يعود التشغيل إلى آخر ما اختير من الخيارات الثلاثة الأولى.',
       '<b>نسخ الآية</b>: نسخ نص الآية.',
       '<b>حفظ الآية</b>: وضع علامة مرجعية على آية بعينها.',
