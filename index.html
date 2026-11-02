@@ -29709,6 +29709,9 @@ function playAyah(surah, ayah) {
   const r = RECITERS[currentReciter];
   if (r && reciterKind(r) === 'segment') {
     playSegmentAyah(currentReciter, r, surah, ayah, myToken);
+  } else if (surah === 1 && ayah === 1 && OWN_BASMALA[currentReciter]) {
+    // al-Fatiha's basmala in the reciter's own voice
+    playOwnBasmala(myToken, () => { usedFallbackAudio = false; attemptPlayAyah(reciteAudioUrlPrimary(1, 1), 1, 1, myToken); });
   } else {
     usedFallbackAudio = false;
     attemptPlayAyah(reciteAudioUrlPrimary(surah, ayah), surah, ayah, myToken);
@@ -29817,6 +29820,22 @@ async function playSegmentAyah(reciterId, r, surah, ayah, token) {
 // and each new surah reached while reciting on opens with it too - except
 // at-Tawba, and al-Fatiha whose first ayah is the basmala itself.
 let reciteBasmalaThen = null; // { surah, ayah } to play once the basmala ends
+// Reciters whose al-Fatiha 1 file on the per-ayah source is not in their own
+// voice: their basmala comes from their own complete al-Fatiha recording on
+// mp3quran.net (the part its ayah timing marks as ayah 1) - used for al-Fatiha
+// 1 itself and before every surah. (an-Naml 30 can't serve: it begins with
+// «إنه من سليمان وإنه» with no pause before the basmala.)
+const OWN_BASMALA = { maher: { server: 'https://server12.mp3quran.net/maher/', moshafId: 102 } };
+async function playOwnBasmala(token, onUnavailable) {
+  const src = OWN_BASMALA[currentReciter];
+  const r = { kind: 'segment', server: src.server, moshafId: src.moshafId, surahList: 'A' };
+  const key = 'basmala_' + currentReciter;
+  const timing = await fetchSegmentTimings(key, r, 1);
+  if (token !== reciteRequestToken) return;
+  const entry = timing.status === 'ok' && timing.entries.find((it) => it.ayah === 1);
+  if (!entry) { onUnavailable(); return; }
+  playSegmentAyah(key, r, 1, 1, token);
+}
 function needsBasmala(surah, ayah) { return surah !== 9 && !(surah === 1 && ayah === 1); }
 function playWithBasmala(surah, ayah) {
   if (!needsBasmala(surah, ayah)) { playAyah(surah, ayah); return; }
@@ -29836,9 +29855,12 @@ function playWithBasmala(surah, ayah) {
     playSegmentAyah(currentReciter, r, from[0], from[1], token);
     return;
   }
+  if (OWN_BASMALA[currentReciter]) {
+    playOwnBasmala(token, () => { reciteBasmalaThen = null; playAyah(surah, ayah); });
+    return;
+  }
   const tries = [reciteAudioUrlPrimary(1, 1)];
   if (r && r.cdnEdition) tries.push(reciteAudioUrlFallback(1, 1));
-  tries.push(reciteAudioUrlPrimary(27, 30));
   const attempt = (i) => {
     if (token !== reciteRequestToken) return;
     if (i >= tries.length) { reciteBasmalaThen = null; playAyah(surah, ayah); return; }
@@ -33026,7 +33048,7 @@ function renderGuideTab() {
       'يمكن تحريك شريط التلاوة بالإصبع إلى أي موضع في الشاشة، ويعود إلى مكانه فوق النافذة عند فتحه من جديد. وأثناء التلاوة لا يختفي الشريط بالرجوع، بل يغلق الرجوع النافذة التي تحته، ويختفي الشريط بالرجوع بعد إيقاف التلاوة.',
       'عند اختيار <b>تكرار</b> تظهر قائمة لعدد مرات قراءة الآية (من مرتين إلى سبع)، ويظهر العدد المختار في الشريط مكان كلمة «تكرار»، ويبقى محفوظاً حتى يُغيَّر.',
       'عند اختيار <b>استمرار</b> تظهر نافذة فيها أربعة خيارات منفصلة، يتفعّل واحد منها فقط: <b>حسب الوقت</b> (تستمر التلاوة من الآية المختارة حتى ينتهي الوقت المحدد، من خمس دقائق إلى خمس ساعات، ويبقى الوقت المحدد محفوظاً حتى يُغيَّر)، أو <b>ابتداءً من الآية المختارة حتى نهاية السورة</b>، أو <b>ابتداءً من بداية السورة حتى نهايتها</b>، أو <b>سور وآيات مختارة</b>. ويبقى آخر ما اختير من الخيارات الثلاثة الأولى مفعّلاً، وعليه يكون التشغيل من شريط التلاوة.',
-      'وتبدأ تلاوة <b>الاستمرار</b> بالبسملة بصوت القارئ نفسه (من تلاوته للفاتحة)، سواء بدأت من أول السورة أو من وسطها، وكذلك عند الانتقال إلى كل سورة جديدة، عدا سورة التوبة.',
+      'وتبدأ تلاوة <b>الاستمرار</b> بالبسملة بصوت القارئ نفسه (من تلاوته للفاتحة، وللقارئ ماهر المعيقلي من تلاوته الكاملة للفاتحة في موقع mp3quran، وهي أيضاً بسملة الفاتحة عنده)، سواء بدأت من أول السورة أو من وسطها، وكذلك عند الانتقال إلى كل سورة جديدة، عدا سورة التوبة.',
       'في <b>سور وآيات مختارة</b>: يُكتب اسم السورة؛ فإن وُضعت علامة في مربع <b>سورة</b> قُرئت السورة كاملة وتفعّل عدد مرات تكرارها، وتُكتب أرقام آيات منها (مثل: ٥ أو ١-٧ أو ٣، ٩) ويتفعّل عدد تكرارها بوضع علامة في مربع <b>الآية</b>. ويمكن الجمع بين المربعين، فتُقرأ السورة كاملة ثم الآيات المختارة منها. ويمكن إضافة سور أخرى، و<b>حفظ</b> الاختيار في المرجعيات باسم «تلاوة». ويكون التشغيل وفق هذا الخيار عند اختياره أو عند اختيار تلاوة من المرجعيات، وبعد انتهائه يعود التشغيل إلى آخر ما اختير من الخيارات الثلاثة الأولى.',
       '<b>نسخ الآية</b>: نسخ نص الآية.',
       '<b>حفظ الآية</b>: وضع علامة مرجعية على آية بعينها.',
