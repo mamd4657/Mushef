@@ -500,6 +500,9 @@ body.dark-mode .freePageTextBlock{color:#EFE8D6;}
 .qline.cover-blank-line{cursor:default;user-select:none;-webkit-user-select:none;}
 .ayah-seg.reciting-highlight{background:#B98A2A55;border-radius:3px;}
 .ayah-seg.tap-highlight{background:#4CAF5055;border-radius:3px;}
+::highlight(wbw){background-color:#2F7FD066;}
+body.wbw-on #floatingFrameBar .fbNameGroup{background:#2F7FD066;border-radius:8px;box-shadow:0 0 0 2px #2F7FD066;}
+#floatingFrameBar .fbNameGroup{cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .search-match-highlight{background:#FFD54F99;border-radius:2px;transition:background 1s ease-out;}
 .divine-name{color:#CC0000;}
 body.dark-mode .divine-name{color:#FF5252;}
@@ -827,6 +830,8 @@ body.dark-mode .qline.centered-line,body.dark-mode .centered-page .qline{color:#
 body.dark-mode .qbsm,body.dark-mode .qcombo .cbsm{color:#EFE8D6;}
 body.dark-mode .ayah-seg.reciting-highlight{background:#C9A22755;}
 body.dark-mode .ayah-seg.tap-highlight{background:#66BB6A55;}
+body.dark-mode ::highlight(wbw){background-color:#5A9DF066;}
+body.dark-mode.wbw-on #floatingFrameBar .fbNameGroup{background:#5A9DF066;box-shadow:0 0 0 2px #5A9DF066;}
 body.dark-mode .search-match-highlight{background:#FFCA2899;}
 </style>
 </head>
@@ -27323,6 +27328,7 @@ function buildPageContent(n) {
           : Math.round(totalKashida * segWords / totalWords);
         segK = Math.max(0, segK);
         assigned += segK;
+        sub.dataset.wo = i === 0 ? ghLineStartOffset(n, cellIdx) : 0;
         sub.innerHTML = wrapAyahNumbers(insertKashida(seg.text, segK), seg.surah, seg.ayah, pageGlobalRub, true, i === 0 ? ghLineStartOffset(n, cellIdx) : 0);
         // needsRubStart surahs have no ۞ token of their own to hang the mark
         // off, so it's stitched onto the very start of the line's first
@@ -27458,6 +27464,7 @@ function buildFreePageContent(n) {
         sub.className = 'ayah-seg';
         sub.dataset.surah = seg.surah;
         sub.dataset.ayah = seg.ayah;
+        sub.dataset.wo = segIdx === 0 ? ghLineStartOffset(n, cellIdx) : 0;
         sub.innerHTML = wrapAyahNumbers(seg.text, seg.surah, seg.ayah, pageGlobalRub, false, segIdx === 0 ? ghLineStartOffset(n, cellIdx) : 0);
         container.appendChild(sub);
         container.appendChild(document.createTextNode(' '));
@@ -29302,6 +29309,8 @@ function getTapSelectedAyah() {
 //  - any word or the number of an ayah: that ayah's window
 //  - anything else: nothing
 function handleTextTap(target, wasMoving) {
+  // قراءة الكلمات on: a tap on a word recites it (see wbwHandleTap)
+  if (wbwOn && wbwHandleTap(target)) return;
   const w = target && target.closest ? target.closest('.gharib') : null;
   const green = !!w && gharibOn && !w.closest('#swipeOverlay');
   if (wasMoving) { if (green) showGharib(w); return; }
@@ -29392,6 +29401,279 @@ function handleLongPressOnAyah(target, x, y) {
   // exactly like free mode already does.
 }
 
+
+// ---------------- قراءة الكلمات (word-by-word, al-Husary) ----------------
+// Switched on/off by tapping the surah name in the floating frame bar (it
+// stays coloured while on). While on, a light tap on any word of the text
+// recites just that word in al-Husary's voice: his own per-ayah recording
+// (everyayah Husary_128kbps - the same files as his ayah recitation) played
+// from the word's start to its end, using per-word timings made by forced
+// alignment (books/wbw-husary/NNN.json, one per surah, in 10 ms units: for
+// each ayah [start0,end0,start1,end1,...] by the app's own word order).
+// Taps that follow each other within the chosen time window are gathered
+// and recited together (neighbouring words as one continuous stretch);
+// a tap after the window has passed is a new, separate word. Ayah numbers,
+// blank space, the surah bars and the meanings of green words keep their
+// usual behaviour only while the mode is off - except the ayah number,
+// which still opens the ayah window.
+let wbwOn = store.get('wbw') === 'on';
+let wbwWindowMs = parseInt(store.get('wbw-window') || '1000', 10) || 1000;
+const WBW_WINDOWS = [[600, '٠٫٦'], [1000, '١'], [1500, '١٫٥'], [2000, '٢']];
+const WBW_DIR = 'books/wbw-husary/';
+const wbwSurahData = new Map(); // surah -> Promise<array|null>
+let wbwPending = [];   // gathered taps: {surah, ayah, idx, range}
+let wbwGatherTimer = 0;
+let wbwToken = 0;      // bumps to cancel whatever is playing
+let wbwTapPt = null;   // where the finger came down (screen coordinates)
+const wbwAudio = new Audio();
+wbwAudio.preload = 'auto';
+const wbwHL = (typeof Highlight === 'function' && window.CSS && CSS.highlights) ? new Highlight() : null;
+if (wbwHL) CSS.highlights.set('wbw', wbwHL);
+document.body.classList.toggle('wbw-on', wbwOn);
+document.addEventListener('touchstart', (e) => {
+  if (e.touches && e.touches.length === 1) wbwTapPt = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+}, { capture: true, passive: true });
+document.addEventListener('mousedown', (e) => { wbwTapPt = { x: e.clientX, y: e.clientY }; }, true);
+
+function wbwLoadSurah(s) {
+  if (!wbwSurahData.has(s)) {
+    const p = fetch(WBW_DIR + pad3(s) + '.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    p.then((d) => { if (!d) wbwSurahData.delete(s); });
+    wbwSurahData.set(s, p);
+  }
+  return wbwSurahData.get(s);
+}
+
+// The words of one text element (an ayah's segment, or the basmala line), in
+// order, as text ranges - skipping ayah numbers, waqf signs, rub'/sajdah marks
+// (exactly the tokens the word count in ghEnsureWalk skips too).
+const WBW_SKIP_SEL = '.ayahnum, .ayahnum-badge, .wq, .rubmark, .rubgrid8, .sajdah-mark, svg';
+function wbwTokensOf(el) {
+  const out = [];
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+    acceptNode: (n) => (n.parentElement && n.parentElement.closest(WBW_SKIP_SEL) && el.contains(n.parentElement.closest(WBW_SKIP_SEL))) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
+  });
+  let cur = null; // the word being collected: {parts:[{node,start,end}]}
+  let n;
+  const close = () => {
+    if (!cur) return;
+    const txt = cur.parts.map((p) => p.node.nodeValue.slice(p.start, p.end)).join('');
+    const bare = txt.replace(/ـ/g, '');
+    if (bare && !/^[ۖ-ۜ۞۩]+$/.test(bare) && !/^[٠-٩]+$/.test(bare)) out.push(cur);
+    cur = null;
+  };
+  while ((n = walker.nextNode())) {
+    const v = n.nodeValue;
+    let i = 0;
+    while (i < v.length) {
+      if (/\s/.test(v[i])) { close(); i++; continue; }
+      let j = i;
+      while (j < v.length && !/\s/.test(v[j])) j++;
+      if (!cur) cur = { parts: [] };
+      cur.parts.push({ node: n, start: i, end: j });
+      i = j;
+      if (j < v.length) close();
+    }
+  }
+  close();
+  return out;
+}
+function wbwRangeOf(tok) {
+  const r = document.createRange();
+  const a = tok.parts[0], b = tok.parts[tok.parts.length - 1];
+  r.setStart(a.node, a.start);
+  r.setEnd(b.node, b.end);
+  return r;
+}
+
+// Which word is under the finger: {surah, ayah, idx, range} or null.
+function wbwWordAt(target, x, y) {
+  if (!target || !target.closest || target.closest('#swipeOverlay')) return null;
+  if (target.closest('.ayahnum, .ayahnum-badge')) return null; // the number keeps opening the ayah window
+  let els;
+  const own = target.closest('.ayah-seg, .qbsm, .cbsm');
+  if (own) els = [own];
+  else {
+    const line = target.closest('.qline, .freePara, .fatiha-ayah1-bsm');
+    if (!line) return null;
+    els = [...line.querySelectorAll('.ayah-seg')];
+  }
+  if (x == null || y == null) return null;
+  let best = null, bestD = Infinity;
+  for (const el of els) {
+    let surah, ayah, wo;
+    if (el.classList.contains('ayah-seg')) {
+      surah = parseInt(el.dataset.surah, 10); ayah = parseInt(el.dataset.ayah, 10); wo = parseInt(el.dataset.wo || '0', 10) || 0;
+    } else { surah = 1; ayah = 1; wo = 0; } // a surah's opening basmala: al-Fatiha's first ayah
+    if (!surah || !ayah) continue;
+    const fs = parseFloat(getComputedStyle(el).fontSize) || 24;
+    const toks = wbwTokensOf(el);
+    toks.forEach((tok, k) => {
+      const r = wbwRangeOf(tok);
+      for (const rc of r.getClientRects()) {
+        if (!rc.width) continue;
+        const dx = x < rc.left ? rc.left - x : (x > rc.right ? x - rc.right : 0);
+        const dy = y < rc.top ? rc.top - y : (y > rc.bottom ? y - rc.bottom : 0);
+        if (dy > fs * 0.35 || dx > fs * 0.6) continue;
+        const d = dx + dy * 2;
+        if (d < bestD) { bestD = d; best = { surah, ayah, idx: wo + k, range: r }; }
+      }
+    });
+  }
+  return best;
+}
+
+function wbwShowHighlight() {
+  if (!wbwHL) return;
+  wbwHL.clear();
+  wbwPending.forEach((w) => { try { wbwHL.add(w.range); } catch (e) { /* detached */ } });
+}
+function wbwClearHighlight() { if (wbwHL) wbwHL.clear(); }
+
+function wbwStop() {
+  wbwToken++;
+  clearTimeout(wbwGatherTimer); wbwGatherTimer = 0;
+  try { wbwAudio.pause(); } catch (e) { /* ignore */ }
+  wbwPending = [];
+  wbwClearHighlight();
+}
+
+function setWbwOn(on, announce) {
+  wbwOn = !!on;
+  store.set('wbw', wbwOn ? 'on' : 'off');
+  document.body.classList.toggle('wbw-on', wbwOn);
+  if (!wbwOn) wbwStop();
+  if (announce) toast(wbwOn ? 'قراءة الكلمات مفعّلة' : 'قراءة الكلمات متوقفة', true);
+}
+
+// A tap on a word while the mode is on. Returns true when it was handled.
+function wbwHandleTap(target) {
+  if (!wbwOn) return false;
+  const pt = wbwTapPt;
+  const hit = wbwWordAt(target, pt && pt.x, pt && pt.y);
+  if (!hit) return false;
+  if (typeof hideGharib === 'function') hideGharib();
+  if (getTapSelectedAyah() || ayahPopupEl.style.display !== 'none') { clearAyahTapSelection(); hideAyahPopup(); }
+  if (reciting) stopRecitation();
+  // still gathering: add to the group; otherwise (nothing gathered, or a
+  // group already reciting) a new group starts with this word
+  if (!wbwGatherTimer) { wbwStop(); }
+  if (!wbwPending.some((w) => w.surah === hit.surah && w.ayah === hit.ayah && w.idx === hit.idx)) wbwPending.push(hit);
+  wbwShowHighlight();
+  wbwLoadSurah(hit.surah);
+  wbwPrepare(hit.surah, hit.ayah);
+  clearTimeout(wbwGatherTimer);
+  const token = wbwToken;
+  wbwGatherTimer = setTimeout(() => { wbwGatherTimer = 0; if (token === wbwToken) wbwPlayGroup(token); }, wbwWindowMs);
+  return true;
+}
+
+function wbwUrl(s, a, alt) {
+  return alt ? ('https://cdn.islamic.network/quran/audio/128/ar.husary/' + globalAyahNumber(s, a) + '.mp3')
+    : ('https://everyayah.com/data/Husary_128kbps/' + pad3(s) + pad3(a) + '.mp3');
+}
+// Starts loading an ayah's recording ahead of time (while taps are still
+// being gathered), so the word sounds without delay.
+function wbwPrepare(s, a) {
+  const url = wbwUrl(s, a, false);
+  if (wbwAudio.dataset.key === s + ':' + a) return;
+  wbwAudio.dataset.key = s + ':' + a;
+  wbwAudio.dataset.alt = '';
+  wbwAudio.src = url;
+  try { wbwAudio.load(); } catch (e) { /* ignore */ }
+}
+function wbwReady(s, a, token) {
+  return new Promise((resolve) => {
+    wbwPrepare(s, a);
+    const done = (ok) => { wbwAudio.removeEventListener('loadedmetadata', onOk); wbwAudio.removeEventListener('error', onErr); clearTimeout(t); resolve(ok && token === wbwToken); };
+    const onOk = () => done(true);
+    const onErr = () => {
+      if (!wbwAudio.dataset.alt) { wbwAudio.dataset.alt = '1'; wbwAudio.src = wbwUrl(s, a, true); try { wbwAudio.load(); } catch (e) { /* ignore */ } return; }
+      done(false);
+    };
+    if (wbwAudio.readyState >= 1) { resolve(token === wbwToken); return; }
+    wbwAudio.addEventListener('loadedmetadata', onOk);
+    wbwAudio.addEventListener('error', onErr);
+    const t = setTimeout(() => done(false), 20000);
+  });
+}
+
+// [startSec, endSec] of words i..j of an ayah. The few ayahs the timing
+// files lack fall back to sharing the recording out by the words' lengths.
+function wbwSpanOf(data, s, a, i, j) {
+  const row = data && data[a - 1];
+  if (row && row.length >= (j + 1) * 2) return [row[i * 2] / 100, row[j * 2 + 1] / 100];
+  ghEnsureWalk();
+  const words = GH_AYAH_WORDS.get(s + ':' + a) || [];
+  const dur = isFinite(wbwAudio.duration) ? wbwAudio.duration : 0;
+  if (!words.length || !dur) return null;
+  const wts = words.map((w) => Math.max(1, ghSkel(w).length) + 1);
+  const tot = wts.reduce((x, y) => x + y, 0);
+  const lead = Math.min(0.4, dur * 0.05), body = dur - lead - 0.1;
+  let acc = 0; const at = [];
+  wts.forEach((w) => { at.push(lead + body * acc / tot); acc += w; });
+  at.push(lead + body);
+  return [at[i], at[j + 1]];
+}
+
+function wbwPlaySpan(startSec, endSec, token) {
+  return new Promise((resolve) => {
+    if (token !== wbwToken) { resolve(false); return; }
+    const a = wbwAudio;
+    let raf = 0, guard = 0, started = false;
+    const finish = (ok) => { cancelAnimationFrame(raf); clearTimeout(guard); a.removeEventListener('seeked', go); try { a.pause(); } catch (e) { /* ignore */ } a.volume = 1; resolve(ok); };
+    const tick = () => {
+      if (token !== wbwToken) { finish(false); return; }
+      const t = a.currentTime;
+      const left = endSec - t;
+      if (left <= 0.07) a.volume = Math.max(0, Math.min(1, left / 0.07));
+      if (t >= endSec || a.ended) { finish(true); return; }
+      raf = requestAnimationFrame(tick);
+    };
+    const go = () => {
+      if (started) return;
+      started = true;
+      a.volume = 1;
+      a.playbackRate = 1;
+      const p = a.play();
+      if (p && p.catch) p.catch(() => finish(false));
+      raf = requestAnimationFrame(tick);
+    };
+    guard = setTimeout(() => finish(false), Math.max(4000, (endSec - startSec) * 1000 + 6000));
+    const from = Math.max(0, startSec - 0.03);
+    if (Math.abs(a.currentTime - from) < 0.01) go();
+    else { a.addEventListener('seeked', go, { once: true }); a.currentTime = from; }
+  });
+}
+
+async function wbwPlayGroup(token) {
+  const words = wbwPending.slice().sort((p, q) => (p.surah - q.surah) || (p.ayah - q.ayah) || (p.idx - q.idx));
+  // neighbouring words (same ayah, next word) are one stretch
+  const runs = [];
+  words.forEach((w) => {
+    const L = runs[runs.length - 1];
+    if (L && L.surah === w.surah && L.ayah === w.ayah && w.idx === L.j + 1) L.j = w.idx;
+    else runs.push({ surah: w.surah, ayah: w.ayah, i: w.idx, j: w.idx });
+  });
+  for (let k = 0; k < runs.length; k++) {
+    const r = runs[k];
+    const data = await wbwLoadSurah(r.surah);
+    if (token !== wbwToken) return;
+    if (!(await wbwReady(r.surah, r.ayah, token))) { if (token === wbwToken && !navigator.onLine) toast('تحتاج قراءة الكلمات إلى الاتصال بالإنترنت'); break; }
+    const span = wbwSpanOf(data, r.surah, r.ayah, r.i, r.j);
+    if (!span) continue;
+    if (!(await wbwPlaySpan(span[0], span[1], token))) break;
+    if (k < runs.length - 1) await new Promise((res) => setTimeout(res, 180));
+  }
+  if (token === wbwToken) { setTimeout(() => { if (token === wbwToken && !wbwGatherTimer) { wbwPending = []; wbwClearHighlight(); } }, 250); }
+}
+
+document.getElementById('floatingFrameBar').addEventListener('click', (e) => {
+  const nm = e.target.closest ? e.target.closest('.fbNameGroup') : null;
+  if (!nm) return;
+  e.stopPropagation();
+  setWbwOn(!wbwOn, true);
+});
 
 // ---------------- recitation playback ----------------
 // RECITERS_CATALOG holds every reciter the app knows how to play (id ->
@@ -33030,6 +33312,7 @@ function renderGuideTab() {
       'بين ذلك وقوسي اسم السورة: أرقام الجزء (ج) والحزب (ح) والربع (ر) الحاليّة - وفي الاتجاه الأفقي تظهر الكلمات كاملة (جزء/حزب/ربع) بدل الحرف الواحد.',
       'علامة المرجعية ودائرة رقم الصفحة وبقية عناصر الإطار ثابتة في مكانها دائماً، سواء كانت الصفحة فردية أو زوجية.',
       'يتحدّث تلقائياً أثناء التمرير ليطابق ما تقرأه.',
+      'النقر على اسم السورة يفعّل <b>قراءة الكلمات بصوت الحصري</b> أو يوقفها (انظر الفقرة ١١).',
     ]},
     { title: '٣. القائمة الجانبية (تُفتح بزر القائمة أعلى يمين الشاشة)', items: [
       '<b>التخطيط</b>: الاختيار بين نص المصحف (عثماني برسم المصحف، أو إملائي بتشكيل كامل، أو مجرَّد بدون تشكيل)، والاختيار بين الوضع القياسي المطابق للمصحف الورقي (١٥ سطراً في الصفحة) والوضع الحر القابل للتكبير والتصغير بحرية، وإظهار تلوين معاني الكلمات أو إخفاؤه.',
@@ -33103,6 +33386,13 @@ function renderGuideTab() {
       'ويوجد في المصحف خط فوق ذكر السجود في هذه الآيات، وتوجد في نهاية الآية قبل رقم الآية علامة ' + SAJDAH_MARK_SVG + ' للتذكير بسجود التلاوة.',
       'وعدا هذه السجدات الواجبة، يوجد في المصحف أحد عشر موضعاً لسجود التلاوة، ولكن ليس واجباً، ويُفهم من بعض الأخبار أنه ينبغي سجود التلاوة عند كل ذكر للسجود أثناء تلاوة أو سماع آية فيها ذكر السجود.',
       'ومن المهم تعلّم أحكام سجود التلاوة، وتجد في عنوان <b>الأدعية</b> من هذه القائمة صيغتين لما يقال في سجود التلاوة.',
+    ]},
+    { title: '١١. قراءة الكلمات بصوت الحصري (للتعلّم)', items: [
+      '<b>التفعيل والإيقاف</b>: بالنقر على اسم السورة في الإطار العائم أعلى الصفحة، فيتلوّن الاسم <b style="color:#2F7FD0;">بالأزرق</b> ما دامت الميزة مفعّلة، وتظهر عبارة «قراءة الكلمات مفعّلة» أو «قراءة الكلمات متوقفة». ويمكن أيضاً تفعيلها وإيقافها من عنوان <b>التخطيط</b> في القائمة الجانبية.',
+      'وهي مفعّلة: انقر أي كلمة من النص (أو من البسملة) نقرة خفيفة، فتتلوّن بالأزرق نفسه، وتُقرأ بصوت الشيخ محمود خليل الحصري من تلاوته المرتّلة للآية نفسها.',
+      '<b>عدة كلمات</b>: الكلمات التي تُنقر متتابعةً قبل انقضاء <b>مهلة جمع الكلمات</b> تُجمع وتُقرأ معاً بعد آخر نقرة، والمتجاورة منها تُقرأ قراءة متصلة كما في التلاوة. وما يُنقر بعد انقضاء المهلة يُقرأ وحده. وتُختار المهلة (٠٫٦ أو ١ أو ١٫٥ أو ٢ ثانية) من عنوان <b>التخطيط</b>.',
+      'وأثناء تفعيلها لا يفتح النقر على الكلمات نافذة الآية ولا معاني الكلمات الخضراء، أما النقر على <b>رقم الآية</b> فيفتح نافذتها كالمعتاد. وإذا كانت تلاوة الآيات جارية توقفت عند نقر كلمة.',
+      'تحتاج إلى الاتصال بالإنترنت، إلا للآيات التي نُزّلت تلاوتها بصوت الحصري للعمل بدون إنترنت. ومواضع الكلمات مأخوذة بالمحاذاة الآلية للتلاوة، فقد يُسمع في القليل منها طرف من الكلمة المجاورة.',
     ]},
   ];
   SECTIONS.forEach((sec) => {
@@ -33331,6 +33621,37 @@ function renderFontTab() {
   stNote.style.cssText = 'font-family:sans-serif;font-size:13.5px;font-weight:700;padding:8px 10px 10px;line-height:1.65;';
   stNote.innerHTML = 'في الوضع الحر. ويمكن التبديل بسرعة بالزر ' + '<span style="display:inline-flex;vertical-align:middle;background:#0E4433;color:#E8B84B;border-radius:6px;padding:2px;">' + document.getElementById('segStopBtn').innerHTML.replace('width="24" height="24"', 'width="16" height="16"') + '</span>' + ' في الشريط السفلي: ذهبي عند التفعيل (وتظهر عبارة «التوقف مفعّل»)، وباهت عند الإلغاء (وتظهر عبارة «عدم التوقف»).';
   card.appendChild(stNote);
+
+  card = fontTabHeading('٥. قراءة الكلمات بصوت الحصري');
+  [[true, 'مفعّلة', 'انقر الكلمة لتُقرأ'], [false, 'متوقفة', 'النقر المعتاد']].forEach(([on, label, desc]) => {
+    const row = document.createElement('button');
+    row.className = 'font-opt' + (wbwOn === on ? ' active' : '');
+    row.innerHTML = '<span class="fo-check">✓</span>' +
+      '<span class="fo-sample" style="font-size:16px;font-family:sans-serif;font-weight:700;">' + label + '</span>' +
+      '<span class="fo-label" style="text-align:center;line-height:1.35;font-size:14px;">' + desc + '</span>';
+    row.addEventListener('click', () => { setWbwOn(on, false); renderFontTab(); });
+    card.appendChild(row);
+  });
+  const wwHead = document.createElement('div');
+  wwHead.style.cssText = 'font-family:sans-serif;font-size:14.5px;font-weight:800;padding:10px 10px 4px;';
+  wwHead.textContent = 'مهلة جمع الكلمات (بالثواني):';
+  card.appendChild(wwHead);
+  const wwRow = document.createElement('div');
+  wwRow.style.cssText = 'display:flex;gap:8px;padding:4px 10px 6px;flex-wrap:wrap;';
+  WBW_WINDOWS.forEach(([ms, lab]) => {
+    const b = document.createElement('button');
+    const on = wbwWindowMs === ms;
+    b.textContent = lab;
+    b.style.cssText = 'flex:1 1 0;min-width:52px;padding:8px 0;border-radius:10px;font:800 16px sans-serif;cursor:pointer;border:2px solid #0E4433;' + (on ? 'background:#0E4433;color:#E8B84B;' : 'background:transparent;color:inherit;');
+    b.addEventListener('click', () => { wbwWindowMs = ms; store.set('wbw-window', String(ms)); renderFontTab(); });
+    wwRow.appendChild(b);
+  });
+  card.appendChild(wwRow);
+  const wwNote = document.createElement('div');
+  wwNote.className = 'strong-note';
+  wwNote.style.cssText = 'font-family:sans-serif;font-size:13.5px;font-weight:700;padding:8px 10px 10px;line-height:1.65;';
+  wwNote.textContent = 'للتفعيل والإيقاف بسرعة: انقر اسم السورة في الشريط العلوي، فيتلوّن بالأزرق ما دامت القراءة مفعّلة. ثم انقر أي كلمة نقرة خفيفة فتُقرأ بصوت الشيخ الحصري، وتتلوّن بنفس اللون. الكلمات التي تنقرها متتابعةً قبل انقضاء المهلة تُقرأ معًا (والمتجاورة منها قراءةً متصلة)، وما تنقره بعد انقضائها يُقرأ وحده. رقم الآية يفتح نافذتها كالمعتاد.';
+  card.appendChild(wwNote);
 
   const credit = document.createElement('div');
   credit.className = 'strong-note';
