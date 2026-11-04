@@ -245,11 +245,11 @@ body.dark-mode .surah-search-input::placeholder{color:#A79E86;}
 .font-opt .fo-check{font-size:18px;color:#0E4433;flex:0 0 20px;visibility:hidden;}
 .font-opt.active .fo-check{visibility:visible;}
 .fo-card{border:2px solid #B98A2A;border-radius:12px;margin:12px 2px 4px;overflow:hidden;background:#FFFCF3;box-shadow:0 2px 6px rgba(0,0,0,.08);}
-.fo-card-head{background:#0E4433;color:#F6EFDC;font-family:sans-serif;font-weight:700;font-size:16px;padding:8px 12px;}
+.fo-card-head{background:#0E4433;color:#F6EFDC;font-family:sans-serif;font-weight:700;font-size:18px;padding:8px 12px;}
 .fo-card .font-opt{padding:9px 8px;gap:10px;}
 .fo-card .font-opt:last-child{border-bottom:none;}
-.fo-card .font-opt .fo-label{font-size:15px;}
-.fo-card .font-opt .fo-sample{font-size:15.5px;}
+.fo-card .font-opt .fo-label{font-size:17px;}
+.fo-card .font-opt .fo-sample{font-size:17px;}
 .fo-card .font-opt .fo-check{font-size:16px;flex-basis:16px;}
 body.dark-mode .fo-card{background:#1B211A;border-color:#C9A227;}
 body.dark-mode .fo-card-head{background:#0B2E23;color:#EFE8D6;border-bottom:1px solid #C9A227;}
@@ -321,6 +321,7 @@ body.dark-mode .bookmark-section-title{color:#E8B84B;border-bottom-color:#E8B84B
 main{max-width:760px;margin:0 auto;padding:0 8px;}
 #vScrollWrap{position:fixed;left:0;right:0;max-width:760px;margin:0 auto;box-sizing:border-box;padding:0;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y pinch-zoom;overflow-anchor:none;}
 #vScrollWrap *{overflow-anchor:none;}
+#freeScrollWrap,#freeScrollWrap *{overflow-anchor:none;}
 .vSlot{box-sizing:border-box;padding:0 7px 6px;}
 body.landscape-lock .vSlot{padding:0 26px 14px;}
 .page-frame{background:var(--pageBg,#FBF5E4);border:2px solid #0E4433;border-radius:14px;box-shadow:inset 0 0 0 4px var(--pageRing,#F6EFDC), 0 10px 30px rgba(14,68,51,.15);padding:4px;min-height:480px;position:relative;}
@@ -506,7 +507,7 @@ body.wbw-on #floatingFrameBar .fbNameGroup{background:#2F7FD066;border-radius:8p
 .search-match-highlight{background:#FFD54F99;border-radius:2px;transition:background 1s ease-out;}
 .divine-name{color:#CC0000;}
 body.dark-mode .divine-name{color:#FF5252;}
-.gharib{color:#00904A;}
+.gharib{color:#00733A;}
 body.dark-mode .gharib{color:#4CD98A;}
 .gharib.gh-active{background:rgba(0,144,74,.16);border-radius:4px;}
 body.dark-mode .gharib.gh-active{background:rgba(76,217,138,.18);}
@@ -28233,7 +28234,11 @@ function scheduleFreeSettleCheck() {
 
 function setFreeScrollTop(wrap, value) {
   freeSuppressScrollTracking = true;
+  const old = wrap.scrollTop;
   wrap.scrollTop = value;
+  // the auto-scroll keeps its own exact position: move it by the same amount
+  if (freeAutoScrollAccum !== null) freeAutoScrollAccum += wrap.scrollTop - old;
+  if (typeof segShiftAll === 'function') segShiftAll(wrap.scrollTop - old);
   requestAnimationFrame(() => { freeSuppressScrollTracking = false; });
 }
 
@@ -28259,27 +28264,38 @@ function applyDeferredFreeCorrections() {
       const addStart = desiredStart;
       const frag = document.createDocumentFragment();
       for (let p = addStart; p < freeWindowStart; p++) frag.appendChild(buildFreePageFrameElement(p));
-      const prevHeight = container.scrollHeight;
+      // measured on the page that was first until now (its exact on-screen
+      // shift), so margins between pages and fractional heights are counted
+      const keep = container.firstElementChild;
+      const before = keep ? keep.getBoundingClientRect().top : 0;
       container.insertBefore(frag, container.firstChild);
+      // finish their kashida now, so they don't change height (and move
+      // the text) after the shift below has been measured
+      if (window.freeKashidaNow) for (let p = addStart; p < freeWindowStart; p++) window.freeKashidaNow(document.getElementById('freePageText_' + p));
       freeWindowStart = addStart;
-      const addedHeight = container.scrollHeight - prevHeight;
+      const addedHeight = keep ? keep.getBoundingClientRect().top - before : 0;
       setFreeScrollTop(wrap, wrap.scrollTop + addedHeight);
     }
-  } else if (nearBottom) {
-    // same hysteresis reasoning as the far-end trim above, mirrored: only
-    // trim the near/start end once we've genuinely moved forward (nearBottom),
-    // not just "not currently at the exact top edge" (true right after
-    // extending backward, which would undo it immediately).
+  } else {
+    // Trim the start once the window has grown past its size - but only
+    // pages well behind the reader (further back than the backward buffer
+    // above ever adds), so the two never undo each other. (Waiting for
+    // nearBottom here meant it never ran during auto-scroll - the forward
+    // growth always moved the bottom away first - and the window kept
+    // growing, page after page, making the scrolling heavier and jerkier.)
     const total = freeWindowEnd - freeWindowStart + 1;
     if (total > FREE_WINDOW_MAX) {
       const excess = total - FREE_WINDOW_MAX;
-      const removeUpTo = Math.min(freeWindowEnd, freeWindowStart + excess - 1);
-      let removedHeight = 0;
+      const removeUpTo = Math.min(freeWindowEnd, freeWindowStart + excess - 1, pageNum - FREE_WINDOW_BACKWARD_RADIUS - 4);
+      if (removeUpTo < freeWindowStart) return;
+      const keep = container.querySelector('[data-page="' + (removeUpTo + 1) + '"]');
+      const before = keep ? keep.getBoundingClientRect().top : 0;
       for (let p = freeWindowStart; p <= removeUpTo; p++) {
         const el = container.querySelector('[data-page="' + p + '"]');
-        if (el) { removedHeight += el.offsetHeight; el.remove(); }
+        if (el) el.remove();
       }
       freeWindowStart = removeUpTo + 1;
+      const removedHeight = keep ? before - keep.getBoundingClientRect().top : 0;
       setFreeScrollTop(wrap, wrap.scrollTop - removedHeight);
     }
   }
@@ -28636,6 +28652,9 @@ function setFreeFontPx(px) {
     // page's top - the restore below replaces it with putting the exact
     // same point back at the viewport's center instead.
     renderFreeWindow((anchor && anchor.page) || pageNum, false);
+    // the pages around the anchor get their kashida before the anchor is
+    // put back, so they don't change height (and move the text) afterwards
+    if (window.freeKashidaNow) for (let p = pageNum - 1; p <= pageNum + 1; p++) window.freeKashidaNow(document.getElementById('freePageText_' + p));
     if (wrap && container) {
       freeSuppressScrollTracking = true;
       if (!restoreCenterAnchor(wrap, container, anchor)) {
@@ -28747,6 +28766,7 @@ let freeSpeedPxPerSec = parseInt(store.get('free-auto-speed-px'), 10) || 40;
 const FREE_MIN_SPEED = 10, FREE_MAX_SPEED = 200, FREE_SPEED_STEP = 5; // finer steps (was 10): in-between speeds
 let freeAutoRafId = null;
 let freeAutoLastTs = null;
+let freeAutoLastSet = null;
 let freeAutoScrollAccum = null; // see autoScrollAccum above - avoids losing the
 // sub-pixel remainder every frame when scrollTop is read back as an integer.
 
@@ -28759,14 +28779,20 @@ function freeAutoScrollStep(ts) {
   if (freeAutoLastTs === null) {
     freeAutoLastTs = ts;
     if (wrap) freeAutoScrollAccum = wrap.scrollTop;
+    freeAutoLastSet = wrap ? wrap.scrollTop : null;
     freeAutoRafId = requestAnimationFrame(freeAutoScrollStep);
     return;
   }
   const dt = (ts - freeAutoLastTs) / 1000;
   freeAutoLastTs = ts;
   if (wrap) {
-    freeAutoScrollAccum += freeSpeedPxPerSec * dt;
-    wrap.scrollTop = freeAutoScrollAccum; // triggers the scroll listener, which extends the window / advances pageNum and stops at the very end
+    // scrollTop was moved by something else since the last frame (a font
+    // size change rebuilding the pages, the window being trimmed or grown):
+    // carry on from where the text now is, never from the old number
+    if (freeAutoLastSet !== null && Math.abs(wrap.scrollTop - freeAutoLastSet) > 1.5) freeAutoScrollAccum = wrap.scrollTop;
+    freeAutoScrollAccum += freeSpeedPxPerSec * Math.min(dt, 0.05);
+    wrap.scrollTop = freeAutoScrollAccum;
+    freeAutoLastSet = wrap.scrollTop; // triggers the scroll listener, which extends the window / advances pageNum and stops at the very end
   }
   freeAutoRafId = requestAnimationFrame(freeAutoScrollStep);
 }
@@ -30297,6 +30323,7 @@ function positionReciteModeBar() {
 
 function closeReciteModeBarLayer() {
   reciteModeBarEl.style.display = 'none';
+  if (typeof hideRepeatMenu === 'function') hideRepeatMenu();
 }
 function openReciteModeBar() {
   reciteBarDX = 0; reciteBarDY = 0;
@@ -30359,7 +30386,7 @@ let contQueue = null, contQueuePos = 0, contPlanBuiltFor = null, contStopAt = nu
 let contForceFresh = false;
 let reciteStartKey = null;
 // تكرار: how many times the ayah is read (2-7), remembered until changed
-const REPEAT_CHOICES = [[2, 'مرتين'], [3, 'ثلاث'], [4, 'أربع'], [5, 'خمس'], [6, 'ست'], [7, 'سبع']];
+const REPEAT_CHOICES = [[2, 'مرتان'], [3, 'ثلاث'], [4, 'أربع'], [5, 'خمس'], [6, 'ست'], [7, 'سبع']];
 let repeatCount = parseInt(store.get('repeat-count') || '3', 10);
 if (!(repeatCount >= 2 && repeatCount <= 7)) repeatCount = 3;
 let reciteRepeatLeft = 0;
@@ -30647,8 +30674,23 @@ function openRepeatMenu() {
     closeSpecificLayer(closeRepeatMenuLayer);
   }));
   repeatMenuEl.style.display = 'flex';
-  pushBackLayer(closeRepeatMenuLayer);
+  if (backLayerStack.lastIndexOf(closeRepeatMenuLayer) === -1) pushBackLayer(closeRepeatMenuLayer);
 }
+function repeatMenuShown() { return !!repeatMenuEl && repeatMenuEl.style.display !== 'none'; }
+// Hidden (and its Back step removed) whenever the reader moves on to
+// anything else: another choice on the bar, the play button, the text,
+// a toolbar button, the side menu...
+function hideRepeatMenu() {
+  if (!repeatMenuEl) return;
+  repeatMenuEl.style.display = 'none';
+  dropBackLayer(closeRepeatMenuLayer);
+}
+document.addEventListener('pointerdown', (e) => {
+  if (!repeatMenuShown()) return;
+  const t = e.target;
+  if (t && t.closest && t.closest('#repeatMenu, #reciteModeRepeatLabel')) return;
+  hideRepeatMenu();
+}, true);
 
 // ---- dragging the recitation bar with a finger ----
 let reciteBarDX = 0, reciteBarDY = 0, reciteBarJustDragged = false;
@@ -31602,6 +31644,18 @@ let segHint = null;         // { s } or { j } - where a box/index jump is meant 
 let segPanelEl = null;
 let segEngaged = null;      // { lim } while the boxes are showing
 let segLimits = { min: -Infinity, max: Infinity };
+// The page window above the reader was grown or trimmed and scrollTop moved
+// by d to keep the text still: every remembered stop position moves with it.
+function segShiftAll(d) {
+  if (!d) return;
+  if (segLimits.min !== -Infinity) segLimits.min += d;
+  if (segLimits.max !== Infinity) segLimits.max += d;
+  if (segLock) segLock.lim += d;
+  if (segArmed && typeof segArmed.lim === 'number') segArmed.lim += d;
+  if (segEngaged && typeof segEngaged.lim === 'number') segEngaged.lim += d;
+  if (segTouch && typeof segTouch.top0 === 'number') segTouch.top0 += d;
+  if (typeof segLastTop === 'number') segLastTop += d;
+}
 // page snapping settles inside the current stretch too
 function segClampTarget(t) { return (reciting || layoutMode !== 'free' || segPassFloor) ? t : Math.max(segLimits.min, Math.min(segLimits.max, t)); }
 function segWrap() { return layoutMode === 'free' ? document.getElementById('freeScrollWrap') : vScrollWrap; }
@@ -32864,6 +32918,7 @@ let speedPxPerSec = 16;
 let autoPlaying = false;
 let autoRafId = null;
 let lastFrameTime = 0;
+let boundAutoLastSet = null;
 let autoScrollAccum = null; // tracks the true fractional scroll position - scrollTop itself
 // is an integer, so reading it back as the base for the next increment would
 // silently drop the sub-pixel remainder every frame and could get stuck
@@ -32882,13 +32937,16 @@ function autoScrollStep(ts) {
   if (!lastFrameTime) {
     lastFrameTime = ts;
     autoScrollAccum = vScrollWrap.scrollTop;
+    boundAutoLastSet = vScrollWrap.scrollTop;
     autoRafId = requestAnimationFrame(autoScrollStep);
     return;
   }
   const dt = (ts - lastFrameTime) / 1000;
   lastFrameTime = ts;
-  autoScrollAccum += speedPxPerSec * dt;
+  if (boundAutoLastSet !== null && Math.abs(vScrollWrap.scrollTop - boundAutoLastSet) > 1.5) autoScrollAccum = vScrollWrap.scrollTop;
+  autoScrollAccum += speedPxPerSec * Math.min(dt, 0.05);
   vScrollWrap.scrollTop = autoScrollAccum;
+  boundAutoLastSet = vScrollWrap.scrollTop;
   autoRafId = requestAnimationFrame(autoScrollStep);
 }
 
@@ -33371,7 +33429,7 @@ function renderGuideTab() {
       'آخر ٣٦ آية في المصحف لا تكتمل بها خمسون آية جديدة، فلا تحمل علامة.',
     ]},
     { title: '٩. معاني الألفاظ (الكلمات الخضراء)', items: [
-      'الألفاظ والعبارات القرآنية التي تحتاج إلى بيان ملوّنة في المصحف بـ<b style="color:#00904A;">اللون الأخضر</b>، ومعانيها مختصرة لمستوى الناشئين، تكاد تشمل النص القرآني كله (أكثر من أحد عشر ألف مدخل)، مأخوذة من تفسير الصافي، وتبيين القرآن، ومعانٍ لغوية مكمِّلة.',
+      'الألفاظ والعبارات القرآنية التي تحتاج إلى بيان ملوّنة في المصحف بـ<b style="color:#00733A;">اللون الأخضر</b>، ومعانيها مختصرة لمستوى الناشئين، تكاد تشمل النص القرآني كله (أكثر من أحد عشر ألف مدخل)، مأخوذة من تفسير الصافي، وتبيين القرآن، ومعانٍ لغوية مكمِّلة.',
       'انقر أي لفظة ملوّنة يظهر معناها في مستطيل صغير قريب منها لا يغطيها. ويختفي بالنقر على اللفظة نفسها أو على أي موضع آخر من النص، أو بالرجوع، أو بالانتقال إلى أي عمل آخر. وإذا كان المعنى لعبارة من عدة كلمات تُظلَّل كلماتها كلها.',
       'النقر على لفظة ملوّنة أخرى والمستطيل ظاهر يُخفيه ويُظهر معناها. والنقر على كلمة سوداء أو رقم آية والمستطيل ظاهر يُخفيه فقط دون فتح نافذة الآية. وإذا كانت نافذة الآية مفتوحة، فالنقر على لفظة ملوّنة يغلق النافذة فقط.',
       'أثناء التمرير التلقائي: النقر على لفظة ملوّنة يوقف التمرير ويُظهر معناها، والنقر على لفظة ملوّنة أخرى يُظهر معناها بدلاً منه. والنقر على أي موضع آخر من الصفحة أو على اللفظة نفسها، أو الرجوع، يُخفي المستطيل ويعيد التمرير. والانتقال إلى نافذة أو قائمة أخرى يُخفيه، ويعود التمرير عند إغلاقها والرجوع إلى المصحف؛ أما أزرار السرعة وحجم الخط ونحوها فتُخفيه ويبقى التمرير متوقفاً.',
@@ -33564,7 +33622,7 @@ function renderFontTab() {
     row.innerHTML = '<span class="fo-check">✓</span>' +
       '<span class="fo-sample" style="font-family:var(--quran-font),serif;font-weight:400;-webkit-text-stroke:max(0.023em, 0.5px) currentColor;">' + escapeHtml(quranTextSample(o.id)) + '</span>' +
       '<span class="fo-label" style="text-align:center;line-height:1.35;">' + o.label +
-      '<span style="display:block;font-size:13px;font-weight:700;opacity:.75;">' + o.desc + '</span></span>';
+      '<span style="display:block;font-size:15.5px;font-weight:700;opacity:.75;">' + o.desc + '</span></span>';
     row.addEventListener('click', () => { applyQuranText(o.id); renderFontTab(); });
     card.appendChild(row);
   });
@@ -33592,8 +33650,8 @@ function renderFontTab() {
     const active = src ? (gharibOn && gharibSrc === src) : !gharibOn;
     row.className = 'font-opt' + (active ? ' active' : '');
     row.innerHTML = '<span class="fo-check">✓</span>' +
-      '<span class="fo-sample" style="font-size:16px;font-family:sans-serif;font-weight:700;' + (src ? 'color:#00904A;' : '') + '">' + label + '</span>' +
-      '<span class="fo-label" style="text-align:center;line-height:1.35;font-size:14px;">' + desc + '</span>';
+      '<span class="fo-sample" style="font-size:16px;font-family:sans-serif;font-weight:700;' + (src ? 'color:#00733A;' : '') + '">' + label + '</span>' +
+      '<span class="fo-label" style="text-align:center;line-height:1.35;font-size:16.5px;">' + desc + '</span>';
     row.addEventListener('click', () => {
       if (src) { setGharibOn(true); setGharibSource(src); } else setGharibOn(false);
       renderFontTab();
@@ -33602,7 +33660,7 @@ function renderFontTab() {
   });
   const ghNote = document.createElement('div');
   ghNote.className = 'strong-note';
-  ghNote.style.cssText = 'font-family:sans-serif;font-size:13.5px;font-weight:700;padding:8px 10px 10px;line-height:1.65;';
+  ghNote.style.cssText = 'font-family:sans-serif;font-size:17px;font-weight:700;padding:8px 10px 10px;line-height:1.65;';
   ghNote.textContent = 'انقر أي كلمة ملوّنة باللون الأخضر في المصحف ليظهر معناها، وانقر مرة أخرى لإخفائه.';
   card.appendChild(ghNote);
 
@@ -33612,13 +33670,13 @@ function renderFontTab() {
     row.className = 'font-opt' + (segStopOn === on ? ' active' : '');
     row.innerHTML = '<span class="fo-check">✓</span>' +
       '<span class="fo-sample" style="font-size:16px;font-family:sans-serif;font-weight:700;">' + label + '</span>' +
-      '<span class="fo-label" style="text-align:center;line-height:1.35;font-size:14px;">' + desc + '</span>';
+      '<span class="fo-label" style="text-align:center;line-height:1.35;font-size:16.5px;">' + desc + '</span>';
     row.addEventListener('click', () => { setSegStop(on, true); renderFontTab(); });
     card.appendChild(row);
   });
   const stNote = document.createElement('div');
   stNote.className = 'strong-note';
-  stNote.style.cssText = 'font-family:sans-serif;font-size:13.5px;font-weight:700;padding:8px 10px 10px;line-height:1.65;';
+  stNote.style.cssText = 'font-family:sans-serif;font-size:17px;font-weight:700;padding:8px 10px 10px;line-height:1.65;';
   stNote.innerHTML = 'في الوضع الحر. ويمكن التبديل بسرعة بالزر ' + '<span style="display:inline-flex;vertical-align:middle;background:#0E4433;color:#E8B84B;border-radius:6px;padding:2px;">' + document.getElementById('segStopBtn').innerHTML.replace('width="24" height="24"', 'width="16" height="16"') + '</span>' + ' في الشريط السفلي: ذهبي عند التفعيل (وتظهر عبارة «التوقف مفعّل»)، وباهت عند الإلغاء (وتظهر عبارة «عدم التوقف»).';
   card.appendChild(stNote);
 
@@ -33628,12 +33686,12 @@ function renderFontTab() {
     row.className = 'font-opt' + (wbwOn === on ? ' active' : '');
     row.innerHTML = '<span class="fo-check">✓</span>' +
       '<span class="fo-sample" style="font-size:16px;font-family:sans-serif;font-weight:700;">' + label + '</span>' +
-      '<span class="fo-label" style="text-align:center;line-height:1.35;font-size:14px;">' + desc + '</span>';
+      '<span class="fo-label" style="text-align:center;line-height:1.35;font-size:16.5px;">' + desc + '</span>';
     row.addEventListener('click', () => { setWbwOn(on, false); renderFontTab(); });
     card.appendChild(row);
   });
   const wwHead = document.createElement('div');
-  wwHead.style.cssText = 'font-family:sans-serif;font-size:14.5px;font-weight:800;padding:10px 10px 4px;';
+  wwHead.style.cssText = 'font-family:sans-serif;font-size:17.5px;font-weight:800;padding:10px 10px 4px;';
   wwHead.textContent = 'مهلة جمع الكلمات (بالثواني):';
   card.appendChild(wwHead);
   const wwRow = document.createElement('div');
@@ -33649,13 +33707,13 @@ function renderFontTab() {
   card.appendChild(wwRow);
   const wwNote = document.createElement('div');
   wwNote.className = 'strong-note';
-  wwNote.style.cssText = 'font-family:sans-serif;font-size:13.5px;font-weight:700;padding:8px 10px 10px;line-height:1.65;';
-  wwNote.textContent = 'للتفعيل والإيقاف بسرعة: انقر اسم السورة في الشريط العلوي، فيتلوّن بالأزرق ما دامت القراءة مفعّلة. ثم انقر أي كلمة نقرة خفيفة فتُقرأ بصوت الشيخ الحصري، وتتلوّن بنفس اللون. الكلمات التي تنقرها متتابعةً قبل انقضاء المهلة تُقرأ معًا (والمتجاورة منها قراءةً متصلة)، وما تنقره بعد انقضائها يُقرأ وحده. رقم الآية يفتح نافذتها كالمعتاد.';
+  wwNote.style.cssText = 'font-family:sans-serif;font-size:17px;font-weight:700;padding:8px 10px 10px;line-height:1.65;';
+  wwNote.textContent = 'للتفعيل السريع: انقر اسم السورة في الإطار العائم، فيتلوّن بالأزرق ما دامت القراءة مفعّلة، وللإيقاف السريع: انقر اسم السورة نفسه في الإطار العائم مرة أخرى. ثم انقر أي كلمة نقرة خفيفة فتُقرأ بصوت الشيخ الحصري، وتتلوّن بنفس اللون. الكلمات التي تنقرها متتابعةً قبل انقضاء المهلة تُقرأ معًا (والمتجاورة منها قراءةً متصلة)، وما تنقره بعد انقضائها يُقرأ وحده. رقم الآية يفتح نافذتها كالمعتاد.';
   card.appendChild(wwNote);
 
   const credit = document.createElement('div');
   credit.className = 'strong-note';
-  credit.style.cssText = 'font-family:sans-serif;font-size:13px;font-weight:700;padding:14px 4px;line-height:1.7;opacity:.8;';
+  credit.style.cssText = 'font-family:sans-serif;font-size:15.5px;font-weight:700;padding:14px 4px;line-height:1.7;opacity:.8;';
   credit.innerHTML = 'مصدر معاني الكلمات: تفسير الصافي، وتبيين القرآن، ومعانٍ لغوية مكمِّلة.';
   sidebarBody.appendChild(credit);
 }
@@ -33842,7 +33900,7 @@ function renderRecitationTab() {
     }).slice(0, 10);
     if (!eaMatches.length && !mqMatches.length) {
       const none = document.createElement('div');
-      none.style.cssText = 'font-family:sans-serif;font-size:14px;color:#8A7B55;padding:6px 4px;';
+      none.style.cssText = 'font-family:sans-serif;font-size:16.5px;color:#8A7B55;padding:6px 4px;';
       none.textContent = 'لا نتائج';
       searchResults.appendChild(none);
       return;
@@ -33853,7 +33911,7 @@ function renderRecitationTab() {
       row.innerHTML =
         '<span style="display:flex;flex-direction:column;align-items:flex-start;min-width:0;">' +
           '<span style="font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;">' + entry.n + '</span>' +
-          '<span style="font-size:12px;color:#3E6B4F;">🔤 تلاوة آية بآية</span>' +
+          '<span style="font-size:14.5px;color:#3E6B4F;">🔤 تلاوة آية بآية</span>' +
         '</span>' +
         '<span style="font-size:18px;font-weight:700;flex-shrink:0;">+</span>';
       row.addEventListener('click', () => { addCustomReciterFromEveryayah(entry); searchInput.value = ''; searchResults.innerHTML = ''; });
@@ -33865,7 +33923,7 @@ function renderRecitationTab() {
       row.innerHTML =
         '<span style="display:flex;flex-direction:column;align-items:flex-start;min-width:0;">' +
           '<span style="font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;">' + entry.n + '</span>' +
-          '<span style="font-size:12px;color:#8A6D1E;">🎧 ملف السورة كاملة (توقيت آلي إن توفر) - ' + entry.m + '</span>' +
+          '<span style="font-size:14.5px;color:#8A6D1E;">🎧 ملف السورة كاملة (توقيت آلي إن توفر) - ' + entry.m + '</span>' +
         '</span>' +
         '<span style="font-size:18px;font-weight:700;flex-shrink:0;">+</span>';
       row.addEventListener('click', () => { addCustomReciterFromMp3quran(entry); searchInput.value = ''; searchResults.innerHTML = ''; });
@@ -33890,7 +33948,7 @@ function renderRecitationTab() {
         '<button class="recite-select-btn' + (isActive ? ' active' : '') + '" style="flex-shrink:0;border:3px solid #7B2E2E;border-radius:14px;padding:3px 9px;font-size:15px;font-weight:700;cursor:pointer;font-family:sans-serif;">' + (isActive ? 'مفعّل' : 'تفعيل') + '</button>' +
         '<button class="recite-download-btn' + (dlState === 'full' ? ' full' : dlState === 'partial' ? ' partial' : '') + '" style="flex-shrink:0;border-radius:14px;padding:3px 9px;font-size:15px;font-weight:700;cursor:pointer;font-family:sans-serif;" aria-label="تحميل تلاوة هذا القارئ للاستماع دون أنترنت">' + (dlState === 'full' ? 'محمّل' : 'تحميل') + '</button>' +
       '</div>' +
-      '<span style="font-family:sans-serif;font-size:12px;color:' + badge.color + ';padding-right:4px;">' + badge.text + '</span>';
+      '<span style="font-family:sans-serif;font-size:14.5px;color:' + badge.color + ';padding-right:4px;">' + badge.text + '</span>';
     row.querySelector('.recite-select-btn').addEventListener('click', () => setCurrentReciter(id));
     row.querySelector('.recite-download-btn').addEventListener('click', () => renderReciterDownloadView(id));
     // Deleting a reciter, or its downloaded audio, now lives behind a
@@ -33941,13 +33999,13 @@ function renderReciterDownloadView(reciterId) {
 
   const badge = reciterKindBadge(r);
   const badgeEl = document.createElement('div');
-  badgeEl.style.cssText = 'font-family:sans-serif;font-size:13px;color:' + badge.color + ';padding:0 4px 10px;';
+  badgeEl.style.cssText = 'font-family:sans-serif;font-size:15.5px;color:' + badge.color + ';padding:0 4px 10px;';
   badgeEl.textContent = badge.text;
   sidebarBody.appendChild(badgeEl);
 
   if (!('caches' in window)) {
     const warn = document.createElement('div');
-    warn.style.cssText = 'font-family:sans-serif;font-size:14px;color:#7B2E2E;padding:6px 4px;line-height:1.7;';
+    warn.style.cssText = 'font-family:sans-serif;font-size:16.5px;color:#7B2E2E;padding:6px 4px;line-height:1.7;';
     warn.textContent = 'التحميل للاستماع دون أنترنت غير مدعوم في هذا المتصفح.';
     sidebarBody.appendChild(warn);
     return;
@@ -33957,7 +34015,7 @@ function renderReciterDownloadView(reciterId) {
   allBtn.style.cssText = 'width:100%;font-family:sans-serif;font-size:16px;font-weight:700;padding:10px;border:1.5px solid #3E6B4F;border-radius:12px;background:#EAF3EC;cursor:pointer;margin:6px 0 4px;';
   allBtn.textContent = 'تحميل الكل (كل السور - ١١٤ سورة)';
   const allProgress = document.createElement('div');
-  allProgress.style.cssText = 'font-family:sans-serif;font-size:13px;color:#5B5136;padding:2px 4px 12px;min-height:18px;';
+  allProgress.style.cssText = 'font-family:sans-serif;font-size:15.5px;color:#5B5136;padding:2px 4px 12px;min-height:18px;';
   sidebarBody.appendChild(allBtn);
   sidebarBody.appendChild(allProgress);
 
@@ -36206,8 +36264,26 @@ function renderShareTab() {
   }
   const pending = new Set();
   let raf = 0;
+  // The page frame at the top of the free view, and where it is now - so a
+  // change of height in pages above it can be undone (the text stays still).
+  function viewAnchor() {
+    const wrap = document.getElementById('freeScrollWrap');
+    if (!wrap || layoutMode !== 'free' || !wrap.offsetHeight) return null;
+    const wt = wrap.getBoundingClientRect().top;
+    for (const f of cont.children) {
+      const r = f.getBoundingClientRect();
+      if (r.bottom > wt) return { wrap, f, top: r.top };
+    }
+    return null;
+  }
+  function holdView(a) {
+    if (!a || !a.f.isConnected) return;
+    const d = a.f.getBoundingClientRect().top - a.top;
+    if (Math.abs(d) > 0.01 && typeof setFreeScrollTop === 'function') setFreeScrollTop(a.wrap, a.wrap.scrollTop + d);
+  }
   function flush() {
     raf = 0;
+    const va = viewAnchor();
     pending.forEach((block) => {
       if (!block.isConnected) return;
       block.querySelectorAll('.freePara').forEach((para) => {
@@ -36218,6 +36294,7 @@ function renderShareTab() {
       });
     });
     pending.clear();
+    holdView(va);
   }
   function queue(block) { pending.add(block); if (!raf) raf = requestAnimationFrame(flush); }
   // Kashida for one page right now, before it is ever painted - used for the
