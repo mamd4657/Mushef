@@ -902,9 +902,9 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
   <div id="reciteModeBarInner" style="position:relative;pointer-events:auto;touch-action:none;width:max-content;max-width:calc(100% - 12px);margin:0 auto;background:#7B2E2E;border-radius:22px;box-shadow:0 -2px 10px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;gap:10px;padding:4px 10px;box-sizing:border-box;--rbGap:22px;">
     <button id="reciteModeBarPlayBtn" style="background:transparent;border:none;color:#F6EFDC;font-size:32px;cursor:pointer;line-height:1;padding:0 4px;min-width:36px;" aria-label="تشغيل/إيقاف التلاوة">▶</button>
     <div class="rb-frame" style="display:flex;align-items:center;gap:var(--rbGap);border:1.5px solid #F6EFDC;border-radius:16px;padding:5px 12px;">
-      <label class="rb-opt"><input type="radio" name="reciteModeRadio" id="reciteModeRadioOnce" value="single" checked>مرة</label>
+      <label class="rb-opt"><input type="radio" name="reciteModeRadio" id="reciteModeRadioOnce" value="single">مرة</label>
       <label class="rb-opt" id="reciteModeRepeatLabel"><input type="radio" name="reciteModeRadio" id="reciteModeRadioRepeat" value="repeat"><span id="reciteRepeatWord">تكرار</span></label>
-      <label class="rb-opt" id="reciteModeContLabel"><input type="radio" name="reciteModeRadio" id="reciteModeRadioContinue" value="continuous">استمرار</label>
+      <label class="rb-opt" id="reciteModeContLabel"><input type="radio" name="reciteModeRadio" id="reciteModeRadioContinue" value="continuous" checked>استمرار</label>
     </div>
   </div>
 </div>
@@ -29946,7 +29946,7 @@ function setCurrentReciter(id) {
   if (typeof renderRecitationTab === 'function' && currentTab === 'recitation') renderRecitationTab();
 }
 
-let reciteMode = 'single'; // 'single' (مرة) | 'repeat' (تكرار) | 'continuous' (استمرار)
+let reciteMode = 'continuous'; // 'single' (مرة) | 'repeat' (تكرار) | 'continuous' (استمرار)
 let reciting = false;
 let reciteAudio = new Audio();
 let recitingKey = null; // "surah:ayah" currently highlighted
@@ -30448,6 +30448,12 @@ function closeReciteModeBarLayer() {
 }
 function openReciteModeBar() {
   reciteBarDX = 0; reciteBarDY = 0;
+  // every time تلاوة is opened (and nothing is playing) it starts on استمرار;
+  // مرة or تكرار can then be chosen for this time
+  if (!reciting && reciteModeBarEl.style.display === 'none') {
+    reciteMode = 'continuous';
+    document.getElementById('reciteModeRadioContinue').checked = true;
+  }
   document.getElementById('reciteModeBarInner').style.transform = '';
   reciteModeBarEl.style.display = 'block';
   reciteModeBarEl.style.zIndex = '56';
@@ -33506,7 +33512,7 @@ function renderGuideTab() {
     ]},
     { title: '٤. نافذة الآية (تظهر بالنقر على الآية)', items: [
       'تُفتح نافذة الآية بالنقر على <b>أي كلمة من الآية أو على رقمها</b> عدا الكلمات الخضراء (والتمرير التلقائي غير مفعّل)، وتُغلق مع تظليل الآية بالنقر على أي موضع من النص (حتى لو كان كلمة خضراء)، أو بالرجوع، أو بالانتقال إلى أي عمل آخر. وتبدأ التلاوة الصوتية من النافذة.',
-      '<b>تلاوة</b>: الاستماع لتلاوة الآية بصوت القارئ المختار. يظهر شريط التلاوة فوق نافذة الآية مباشرة، وفيه زر التشغيل والإيقاف، واختيارات قراءة الآية <b>مرة</b> واحدة أو <b>تكرارها</b> أو <b>الاستمرار</b>.',
+      '<b>تلاوة</b>: الاستماع لتلاوة الآية بصوت القارئ المختار. يظهر شريط التلاوة فوق نافذة الآية مباشرة، وفيه زر التشغيل والإيقاف، واختيارات قراءة الآية <b>مرة</b> واحدة أو <b>تكرارها</b> أو <b>الاستمرار</b>. وفي كل مرة يُفتح فيها شريط التلاوة يكون الاختيار على <b>استمرار</b>، ولمن أراد غيره أن يختار «مرة» أو «تكرار».',
       'يمكن تحريك شريط التلاوة بالإصبع إلى أي موضع في الشاشة، ويعود إلى مكانه فوق النافذة عند فتحه من جديد. وأثناء التلاوة لا يختفي الشريط بالرجوع، بل يغلق الرجوع النافذة التي تحته، ويختفي الشريط بالرجوع بعد إيقاف التلاوة.',
       'عند اختيار <b>تكرار</b> تظهر قائمة لعدد مرات قراءة الآية (من مرتين إلى سبع)، ويظهر العدد المختار في الشريط مكان كلمة «تكرار»، ويبقى محفوظاً حتى يُغيَّر.',
       'عند اختيار <b>استمرار</b> تظهر نافذة فيها أربعة خيارات منفصلة، يتفعّل واحد منها فقط: <b>حسب الوقت</b> (تستمر التلاوة من الآية المختارة حتى ينتهي الوقت المحدد، من خمس دقائق إلى خمس ساعات، ويبقى الوقت المحدد محفوظاً حتى يُغيَّر)، أو <b>ابتداءً من الآية المختارة حتى نهاية السورة</b>، أو <b>ابتداءً من بداية السورة حتى نهايتها</b>، أو <b>سور وآيات مختارة</b>. ويبقى آخر ما اختير من الخيارات الثلاثة الأولى مفعّلاً، وعليه يكون التشغيل من شريط التلاوة.',
