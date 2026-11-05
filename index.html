@@ -535,7 +535,21 @@ html,body{overflow:hidden;}
 .cd-head input,.cd-row input,.cd-chk input,.cd-chip input{accent-color:#0E4433;width:20px;height:20px;margin:0;flex-shrink:0;}
 .cd-chips{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
 .cd-chips.off,#cdList.off{opacity:.45;}
-.cd-main{font-size:18.5px;font-weight:800;padding:7px 0;}
+.cd-main{font-size:20.5px;font-weight:800;padding:7px 0;}
+/* the four choices in one clear frame, with a clear line between them; the
+   title above it and تشغيل / إغلاق below it stay outside */
+.cd-box{border:2.5px solid #0E4433;border-radius:14px;padding:0 10px;margin:4px 0 10px;}
+.cd-box > .cd-sec{border-top:2px solid #0E4433;padding:8px 0;}
+.cd-box > .cd-sec:first-child{border-top:none;}
+.cd-title{font-size:21px;}
+/* the details of حسب الوقت and سور وآيات مختارة in their own blue */
+.cd-chips,#cdList{--cdBlue:#1E5BB8;color:var(--cdBlue);}
+.cd-chips .cd-chip,#cdList .cd-item,#cdList .cd-in,#cdList .cd-btn{border-color:var(--cdBlue);color:var(--cdBlue);}
+.cd-chips input,#cdList input[type=checkbox]{accent-color:var(--cdBlue);}
+#cdList .cd-in::placeholder{color:var(--cdBlue);opacity:.55;}
+body.dark-mode .cd-chips,body.dark-mode #cdList{--cdBlue:#8DBBFF;}
+body.dark-mode .cd-box,body.dark-mode .cd-box > .cd-sec{border-color:#F6EFDC;}
+body.dark-mode .cd-chips .cd-chip,body.dark-mode #cdList .cd-item,body.dark-mode #cdList .cd-in,body.dark-mode #cdList .cd-btn{border-color:var(--cdBlue);color:var(--cdBlue);}
 /* what belongs to a main choice starts under its first letter (radio 20px + gap 8px) */
 .cd-sec > .cd-chips,.cd-sec > #cdList{margin-right:28px;}
 .cd-chk.dis,.cd-in.dis{opacity:.4;}
@@ -30572,14 +30586,14 @@ function renderContDialog() {
   for (let i = 1; i <= 114; i++) names += '<option value="' + SURAH_NAMES[i] + '">';
   d.innerHTML = '<div class="cd-card">' +
     '<div class="cd-title">خيارات الاستمرار</div>' +
-    '<div class="cd-sec">' + opt('time', 'حسب الوقت (ابتداءً من الآية المختارة)') +
+    '<div class="cd-box"><div class="cd-sec">' + opt('time', 'حسب الوقت (ابتداءً من الآية المختارة)') +
       '<div class="cd-chips' + (kind === 'time' ? '' : ' off') + '">' + timeChips + '</div></div>' +
     '<div class="cd-sec">' + opt('toEnd', 'ابتداءً من الآية المختارة حتى نهاية السورة') + '</div>' +
     '<div class="cd-sec">' + opt('surah', 'ابتداءً من بداية السورة حتى نهايتها') + '</div>' +
     '<div class="cd-sec">' + opt('list', 'سور وآيات مختارة') +
       '<div id="cdList" class="' + (kind === 'list' ? '' : 'off') + '">' + items +
         '<div class="cd-actions"><button id="cdAdd" class="cd-btn light">+ إضافة سورة</button><button id="cdSave" class="cd-btn light">حفظ</button></div>' +
-      '</div></div>' +
+      '</div></div></div>' +
     '<datalist id="cdSurahNames">' + names + '</datalist>' +
     '<div class="cd-actions main"><button id="cdPlay" class="cd-btn">▶ تشغيل</button><button id="cdClose" class="cd-btn light">إغلاق</button></div>' +
   '</div>';
