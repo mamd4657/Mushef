@@ -29583,6 +29583,7 @@ function setWbwOn(on, announce) {
   store.set('wbw', wbwOn ? 'on' : 'off');
   document.body.classList.toggle('wbw-on', wbwOn);
   if (!wbwOn) wbwStop();
+  else wbwFetchAllTimings();
   if (announce) toast(wbwOn ? 'قراءة الكلمات مفعّلة' : 'قراءة الكلمات متوقفة', true);
 }
 
@@ -29699,13 +29700,66 @@ async function wbwPlayGroup(token) {
     const r = runs[k];
     const data = await wbwLoadSurah(r.surah);
     if (token !== wbwToken) return;
-    if (!(await wbwReady(r.surah, r.ayah, token))) { if (token === wbwToken && !navigator.onLine) toast('تحتاج قراءة الكلمات إلى الاتصال بالإنترنت'); break; }
+    if (!(await wbwReady(r.surah, r.ayah, token))) { if (token === wbwToken && !navigator.onLine) toast('هذه الآية غير محفوظة في الجهاز بعد، وتحتاج إلى الاتصال بالإنترنت أول مرة'); break; }
     const span = wbwSpanOf(data, r.surah, r.ayah, r.i, r.j);
     if (!span) continue;
     if (!(await wbwPlaySpan(span[0], span[1], token))) break;
+    wbwKeepAyah(r.surah, r.ayah);
     if (k < runs.length - 1) await new Promise((res) => setTimeout(res, 180));
   }
   if (token === wbwToken) { setTimeout(() => { if (token === wbwToken && !wbwGatherTimer) { wbwPending = []; wbwClearHighlight(); } }, 250); }
+}
+
+// ---- قراءة الكلمات بدون إنترنت ----
+// 1) The word timings for the whole Quran (~0.7 MB in all, 114 small files)
+//    are fetched once in the background; the service worker keeps them.
+// 2) Every ayah whose words have been listened to is kept on the device
+//    (the same Cache Storage the reciters' downloads use), so it works
+//    offline from then on - nothing is downloaded that wasn't asked for.
+// 3) A surah, or the whole recitation, can also be downloaded ahead from
+//    التخطيط (the same files as al-Husary's download in التلاوة).
+let wbwTimingsRunning = false;
+async function wbwFetchAllTimings() {
+  if (wbwTimingsRunning || store.get('wbw-timings-all') === '1' || !navigator.onLine) return;
+  wbwTimingsRunning = true;
+  let ok = 0;
+  for (let su = 1; su <= 114; su++) {
+    const d = await wbwLoadSurah(su);
+    if (d) ok++;
+    else if (!navigator.onLine) break;
+  }
+  wbwTimingsRunning = false;
+  if (ok === 114) store.set('wbw-timings-all', '1');
+}
+if (wbwOn) setTimeout(wbwFetchAllTimings, 6000);
+function wbwKeepAyah(su, a) {
+  if (!navigator.onLine) return;
+  const url = wbwUrl(su, a, false);
+  setTimeout(() => { downloadAudioUrl(url).catch(() => {}); }, 400);
+}
+let wbwDl = null; // { stop:boolean, label }
+async function wbwDownload(surahs, onUpdate) {
+  if (wbwDl) return;
+  wbwDl = { stop: false, done: 0, total: surahs.length, cur: 0, curDone: 0, curTotal: 0 };
+  wbwFetchAllTimings();
+  let fail = 0;
+  for (const su of surahs) {
+    if (wbwDl.stop) break;
+    wbwDl.cur = su;
+    if (!isSurahMarkedDownloaded('husary', su)) {
+      const res = await downloadSurahForReciter('husary', su, (d, t) => { if (wbwDl) { wbwDl.curDone = d; wbwDl.curTotal = t; onUpdate(); } });
+      if (!res.ok) { fail++; if (!navigator.onLine) break; }
+    }
+    await wbwLoadSurah(su);
+    wbwDl.done++;
+    onUpdate();
+  }
+  const stopped = wbwDl.stop;
+  wbwDl = null;
+  onUpdate();
+  if (stopped) toast('تم إيقاف التنزيل');
+  else if (fail) toast('تعذّر تنزيل بعض الآيات، أعد المحاولة عند توفر الاتصال');
+  else toast('✓ تم التنزيل، وتعمل قراءة الكلمات فيه بدون إنترنت');
 }
 
 document.getElementById('floatingFrameBar').addEventListener('click', (e) => {
@@ -33464,7 +33518,7 @@ function renderGuideTab() {
       'وهي مفعّلة: انقر أي كلمة من النص (أو من البسملة) نقرة خفيفة، فتتلوّن بالأزرق نفسه، وتُقرأ بصوت الشيخ محمود خليل الحصري من تلاوته المرتّلة للآية نفسها.',
       '<b>عدة كلمات</b>: الكلمات التي تُنقر متتابعةً قبل انقضاء <b>مهلة جمع الكلمات</b> تُجمع وتُقرأ معاً بعد آخر نقرة، والمتجاورة منها تُقرأ قراءة متصلة كما في التلاوة. وما يُنقر بعد انقضاء المهلة يُقرأ وحده. وتُختار المهلة (٠٫٦ أو ١ أو ١٫٥ أو ٢ ثانية) من عنوان <b>التخطيط</b>.',
       'وأثناء تفعيلها لا يفتح النقر على الكلمات نافذة الآية ولا معاني الكلمات الخضراء، أما النقر على <b>رقم الآية</b> فيفتح نافذتها كالمعتاد. وإذا كانت تلاوة الآيات جارية توقفت عند نقر كلمة.',
-      'تحتاج إلى الاتصال بالإنترنت، إلا للآيات التي نُزّلت تلاوتها بصوت الحصري للعمل بدون إنترنت. ومواضع الكلمات مأخوذة بالمحاذاة الآلية للتلاوة، فقد يُسمع في القليل منها طرف من الكلمة المجاورة.',
+      '<b>بدون إنترنت</b>: كل آية تُسمع كلماتها مرة مع الاتصال تُحفظ في الجهاز تلقائياً فتعمل بعد ذلك بدون إنترنت، ويمكن تنزيل السورة الحالية أو تلاوة الحصري كاملة مسبقاً من بند «قراءة الكلمات» في عنوان <b>التخطيط</b>. ومواضع الكلمات مأخوذة بالمحاذاة الآلية للتلاوة، فقد يُسمع في القليل منها طرف من الكلمة المجاورة.',
     ]},
   ];
   SECTIONS.forEach((sec) => {
@@ -33724,6 +33778,55 @@ function renderFontTab() {
   wwNote.style.cssText = 'font-family:sans-serif;font-size:17px;font-weight:700;padding:8px 10px 10px;line-height:1.65;';
   wwNote.textContent = 'للتفعيل السريع: انقر اسم السورة في الإطار العائم، فيتلوّن بالأزرق ما دامت القراءة مفعّلة، وللإيقاف السريع: انقر اسم السورة نفسه في الإطار العائم مرة أخرى. ثم انقر أي كلمة نقرة خفيفة فتُقرأ بصوت الشيخ الحصري، وتتلوّن بنفس اللون. الكلمات التي تنقرها متتابعةً قبل انقضاء المهلة تُقرأ معًا (والمتجاورة منها قراءةً متصلة)، وما تنقره بعد انقضائها يُقرأ وحده. رقم الآية يفتح نافذتها كالمعتاد.';
   card.appendChild(wwNote);
+  // offline
+  const dlHead = document.createElement('div');
+  dlHead.style.cssText = 'font-family:sans-serif;font-size:17.5px;font-weight:800;padding:10px 10px 4px;border-top:1px solid #D9CBA3;';
+  dlHead.textContent = 'العمل بدون إنترنت:';
+  card.appendChild(dlHead);
+  const curS = surahAtPage(pageNum) || 1;
+  const dlWrap = document.createElement('div');
+  dlWrap.style.cssText = 'display:flex;flex-direction:column;gap:8px;padding:4px 10px 6px;';
+  const mkBtn = () => { const b = document.createElement('button'); b.style.cssText = 'width:100%;padding:10px 8px;border-radius:10px;font:800 16.5px sans-serif;cursor:pointer;border:2px solid #0E4433;background:transparent;color:inherit;line-height:1.5;'; return b; };
+  const bS = mkBtn(), bAll = mkBtn();
+  const dlInfo = document.createElement('div');
+  dlInfo.style.cssText = 'font-family:sans-serif;font-size:16px;font-weight:700;min-height:20px;text-align:center;';
+  const allDone = () => { for (let i = 1; i <= 114; i++) if (!isSurahMarkedDownloaded('husary', i)) return false; return true; };
+  const paint = () => {
+    if (!bS.isConnected) return;
+    const sDone = isSurahMarkedDownloaded('husary', curS);
+    if (wbwDl) {
+      bS.textContent = 'إيقاف التنزيل';
+      bAll.style.display = 'none';
+      dlInfo.textContent = 'جارٍ التنزيل: سورة ' + (SURAH_NAMES[wbwDl.cur] || '') + (wbwDl.curTotal ? ' (' + toArabicDigits(wbwDl.curDone) + ' من ' + toArabicDigits(wbwDl.curTotal) + ' آية)' : '') + (wbwDl.total > 1 ? ' - ' + toArabicDigits(wbwDl.done) + ' من ' + toArabicDigits(wbwDl.total) + ' سورة' : '');
+    } else {
+      bAll.style.display = '';
+      bS.textContent = sDone ? '✓ سورة ' + SURAH_NAMES[curS] + ' منزّلة' : 'تنزيل سورة ' + SURAH_NAMES[curS] + ' (الحالية)';
+      bAll.textContent = allDone() ? '✓ تلاوة الحصري كاملة منزّلة' : 'تنزيل تلاوة الحصري كاملة (نحو ١ غيغابايت)';
+      dlInfo.textContent = '';
+    }
+    dlInfo.style.display = dlInfo.textContent ? '' : 'none';
+  };
+  bS.addEventListener('click', () => {
+    if (wbwDl) { wbwDl.stop = true; return; }
+    if (isSurahMarkedDownloaded('husary', curS)) return;
+    if (!navigator.onLine) { toast('التنزيل يحتاج إلى الاتصال بالإنترنت'); return; }
+    wbwDownload([curS], paint); paint();
+  });
+  bAll.addEventListener('click', () => {
+    if (wbwDl || allDone()) return;
+    if (!navigator.onLine) { toast('التنزيل يحتاج إلى الاتصال بالإنترنت'); return; }
+    const list = []; for (let i = 1; i <= 114; i++) list.push(i);
+    wbwDownload(list, paint); paint();
+  });
+  dlWrap.appendChild(bS); dlWrap.appendChild(bAll); dlWrap.appendChild(dlInfo);
+  card.appendChild(dlWrap);
+  if (wbwDl) { const t = setInterval(() => { if (!bS.isConnected) clearInterval(t); else paint(); }, 500); }
+  paint();
+  const dlNote = document.createElement('div');
+  dlNote.className = 'strong-note';
+  dlNote.style.cssText = 'font-family:sans-serif;font-size:17px;font-weight:700;padding:4px 10px 10px;line-height:1.65;';
+  dlNote.textContent = 'كل آية تُسمع كلماتها مرة مع الاتصال تُحفظ في الجهاز تلقائياً، فتُقرأ كلماتها بعد ذلك بدون إنترنت، دون تنزيل ما لم تستمع إليه. ويمكن تنزيل السورة الحالية أو التلاوة كاملة مسبقاً بالزرّين أعلاه، وهي الملفات نفسها التي يُنزّلها زر التنزيل للشيخ الحصري في عنوان «التلاوة»، فلا تتكرر.';
+  card.appendChild(dlNote);
 
   const credit = document.createElement('div');
   credit.className = 'strong-note';
