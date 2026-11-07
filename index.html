@@ -666,7 +666,9 @@ body.dark-mode .rubgrid8-on{fill:#5B8A72;stroke:#5B8A72;}
 .sajdah-word-mark{border-top:2px solid #000;padding-top:1px;}
 /* waqf signs (ۖ ۗ ۚ ...) ride directly on the word before them, never floating between two words */
 .wqj{white-space:nowrap;}
-.wq{display:inline-block;margin-right:0.05em;}
+/* the waqf sign stays an ordinary combining mark of the word's last letter,
+   so the font itself places it above the end of the word, as printed */
+.wq{display:inline;margin:0;}
 body.dark-mode .sajdah-word-mark{border-top-color:#EFE8D6;}
 .sajdah-side-bar{fill:#000;}
 body.dark-mode .sajdah-side-bar{fill:#EFE8D6;}
