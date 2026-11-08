@@ -30326,9 +30326,9 @@ async function playSegmentAyah(reciterId, r, surah, ayah, token) {
 let reciteBasmalaThen = null; // { surah, ayah } to play once the basmala ends
 // Reciters whose al-Fatiha 1 file on the per-ayah source is not in their own
 // voice: their basmala comes from their own complete al-Fatiha recording on
-// mp3quran.net (the part its ayah timing marks as ayah 1) - used for al-Fatiha
-// 1 itself and before every surah. (an-Naml 30 can't serve: it begins with
-// «إنه من سليمان وإنه» with no pause before the basmala.)
+// their own an-Naml 30 cut at the word «بسم» (see playNamlBasmala), or failing
+// that their complete al-Fatiha recordings below - used for al-Fatiha 1 itself
+// and before every surah except at-Tawba.
 // Two independent sources are tried in turn, so the basmala doesn't hang on
 // one site's timing data being reachable: mp3quran's recording + ayat_timing
 // first, then quran.com's (QDC) complete recording of the same reciter with
@@ -30357,10 +30357,26 @@ function playAudioRange(url, fromMs, toMs, token) {
     if (token !== reciteRequestToken) return;
     reciteAudio.playbackRate = reciteSpeed;
     reciteAudio.currentTime = fromMs / 1000;
-    segmentBoundaryEndTime = toMs / 1000;
+    segmentBoundaryEndTime = toMs == null ? null : toMs / 1000; // null: to the file's end ('ended')
     segmentBoundaryToken = token;
+    // A source that can't seek (e.g. a saved copy served whole) would play
+    // from 0:00 - for the an-Naml basmala that's «إنه من سليمان وإنه». So
+    // the position is checked once playback runs: re-seek once, and if it
+    // still isn't there, the basmala is skipped rather than played wrong.
+    let tries = 0;
+    const check = () => {
+      if (token !== reciteRequestToken) { reciteAudio.removeEventListener('timeupdate', check); return; }
+      if (reciteAudio.currentTime >= fromMs / 1000 - 0.25) { reciteAudio.removeEventListener('timeupdate', check); return; }
+      if (tries++ < 1) { try { reciteAudio.currentTime = fromMs / 1000; } catch (e) { /* ignore */ } return; }
+      reciteAudio.removeEventListener('timeupdate', check);
+      reciteAudio.pause();
+      if (reciteBasmalaThen) handleAyahAudioEnded(); else { segmentBoundaryEndTime = null; reciteAudio.currentTime = fromMs / 1000; reciteAudio.play().catch(() => {}); }
+    };
+    if (fromMs > 0) reciteAudio.addEventListener('timeupdate', check);
     reciteAudio.play().catch((err) => {
       if (token !== reciteRequestToken || (err && err.name === 'AbortError')) return;
+      // a basmala that won't play is skipped: straight on to its ayah
+      if (reciteBasmalaThen) { handleAyahAudioEnded(); return; }
       toast('تعذّر تشغيل الصوت: ' + (err && err.name ? err.name : 'خطأ غير معروف'));
       stopRecitation();
     });
@@ -30371,7 +30387,22 @@ function playAudioRange(url, fromMs, toMs, token) {
     reciteAudio.addEventListener('loadedmetadata', go, { once: true });
   } else go();
 }
+// First choice: the basmala cut from the reciter's own an-Naml 30 («إنه من
+// سليمان وإنه بسم الله الرحمن الرحيم») using the word timings the app already
+// ships for word reading (books/wbw-<id>/027.json): from the start of its 5th
+// word «بسم» to the end of the file. Being the app's own data plus the same
+// per-ayah file every other ayah of his comes from, it needs no other site.
+async function playNamlBasmala(token) {
+  const data = await wbwLoadSurah(currentReciter, 27);
+  if (token !== reciteRequestToken) return true;
+  const row = data && data[29];
+  if (!row || row.length < 16 || !(row[8] > 0)) return false;
+  playAudioRange(reciteAudioUrlPrimary(27, 30), row[8] * 10, null, token);
+  return true;
+}
 async function playOwnBasmala(token, onUnavailable) {
+  if (await playNamlBasmala(token)) return;
+  if (token !== reciteRequestToken) return;
   const src = OWN_BASMALA[currentReciter];
   const r = { kind: 'segment', server: src.server, moshafId: src.moshafId, surahList: 'A' };
   const key = 'basmala_' + currentReciter;
