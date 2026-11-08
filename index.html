@@ -530,7 +530,7 @@ body.dark-mode .freePageTextBlock{color:#EFE8D6;}
    purpose - just a full text-line-height spacer, never a selectable/
    clickable line like a real reading line. */
 .qline.cover-blank-line{cursor:default;user-select:none;-webkit-user-select:none;}
-:root{--hlSky:#DDF0FB;--hlSkyEdge:#8FC6E6;--hlTap:#DDF4E3;--hlTapEdge:#8CCB9C;}
+:root{--hlSky:#CCDAE3;--hlSkyEdge:#9DB3C2;--hlTap:#D6DDB8;--hlTapEdge:#A9B58A;} /* muted, a step darker than the page (no glow); blue-grey vs sage so they read apart */
 body.dark-mode{--hlSky:rgba(79,179,240,.42);--hlSkyEdge:rgba(79,179,240,.6);--hlTapEdge:rgba(102,187,106,.6);}
 /* recited ayah (مرة / تكرار / استمرار) and word reading share one light sky
    blue - clearly apart from every page background, the light sky one too */
@@ -959,7 +959,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
 
 <div id="autoFab" style="position:fixed;bottom:0;left:0;right:0;z-index:50;background:#0E4433;display:flex;align-items:center;justify-content:center;gap:8px;padding:7px 8px;padding-bottom:calc(7px + var(--navInset));box-shadow:0 -2px 10px rgba(0,0,0,.2);flex-wrap:wrap;height:calc(var(--floatBarH) + var(--navInset));box-sizing:border-box;">
   <div class="fab-frame" id="rotateFrameBound">
-    <button class="fab-btn" id="rotateBtn" aria-label="تبديل العرض الأفقي/العمودي" title="تبديل العرض"><svg class="fab-icon" viewBox="0 0 24 24" width="1.2em" height="1.2em" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="5" fill="#4C8FDB"/><g fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.6 10.2A6 6 0 0 0 7.3 7.6"/><path d="M6.4 13.8a6 6 0 0 0 10.3 2.6"/><path d="M6.8 4.4v3.8h3.8"/><path d="M17.2 19.6v-3.8h-3.8"/></g></svg></button>
+    <button class="fab-btn" id="rotateBtn" aria-label="تبديل العرض الأفقي/العمودي" title="تبديل العرض"><svg class="fab-icon" viewBox="0 0 24 24" width="1.2em" height="1.2em" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.6 10.2A6 6 0 0 0 7.3 7.6"/><path d="M6.4 13.8a6 6 0 0 0 10.3 2.6"/><path d="M6.8 4.4v3.8h3.8"/><path d="M17.2 19.6v-3.8h-3.8"/></g></svg></button>
   </div>
   <div class="fab-frame fab-frame-scroll">
     <button id="speedDownBtn" class="fab-btn fab-btn-round" aria-label="أبطئ التمرير">−</button>
@@ -970,7 +970,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
     <button id="speedUpBtn" class="fab-btn fab-btn-round" aria-label="أسرع التمرير">+</button>
   </div>
   <div class="fab-frame" id="backFrameBound">
-    <button class="fab-btn" id="backBtn" aria-label="رجوع" title="رجوع"><svg class="fab-icon" viewBox="0 0 24 24" width="1.2em" height="1.2em" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="5" fill="#4C8FDB"/><path d="M18 12H6.8M11.2 7.2 6.4 12l4.8 4.8" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="fab-btn" id="backBtn" aria-label="رجوع" title="رجوع"><svg class="fab-icon" viewBox="0 0 24 24" width="1.2em" height="1.2em" aria-hidden="true"><path d="M19 12H5.8M10.6 6.6 5 12l5.6 5.4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   </div>
 </div>
 
@@ -1010,7 +1010,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
   </div>
   <div id="freeAutoFab" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;background:#0E4433;align-items:center;justify-content:center;gap:8px;padding:7px 8px;padding-bottom:calc(7px + var(--navInset));box-shadow:0 -2px 10px rgba(0,0,0,.2);flex-wrap:wrap;height:calc(var(--floatBarH) + var(--navInset));box-sizing:border-box;">
     <div class="fab-frame" id="rotateFrameFree">
-      <button class="fab-btn" id="rotateBtnFree" aria-label="تبديل العرض الأفقي/العمودي" title="تبديل العرض"><svg class="fab-icon" viewBox="0 0 24 24" width="1.2em" height="1.2em" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="5" fill="#4C8FDB"/><g fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.6 10.2A6 6 0 0 0 7.3 7.6"/><path d="M6.4 13.8a6 6 0 0 0 10.3 2.6"/><path d="M6.8 4.4v3.8h3.8"/><path d="M17.2 19.6v-3.8h-3.8"/></g></svg></button>
+      <button class="fab-btn" id="rotateBtnFree" aria-label="تبديل العرض الأفقي/العمودي" title="تبديل العرض"><svg class="fab-icon" viewBox="0 0 24 24" width="1.2em" height="1.2em" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.6 10.2A6 6 0 0 0 7.3 7.6"/><path d="M6.4 13.8a6 6 0 0 0 10.3 2.6"/><path d="M6.8 4.4v3.8h3.8"/><path d="M17.2 19.6v-3.8h-3.8"/></g></svg></button>
     </div>
     <div class="fab-frame fab-frame-scroll">
       <button id="freeSpeedDownBtn" class="fab-btn fab-btn-round" aria-label="أبطئ التمرير">−</button>
@@ -1028,7 +1028,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
       <button id="freeSizeUpBtn" class="fab-btn fab-btn-round" aria-label="تكبير حجم الخط" title="تكبير حجم الخط"><span style="font-family:sans-serif;font-size:19px;line-height:1;font-weight:700;">A</span></button>
     </div>
     <div class="fab-frame" id="backFrameFree">
-      <button class="fab-btn" id="backBtnFree" aria-label="رجوع" title="رجوع"><svg class="fab-icon" viewBox="0 0 24 24" width="1.2em" height="1.2em" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="5" fill="#4C8FDB"/><path d="M18 12H6.8M11.2 7.2 6.4 12l4.8 4.8" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button class="fab-btn" id="backBtnFree" aria-label="رجوع" title="رجوع"><svg class="fab-icon" viewBox="0 0 24 24" width="1.2em" height="1.2em" aria-hidden="true"><path d="M19 12H5.8M10.6 6.6 5 12l5.6 5.4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
   </div>
   <div style="text-align:center;color:#7A7360;font-size:12px;margin-top:10px;">مرّر بإصبعك لأعلى للصفحة التالية، ولأسفل للصفحة السابقة</div>
