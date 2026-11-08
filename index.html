@@ -611,7 +611,9 @@ body.dark-mode .cd-head input,body.dark-mode .cd-row input,body.dark-mode .cd-ch
 .segp .seg-side{flex:1;display:flex;flex-direction:column;gap:4px;min-width:0;}
 .segp .seg-btn{flex:1;background:#FBF6E8;color:#0E4433;border:2px solid #0E4433;border-radius:10px;padding:5px 2px;font-family:sans-serif;font-weight:700;font-size:min(16px,3.9vw);white-space:nowrap;overflow:hidden;cursor:pointer;}
 body.dark-mode .segp .seg-btn{background:#14231D;color:#F6EFDC;border-color:#F6EFDC;}
-.rb-opt{display:flex;align-items:center;gap:7px;color:#F6EFDC;font-family:sans-serif;font-size:18px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.rb-close{flex-shrink:0;align-self:stretch;margin:3px 0;min-width:38px;padding:0 6px;background:transparent;border:1.5px solid #F6EFDC;border-radius:16px;color:#F6EFDC;font-size:20px;font-weight:700;line-height:1;cursor:pointer;font-family:sans-serif;}
+.rb-close:active{background:rgba(246,239,220,.18);}
+.rb-opt{flex-shrink:0;display:flex;align-items:center;gap:7px;color:#F6EFDC;font-family:sans-serif;font-size:18px;font-weight:700;cursor:pointer;white-space:nowrap;}
 .rb-opt input{-webkit-appearance:none;appearance:none;width:22px;height:22px;margin:0;border:2px solid #F6EFDC;border-radius:50%;background:transparent;display:grid;place-content:center;flex-shrink:0;cursor:pointer;}
 .rb-opt input::before{content:'';width:10px;height:10px;border-radius:50%;background:#F6EFDC;transform:scale(0);transition:transform .12s;}
 .rb-opt input:checked::before{transform:scale(1);}
@@ -940,13 +942,14 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
 </div>
 
 <div id="reciteModeBar" style="display:none;position:fixed;bottom:52px;left:0;right:0;z-index:49;background:#0E443300;pointer-events:none;">
-  <div id="reciteModeBarInner" style="position:relative;pointer-events:auto;touch-action:none;width:max-content;max-width:calc(100% - 12px);margin:0 auto;background:#7B2E2E;border-radius:22px;box-shadow:0 -2px 10px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;gap:10px;padding:4px 10px;box-sizing:border-box;--rbGap:22px;">
+  <div id="reciteModeBarInner" style="position:relative;pointer-events:auto;touch-action:none;width:max-content;max-width:calc(100% - 12px);margin:0 auto;background:#7B2E2E;border-radius:22px;box-shadow:0 -2px 10px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 8px;box-sizing:border-box;--rbGap:22px;">
     <button id="reciteModeBarPlayBtn" style="background:transparent;border:none;color:#F6EFDC;font-size:32px;cursor:pointer;line-height:1;padding:0 4px;min-width:36px;" aria-label="تشغيل/إيقاف التلاوة">▶</button>
-    <div class="rb-frame" style="display:flex;align-items:center;gap:var(--rbGap);border:1.5px solid #F6EFDC;border-radius:16px;padding:5px 12px;">
+    <div class="rb-frame" style="flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:space-around;gap:var(--rbGap);border:1.5px solid #F6EFDC;border-radius:16px;padding:5px 10px;">
       <label class="rb-opt"><input type="radio" name="reciteModeRadio" id="reciteModeRadioOnce" value="single">مرة</label>
       <label class="rb-opt" id="reciteModeRepeatLabel"><input type="radio" name="reciteModeRadio" id="reciteModeRadioRepeat" value="repeat"><span id="reciteRepeatWord">تكرار</span></label>
       <label class="rb-opt" id="reciteModeContLabel"><input type="radio" name="reciteModeRadio" id="reciteModeRadioContinue" value="continuous" checked>استمرار</label>
     </div>
+    <button id="reciteModeBarCloseBtn" class="rb-close" aria-label="إيقاف التلاوة وإغلاق الشريط">✕</button>
   </div>
 </div>
 
@@ -30628,6 +30631,7 @@ const reciteModeBarPlayBtn = document.getElementById('reciteModeBarPlayBtn');
 function positionReciteModeBar() {
   const bar = layoutMode === 'free' ? document.getElementById('freeAutoFab') : document.getElementById('autoFab');
   if (!bar) return;
+  sizeReciteBar();
   reciteModeBarEl.style.width = 'auto';
   reciteModeBarEl.style.left = '0';
   reciteModeBarEl.style.right = '0';
@@ -30653,11 +30657,34 @@ function reciteBarMetrics() {
   const inner = document.getElementById('reciteModeBarInner');
   const shown = reciteModeBarEl.style.display !== 'none';
   if (!shown) { reciteModeBarEl.style.visibility = 'hidden'; reciteModeBarEl.style.display = 'block'; }
+  sizeReciteBar();
   const m = { w: inner.offsetWidth, h: inner.offsetHeight };
   if (!shown) { reciteModeBarEl.style.display = 'none'; reciteModeBarEl.style.visibility = ''; }
   return m;
 }
 function reciteBarShowing() { return reciteModeBarEl.style.display !== 'none'; }
+// The red bar (and with it the ayah window) spans the text frame exactly,
+// right edge to left edge. Its options' spacing shrinks to fit when needed
+// (a narrow phone, «تكرار ٣»), then their text size as a last resort.
+function sizeReciteBar() {
+  const inner = document.getElementById('reciteModeBarInner');
+  const frame = [...document.querySelectorAll('.page-frame')].find((f) => f.offsetWidth > 0);
+  const w = frame ? frame.offsetWidth : 0;
+  if (!w) return;
+  inner.style.width = w + 'px';
+  inner.style.maxWidth = 'none';
+  inner.style.setProperty('--rbGap', '22px');
+  inner.querySelectorAll('.rb-opt').forEach((o) => { o.style.fontSize = ''; });
+  // too tight: any option closer than 8px to its frame's edge (layout
+  // offsets, so it holds in landscape's rotated frame too)
+  const fr = inner.querySelector('.rb-frame');
+  const over = () => [...fr.querySelectorAll('.rb-opt')].some((o) => {
+    const x = o.offsetLeft - fr.offsetLeft - fr.clientLeft; // offsets are from the bar (the positioned parent)
+    return x < 8 || x + o.offsetWidth > fr.clientWidth - 8;
+  });
+  for (let g = 20; g >= 4 && over(); g -= 2) inner.style.setProperty('--rbGap', g + 'px');
+  for (let fs = 17; fs >= 13 && over(); fs--) inner.querySelectorAll('.rb-opt').forEach((o) => { o.style.fontSize = fs + 'px'; });
+}
 
 function closeReciteModeBarLayer() {
   reciteModeBarEl.style.display = 'none';
@@ -30686,6 +30713,13 @@ function closeReciteModeBar() {
   closeSpecificLayer(closeReciteModeBarLayer);
 }
 
+// ✕: stops the recitation and closes the bar at once
+document.getElementById('reciteModeBarCloseBtn').addEventListener('click', (e) => {
+  if (reciteBarJustDragged) return;
+  e.stopPropagation();
+  if (reciting) stopRecitation();
+  closeReciteModeBar();
+});
 reciteModeBarPlayBtn.addEventListener('click', () => {
   if (reciting) stopRecitation();
   else startRecitationRespectingSelection();
@@ -30998,6 +31032,7 @@ function syncRepeatWord() {
   if (!el) return;
   const c = store.get('repeat-count') ? REPEAT_CHOICES.find(([n]) => n === repeatCount) : null;
   el.textContent = c ? c[1] : 'تكرار';
+  if (typeof reciteBarShowing === 'function' && reciteBarShowing()) sizeReciteBar();
 }
 syncRepeatWord();
 let repeatMenuEl = null;
@@ -31167,7 +31202,7 @@ function showAyahPopup(surah, ayah) {
   // button as tall as it.
   const m = reciteBarMetrics();
   const card = document.getElementById('ayahPopupCard');
-  if (m.w > 0) { card.style.width = m.w + 'px'; card.style.maxWidth = 'calc(100% - 12px)'; }
+  if (m.w > 0) { card.style.width = m.w + 'px'; card.style.maxWidth = 'none'; }
   if (m.h > 0) document.documentElement.style.setProperty('--ayahBtnH', m.h + 'px');
   positionAyahPopup();
   // opened over the red bar, the window closes first and the bar stays
@@ -33847,7 +33882,7 @@ function renderGuideTab() {
     { title: '٤. نافذة الآية (تظهر بالنقر على الآية)', items: [
       'تُفتح نافذة الآية بالنقر على <b>أي كلمة من الآية أو على رقمها</b> عدا الكلمات الخضراء (والتمرير التلقائي غير مفعّل)، وتُغلق مع تظليل الآية بالنقر على أي موضع من النص (حتى لو كان كلمة خضراء)، أو بالرجوع، أو بالانتقال إلى أي عمل آخر. وتبدأ التلاوة الصوتية من النافذة.',
       '<b>نسخ الآية</b> و<b>حفظ الآية</b>: تُنفَّذ وتُغلق النافذة مباشرة.',
-      '<b>تلاوة</b>: الاستماع لتلاوة الآية بصوت القارئ المختار. عند النقر عليها تُغلق النافذة ويظهر شريط التلاوة الأحمر فوق الشريط السفلي مباشرة، وتبقى الآية مظللة لتبدأ منها التلاوة، وفي الشريط زر التشغيل والإيقاف، واختيارات قراءة الآية <b>مرة</b> واحدة أو <b>تكرارها</b> أو <b>الاستمرار</b>. وفي كل مرة يُفتح فيها شريط التلاوة يكون الاختيار على <b>استمرار</b>، ولمن أراد غيره أن يختار «مرة» أو «تكرار».',
+      '<b>تلاوة</b>: الاستماع لتلاوة الآية بصوت القارئ المختار. عند النقر عليها تُغلق النافذة ويظهر شريط التلاوة الأحمر فوق الشريط السفلي مباشرة، وتبقى الآية مظللة لتبدأ منها التلاوة، وفي الشريط زر التشغيل والإيقاف، وزر الإغلاق (✕) الذي يوقف التلاوة ويُغلق الشريط مباشرة، واختيارات قراءة الآية <b>مرة</b> واحدة أو <b>تكرارها</b> أو <b>الاستمرار</b>. وفي كل مرة يُفتح فيها شريط التلاوة يكون الاختيار على <b>استمرار</b>، ولمن أراد غيره أن يختار «مرة» أو «تكرار».',
       'يمكن تحريك شريط التلاوة بالإصبع إلى أي موضع في الشاشة، ويعود إلى مكانه فوق الشريط السفلي عند فتحه من جديد. ويبقى الشريط ظاهراً فوق النوافذ والقوائم الأخرى، وتظهر نافذة الآية فوقه إذا فُتحت والشريط ظاهر. وعند الرجوع (بالإيماءة أو بسهم الرجوع) تُغلق أولاً النوافذ والوظائف التي فُتحت بعده، ثم يوقف الرجوع التلاوة إن كانت جارية، ثم يُخفي الشريط، ثم يعود إلى قائمة السور.',
       'أثناء التلاوة تبقى الآية المظللة في أعلى النص (وفي العرض بحجم الصفحة تبقى الصفحة كاملة ظاهرة)، وتُظلَّل البسملة أيضاً أثناء تلاوتها.',
       'إذا انتقلت أثناء التلاوة إلى سورة أخرى (بسهمي «ج» و«ح» في الإطار العائم أو من قائمة السور)، استمرت التلاوة في سورتها وبقي العرض على السورة الجديدة؛ فإذا أُوقفت التلاوة ثم شُغّلت، بدأت من بسملة السورة الجديدة الظاهرة ثم آياتها.',
