@@ -33380,8 +33380,9 @@ function openSidebar(tab, asHome) {
 let homeArmed = false;
 let homeSidebarShowing = false; // the index is open as the app's home (not opened from the text)
 function homeBackLayer() { openSidebar('surah', true); }
-// «العودة إلى آخر صفحة»: on the home index only (السور tab), a box that
-// goes straight back to the page that was open; gone once any page is entered.
+// «العودة إلى آخر صفحة»: a box that goes straight back to the page that was
+// open; shown the whole time the sidebar is open, whatever tab or guide is
+// showing in it, and gone only when the sidebar closes.
 function updateResumeBox() {
   const head = document.querySelector('.sidebar-colheader');
   if (!head) return;
@@ -33392,7 +33393,7 @@ function updateResumeBox() {
     box.addEventListener('click', (e) => { e.stopPropagation(); closeSidebar(); });
     head.appendChild(box);
   }
-  const show = homeSidebarShowing && sidebar.classList.contains('open') && currentTab === 'surah';
+  const show = sidebar.classList.contains('open');
   if (!show) { box.style.display = 'none'; return; }
   box.textContent = 'العودة إلى آخر صفحة: ' + toArabicDigits(pageNum);
   // only as wide as its words; its right edge in line with the floating bar's
