@@ -530,12 +530,12 @@ body.dark-mode .freePageTextBlock{color:#EFE8D6;}
    purpose - just a full text-line-height spacer, never a selectable/
    clickable line like a real reading line. */
 .qline.cover-blank-line{cursor:default;user-select:none;-webkit-user-select:none;}
-:root{--hlSky:rgba(59,164,232,.5);}
+:root{--hlSky:#A6DDF8;}
 body.dark-mode{--hlSky:rgba(79,179,240,.42);}
 /* recited ayah (مرة / تكرار / استمرار) and word reading share one light sky
    blue - clearly apart from every page background, the light sky one too */
 .ayah-seg.reciting-highlight,.qbsm.reciting-highlight,.cbsm.reciting-highlight{background:var(--hlSky);border-radius:3px;}
-.ayah-seg.tap-highlight{background:#4CAF5055;border-radius:3px;}
+.ayah-seg.tap-highlight{background:#A4ECB8;border-radius:3px;} /* light enough that the green words stay clear on it */
 ::highlight(wbw){background-color:var(--hlSky);}
 body.wbw-on #floatingFrameBar .fbNameGroup{background:#2F7FD066;border-radius:8px;box-shadow:0 0 0 2px #2F7FD066;}
 #floatingFrameBar .fbNameGroup{cursor:pointer;-webkit-tap-highlight-color:transparent;}
@@ -947,7 +947,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
 
 <div id="reciteModeBar" style="display:none;position:fixed;bottom:52px;left:0;right:0;z-index:49;background:#0E443300;pointer-events:none;">
   <div id="reciteModeBarInner" style="position:relative;pointer-events:auto;touch-action:none;width:max-content;max-width:calc(100% - 12px);margin:0 auto;background:#7B2E2E;border-radius:22px;box-shadow:0 -2px 10px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 8px;box-sizing:border-box;--rbGap:22px;">
-    <button id="reciteModeBarPlayBtn" style="background:transparent;border:none;color:#F6EFDC;font-size:32px;cursor:pointer;line-height:1;padding:0 4px;min-width:36px;" aria-label="تشغيل/إيقاف التلاوة">▶</button>
+    <button id="reciteModeBarPlayBtn" style="background:transparent;border:none;color:#F6EFDC;font-size:32px;cursor:pointer;line-height:1;padding:0 4px;min-width:36px;" aria-label="تشغيل/إيقاف التلاوة">&#x25B6;&#xFE0E;</button>
     <div class="rb-frame" style="flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:space-around;gap:var(--rbGap);border:1.5px solid #F6EFDC;border-radius:16px;padding:5px 10px;">
       <label class="rb-opt"><input type="radio" name="reciteModeRadio" id="reciteModeRadioOnce" value="single">مرة</label>
       <label class="rb-opt" id="reciteModeRepeatLabel"><input type="radio" name="reciteModeRadio" id="reciteModeRadioRepeat" value="repeat"><span id="reciteRepeatWord">تكرار</span></label>
@@ -28901,7 +28901,7 @@ function startFreeAutoScroll() {
   freeAutoScrolling = true;
   freeAutoLastTs = null;
   const btn = document.getElementById('freePlayPauseBtn');
-  if (btn) btn.textContent = '⏸';
+  if (btn) btn.textContent = '\u23F8\uFE0E';
   freeAutoRafId = requestAnimationFrame(freeAutoScrollStep);
 }
 
@@ -30558,7 +30558,7 @@ reciteAudio.addEventListener('timeupdate', () => {
 // the bottom bar once "تلاوة" is chosen from an ayah's popup) is the only
 // play/pause control left - it reflects and drives all playback state.
 function syncRecitePlayButtons() {
-  const label = reciting ? '⏸' : '▶';
+  const label = reciting ? '\u23F8\uFE0E' : '\u25B6\uFE0E'; // \uFE0E: plain symbol, not Android's blue emoji
   if (reciteModeBarPlayBtn) reciteModeBarPlayBtn.textContent = label;
 }
 
@@ -33461,7 +33461,7 @@ function startAutoScroll() {
   ensureScrollLayer();
   autoPlaying = true;
   lastFrameTime = 0;
-  playPauseBtn.textContent = '⏸';
+  playPauseBtn.textContent = '\u23F8\uFE0E';
   autoRafId = requestAnimationFrame(autoScrollStep);
 }
 function resumeAutoScroll() {
@@ -33920,7 +33920,7 @@ function renderGuideTab() {
     ]},
     { title: '٧. شريط الأدوات السفلي', items: [
       'زرا تكبير/تصغير حجم الخط (' + roundBadge('A', 12) + ' / ' + roundBadge('A', 19) + ').',
-      'زر تشغيل/إيقاف التمرير التلقائي (' + badge(PLAY_ARROW_SVG) + '/' + badge('⏸') + ')، ويُضغط عليه أو على الرقم الذي تحته أو بجانبيه، مع زري إبطاء (' + roundBadge('−', 18) + ') وتسريع (' + roundBadge('+', 18) + ') التمرير. ويبقى التمرير مفعّلاً حتى لو توقفت حركة النص مؤقتاً (بالنقر على النص، أو بالوصول إلى آخر سورة أو جزء، أو بالانتقال إلى عمل آخر)، ولا يُلغى تفعيله إلا بالضغط على زره.',
+      'زر تشغيل/إيقاف التمرير التلقائي (' + badge(PLAY_ARROW_SVG) + '/' + badge('\u23F8\uFE0E') + ')، ويُضغط عليه أو على الرقم الذي تحته أو بجانبيه، مع زري إبطاء (' + roundBadge('−', 18) + ') وتسريع (' + roundBadge('+', 18) + ') التمرير. ويبقى التمرير مفعّلاً حتى لو توقفت حركة النص مؤقتاً (بالنقر على النص، أو بالوصول إلى آخر سورة أو جزء، أو بالانتقال إلى عمل آخر)، ولا يُلغى تفعيله إلا بالضغط على زره.',
       'أثناء التمرير التلقائي: النقر في أي موضع من النص يوقفه، والنقر بعدها على أي موضع من الصفحة عدا الكلمات الخضراء يعيده (والسحب بالإصبع يحرّك الصفحة يدوياً والتمرير متوقف). وزر الرجوع أو إيماءته: الأولى توقف التمرير إن كان متحركاً، والثانية تلغي تفعيله.',
       'زر تبديل اتجاه العرض بين الوضعين الأفقي والعمودي (' + badge(document.getElementById('rotateBtn').innerHTML) + ')؛ بالنقرة الأولى يتحول المصحف إلى الاتجاه الأفقي، وبالنقرة الثانية يعود إلى الاتجاه العمودي مباشرة، أياً كانت الجهة الأفقية الحالية. أما التنقل بين الجهتين الأفقيتين فيكون بالتدوير التلقائي للجهاز فقط.',
       'زر رجوع (' + badge(document.getElementById('backBtn').innerHTML) + ') يقوم بعمل إيماءة الرجوع نفسها (العودة خطوة للخلف في البرنامج، كإغلاق نافذة أو نتائج بحث)، تسهيلاً على من لا تتوفر لديه إيماءة الرجوع في نظام جهازه. وفي الاتجاه الأفقي يعيد هو (وكذلك إيماءة الرجوع) إلى الاتجاه العمودي مباشرة، أياً كانت الجهة الأفقية الحالية. وفي قائمة السور التي يفتح عليها المصحف يُغلق التطبيق إن ضُغط مباشرة بعد فتحه؛ أما بعد استعمال أي نافذة أو وظيفة فالجهاز لا يسمح له بذلك، فتظهر عبارة تنبّه إلى استعمال إيماءة الرجوع للخروج.',
