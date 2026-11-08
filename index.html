@@ -30215,7 +30215,9 @@ function playAyah(surah, ayah) {
     playSegmentAyah(currentReciter, r, surah, ayah, myToken);
   } else if (surah === 1 && ayah === 1 && OWN_BASMALA[currentReciter]) {
     // al-Fatiha's basmala in the reciter's own voice
-    playOwnBasmala(myToken, () => { usedFallbackAudio = false; attemptPlayAyah(reciteAudioUrlPrimary(1, 1), 1, 1, myToken); });
+    // never the per-ayah file of al-Fatiha 1: it isn't in this reciter's voice -
+    // if his own basmala can't be had, al-Fatiha 1 is passed over
+    playOwnBasmala(myToken, () => { if (myToken === reciteRequestToken) handleAyahAudioEnded(); });
   } else {
     usedFallbackAudio = false;
     attemptPlayAyah(reciteAudioUrlPrimary(surah, ayah), surah, ayah, myToken);
