@@ -439,6 +439,21 @@ body.dark-mode .fbFromTo{color:#EFE8D6;}
    from round 3. */
 .fbJuz,.fbHizb,.fbRub{font-size:26px;font-family:sans-serif;flex-shrink:0;white-space:nowrap;}
 .fbJuz .frame-num,.fbHizb .frame-num,.fbRub .frame-num{font-size:1em;display:inline-block;text-align:center;}
+/* Small arrow riding just above ج (points right: start of the previous
+   surah) and above ح (points left: start of the next surah). Absolutely
+   positioned so it never changes the measured width/height that
+   fitFloatingFrameBar() sizes the bar from. The ::after is an invisible,
+   taller hit area so a tap anywhere on the arrow/letter/number counts. */
+#floatingFrameBar .fbJuz,#floatingFrameBar .fbHizb{position:relative;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+#floatingFrameBar .fbJuz::after,#floatingFrameBar .fbHizb::after{content:'';position:absolute;left:-2px;right:-2px;top:-0.55em;bottom:-0.35em;}
+#floatingFrameBar .fb-no-nav{cursor:default;}
+.fbNavArrow{display:none;}
+#floatingFrameBar .fbNavArrow{display:block;position:absolute;left:50%;top:-0.2em;width:0.78em;height:0.3em;transform:translateX(-50%);pointer-events:none;
+  background:currentColor;-webkit-mask:var(--fbArrowMask) center/contain no-repeat;mask:var(--fbArrowMask) center/contain no-repeat;}
+#floatingFrameBar .fbNavArrow-r{--fbArrowMask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 10'%3E%3Cpath d='M1 5H22M17 1L23 5L17 9' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");}
+#floatingFrameBar .fbNavArrow-l{--fbArrowMask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 10'%3E%3Cpath d='M25 5H4M9 1L3 5L9 9' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");}
+#floatingFrameBar .fb-no-nav .fbNavArrow{visibility:hidden;}
+#floatingFrameBar .fbJuz.fb-nav-press,#floatingFrameBar .fbHizb.fb-nav-press{opacity:.55;}
 .fbNameGroup{display:flex;align-items:center;font-family:'QuranHafs',serif;font-size:26px;color:#0E4433;font-weight:700;white-space:nowrap;flex-shrink:0;}
 body.dark-mode .fbNameGroup{color:#EFE8D6;}
 .fbNameGroup .surah-bracket{font-family:'Amiri',serif;font-size:1.25em;line-height:1;vertical-align:middle;flex-shrink:0;}
@@ -27572,7 +27587,7 @@ function buildFrameBarHTML(n, content, extraSurahClass) {
     '<div class="fbCircleSlot"><div class="side-slot">' + nAr + '</div></div>' +
     '<div class="fbMiddle">' +
       '<div class="fbFromTo">' + fromToHTML + '</div>' +
-      '<span class="fbJuz">' + juzLabel + '<span class="frame-num fbNum-juz">' + toArabicDigits(content.juz) + '</span></span>' +
+      '<span class="fbJuz' + (sid > 1 ? '' : ' fb-no-nav') + '" data-nav-surah="' + (sid > 1 ? sid - 1 : '') + '" aria-label="بداية السورة السابقة"><span class="fbNavArrow fbNavArrow-r" aria-hidden="true"></span>' + juzLabel + '<span class="frame-num fbNum-juz">' + toArabicDigits(content.juz) + '</span></span>' +
       '<span class="fbNameGroup ' + surahClass + '">' +
         '<span class="surah-bracket">[</span>' +
         '<span class="frame-num fbNum-order">' + (sid ? toArabicDigits(sid) : '') + '</span>' +
@@ -27581,7 +27596,7 @@ function buildFrameBarHTML(n, content, extraSurahClass) {
         '<span class="frame-num fbNum-count">' + (count ? toArabicDigits(count) : '') + '</span>' +
         '<span class="surah-bracket">]</span>' +
       '</span>' +
-      '<span class="fbHizb">' + hizbLabel + '<span class="frame-num fbNum-hizb">' + toArabicDigits(content.hizb) + '</span></span>' +
+      '<span class="fbHizb' + (sid && sid < 114 ? '' : ' fb-no-nav') + '" data-nav-surah="' + (sid && sid < 114 ? sid + 1 : '') + '" aria-label="بداية السورة التالية"><span class="fbNavArrow fbNavArrow-l" aria-hidden="true"></span>' + hizbLabel + '<span class="frame-num fbNum-hizb">' + toArabicDigits(content.hizb) + '</span></span>' +
       '<span class="fbRub">' + rubLabel + '<span class="frame-num fbNum-rub">' + toArabicDigits(content.rub) + '</span></span>' +
     '</div>' +
   '</div>';
@@ -32254,6 +32269,36 @@ function scrollToSurahHeader(sid) {
   if (el) el.scrollIntoView({ block: 'start', behavior: 'instant' });
 }
 
+// Shows the very start of surah sid (its name bar at the top of the screen).
+// Shared by the index's surah rows and the floating bar's ج/ح arrows.
+function goToSurahStart(sid) {
+  if (!sid || sid < 1 || sid > 114) return;
+  const needsPageChange = SURAH_PAGES[sid] !== pageNum;
+  segHint = { s: sid }; segStartId = null;
+  centerOn(SURAH_PAGES[sid]);
+  setTimeout(() => { segHint = { s: sid }; segStartId = null; segGuard(); }, needsPageChange ? 320 : 60);
+  // Landing on the destination page alone often leaves the surah's own
+  // name bar (.qheader/.qcombo) out of view - a surah can start mid-page
+  // or near its end - so this scrolls that bar itself into view right at
+  // the top. A cross-page jump needs a moment for the target page to
+  // actually mount before its header element exists to scroll to.
+  if (needsPageChange) setTimeout(() => scrollToSurahHeader(sid), 250);
+  else scrollToSurahHeader(sid);
+}
+
+// Floating bar: tap ج (with its arrow) -> start of the previous surah;
+// tap ح (with its arrow) -> start of the next surah.
+document.getElementById('floatingFrameBar').addEventListener('click', (e) => {
+  const el = e.target.closest ? e.target.closest('.fbJuz, .fbHizb') : null;
+  if (!el) return;
+  e.stopPropagation();
+  const sid = parseInt(el.dataset.navSurah, 10);
+  if (!sid) return;
+  el.classList.add('fb-nav-press');
+  setTimeout(() => el.classList.remove('fb-nav-press'), 160);
+  goToSurahStart(sid);
+});
+
 // ---------------- bound-mode horizontal swipe (page-turn) + long-press-to-
 // select, layered on top of native vertical scrolling (touch-action:pan-y
 // leaves vertical panning entirely to the browser; only the horizontal axis
@@ -33714,22 +33759,7 @@ function renderSurahTab() {
       '<span class="placeIcon"><img src="' + iconSrc + '" alt="' + iconAlt + '"></span>' +
       '<span class="pg">' + SURAH_PAGES[sid] + '</span>';
     row.addEventListener('click', () => {
-      const needsPageChange = SURAH_PAGES[sid] !== pageNum;
-      segHint = { s: sid }; segStartId = null;
-      centerOn(SURAH_PAGES[sid]);
-      setTimeout(() => { segHint = { s: sid }; segStartId = null; segGuard(); }, needsPageChange ? 320 : 60);
-      // Landing on the destination page alone often leaves the surah's own
-      // name bar (.qheader/.qcombo) out of view - a surah can start mid-page
-      // or near its end - so this scrolls that bar itself into view right
-      // at the top, exactly like a search result or bookmark scrolls its
-      // own ayah into view (see highlightSearchMatchInAyah's callers). A
-      // cross-page jump needs a moment for the target page to actually
-      // mount before its header element exists to scroll to.
-      if (needsPageChange) {
-        setTimeout(() => scrollToSurahHeader(sid), 250);
-      } else {
-        scrollToSurahHeader(sid);
-      }
+      goToSurahStart(sid);
       closeSidebar();
     });
     rowsWrap.appendChild(row);
