@@ -226,6 +226,14 @@ body.dark-mode .tabs{border-color:#E8B84B;}
 /* the surah / juz / page currently open in the text (top of the screen) */
 .surah-row.current-row,.surah-row.current-row:hover{background:rgba(185,138,42,.24);}
 body.dark-mode .surah-row.current-row,body.dark-mode .surah-row.current-row:hover{background:rgba(232,184,75,.2);}
+/* Every selection inside a tab's own content (layout/background options,
+   the active reciter, the open dua) uses the same clear gold as the current
+   surah/juz/page row; the sidebar's own main titles (.tab.active) use a
+   distinct, equally clear maroon tint so the two levels read apart. */
+.font-opt.active,.font-opt.active:hover,.sb-sub-current,.dua-title-btn.sb-sub-current:active{background:rgba(185,138,42,.24) !important;}
+body.dark-mode .font-opt.active,body.dark-mode .font-opt.active:hover,body.dark-mode .sb-sub-current,body.dark-mode .dua-title-btn.sb-sub-current:active{background:rgba(232,184,75,.2) !important;}
+.tab.active{background:rgba(123,46,46,.17) !important;color:#7B2E2E;}
+body.dark-mode .tab.active{background:rgba(143,217,176,.16) !important;color:#8FD9B0;}
 .surah-row .rowName{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;}
 .surah-row b{color:#B98A2A;margin-left:6px;font-weight:600;}
 .surah-row .nm{font-family:sans-serif;font-size:20px;font-weight:700;}
@@ -448,10 +456,15 @@ body.dark-mode .fbFromTo{color:#EFE8D6;}
 #floatingFrameBar .fbJuz::after,#floatingFrameBar .fbHizb::after{content:'';position:absolute;left:-2px;right:-2px;top:-0.55em;bottom:-0.35em;}
 #floatingFrameBar .fb-no-nav{cursor:default;}
 .fbNavArrow{display:none;}
-#floatingFrameBar .fbNavArrow{display:block;position:absolute;left:50%;top:-0.2em;width:0.78em;height:0.3em;transform:translateX(-50%);pointer-events:none;
-  background:currentColor;-webkit-mask:var(--fbArrowMask) center/contain no-repeat;mask:var(--fbArrowMask) center/contain no-repeat;}
-#floatingFrameBar .fbNavArrow-r{--fbArrowMask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 10'%3E%3Cpath d='M1 5H22M17 1L23 5L17 9' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");}
-#floatingFrameBar .fbNavArrow-l{--fbArrowMask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 10'%3E%3Cpath d='M25 5H4M9 1L3 5L9 9' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");}
+/* Spans the whole width of the letter + its number (ج٣ / جزء٣ ...): a shaft
+   (::before) plus a solid head (::after) at the pointing end. */
+#floatingFrameBar .fbNavArrow{display:block;position:absolute;left:0;right:0;top:-0.3em;height:0.44em;pointer-events:none;}
+#floatingFrameBar .fbNavArrow::before{content:'';position:absolute;top:50%;height:0.15em;margin-top:-0.075em;background:currentColor;border-radius:0.08em;}
+#floatingFrameBar .fbNavArrow::after{content:'';position:absolute;top:0;bottom:0;width:0.4em;background:currentColor;}
+#floatingFrameBar .fbNavArrow-r::before{left:0;right:0.25em;}
+#floatingFrameBar .fbNavArrow-r::after{right:0;clip-path:polygon(0 0,100% 50%,0 100%);}
+#floatingFrameBar .fbNavArrow-l::before{right:0;left:0.25em;}
+#floatingFrameBar .fbNavArrow-l::after{left:0;clip-path:polygon(100% 0,0 50%,100% 100%);}
 #floatingFrameBar .fb-no-nav .fbNavArrow{visibility:hidden;}
 #floatingFrameBar .fbJuz.fb-nav-press,#floatingFrameBar .fbHizb.fb-nav-press{opacity:.55;}
 .fbNameGroup{display:flex;align-items:center;font-family:'QuranHafs',serif;font-size:26px;color:#0E4433;font-weight:700;white-space:nowrap;flex-shrink:0;}
@@ -32273,17 +32286,31 @@ function scrollToSurahHeader(sid) {
 // Shared by the index's surah rows and the floating bar's ج/ح arrows.
 function goToSurahStart(sid) {
   if (!sid || sid < 1 || sid > 114) return;
-  const needsPageChange = SURAH_PAGES[sid] !== pageNum;
+  // Moving auto-scroll is stopped (but stays switched on); switched-off stays off.
+  segStopAuto();
+  hideSegPanel();
   segHint = { s: sid }; segStartId = null;
   centerOn(SURAH_PAGES[sid]);
-  setTimeout(() => { segHint = { s: sid }; segStartId = null; segGuard(); }, needsPageChange ? 320 : 60);
-  // Landing on the destination page alone often leaves the surah's own
-  // name bar (.qheader/.qcombo) out of view - a surah can start mid-page
-  // or near its end - so this scrolls that bar itself into view right at
-  // the top. A cross-page jump needs a moment for the target page to
-  // actually mount before its header element exists to scroll to.
-  if (needsPageChange) setTimeout(() => scrollToSurahHeader(sid), 250);
-  else scrollToSurahHeader(sid);
+  // Put the surah's name bar at the top in the same frame the new pages are
+  // rendered, so the first thing painted is already the final position (the
+  // old delayed second scroll was the visible jump). Later checks only
+  // correct the rare case where the pages were still settling.
+  const place = () => {
+    const wrap = segWrap();
+    const b = wrap ? segFind(collectSegBoundaries(), 's' + sid) : null;
+    if (b) {
+      const t = segLimMin(b);
+      if (layoutMode === 'free') { if (Math.abs(wrap.scrollTop - t) > 1) setFreeScrollTop(wrap, t); }
+      else if (!segPageFit()) { if (Math.abs(wrap.scrollTop - t) > 1) setBoundScrollTop(t); }
+    } else {
+      scrollToSurahHeader(sid);
+    }
+    segHint = { s: sid }; segStartId = null;
+    segGuard();
+  };
+  place();
+  requestAnimationFrame(place);
+  setTimeout(place, 260);
 }
 
 // Floating bar: tap ج (with its arrow) -> start of the previous surah;
@@ -34257,6 +34284,7 @@ function renderRecitationTab() {
     const dlState = reciterDownloadState(id);
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;flex-direction:column;gap:3px;padding:10px 4px;border-bottom:1px solid #EDE3C6;';
+    if (isActive) row.className = 'sb-sub-current';
     row.innerHTML =
       '<div style="display:flex;align-items:center;gap:5px;">' +
         '<span class="recite-name' + (isActive ? ' active' : '') + '" style="flex:1;min-width:0;font-family:sans-serif;font-weight:700;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (isActive ? '✓ ' : '') + r.name + '</span>' +
@@ -34472,7 +34500,7 @@ function renderDuasTab() {
     row.className = 'dua-row';
 
     const titleBtn = document.createElement('button');
-    titleBtn.className = 'dua-title-btn';
+    titleBtn.className = 'dua-title-btn' + (isOpen ? ' sb-sub-current' : '');
     titleBtn.textContent = dua.title;
     titleBtn.addEventListener('click', () => toggleDua(i));
     row.appendChild(titleBtn);
