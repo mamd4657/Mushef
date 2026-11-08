@@ -530,9 +530,13 @@ body.dark-mode .freePageTextBlock{color:#EFE8D6;}
    purpose - just a full text-line-height spacer, never a selectable/
    clickable line like a real reading line. */
 .qline.cover-blank-line{cursor:default;user-select:none;-webkit-user-select:none;}
-.ayah-seg.reciting-highlight,.qbsm.reciting-highlight,.cbsm.reciting-highlight{background:#B98A2A55;border-radius:3px;}
+:root{--hlSky:rgba(59,164,232,.5);}
+body.dark-mode{--hlSky:rgba(79,179,240,.42);}
+/* recited ayah (مرة / تكرار / استمرار) and word reading share one light sky
+   blue - clearly apart from every page background, the light sky one too */
+.ayah-seg.reciting-highlight,.qbsm.reciting-highlight,.cbsm.reciting-highlight{background:var(--hlSky);border-radius:3px;}
 .ayah-seg.tap-highlight{background:#4CAF5055;border-radius:3px;}
-::highlight(wbw){background-color:#2F7FD066;}
+::highlight(wbw){background-color:var(--hlSky);}
 body.wbw-on #floatingFrameBar .fbNameGroup{background:#2F7FD066;border-radius:8px;box-shadow:0 0 0 2px #2F7FD066;}
 #floatingFrameBar .fbNameGroup{cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .search-match-highlight{background:#FFD54F99;border-radius:2px;transition:background 1s ease-out;}
@@ -886,9 +890,9 @@ body.dark-mode input[type="search"],body.dark-mode input[type="text"],body.dark-
 body.dark-mode #headerSearch{border-color:#F6EFDC;}
 body.dark-mode .qline.centered-line,body.dark-mode .centered-page .qline{color:#EFE8D6;}
 body.dark-mode .qbsm,body.dark-mode .qcombo .cbsm{color:#EFE8D6;}
-body.dark-mode .ayah-seg.reciting-highlight,body.dark-mode .qbsm.reciting-highlight,body.dark-mode .cbsm.reciting-highlight{background:#C9A22755;}
+body.dark-mode .ayah-seg.reciting-highlight,body.dark-mode .qbsm.reciting-highlight,body.dark-mode .cbsm.reciting-highlight{background:var(--hlSky);}
 body.dark-mode .ayah-seg.tap-highlight{background:#66BB6A55;}
-body.dark-mode ::highlight(wbw){background-color:#5A9DF066;}
+body.dark-mode ::highlight(wbw){background-color:var(--hlSky);}
 body.dark-mode.wbw-on #floatingFrameBar .fbNameGroup{background:#5A9DF066;box-shadow:0 0 0 2px #5A9DF066;}
 body.dark-mode .search-match-highlight{background:#FFCA2899;}
 </style>
