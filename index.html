@@ -29707,7 +29707,10 @@ function wbwHandleTap(target) {
   wbwShowHighlight();
   const pref = wbwPreferred();
   wbwLoadSurah(pref, hit.surah);
-  if (navigator.onLine) wbwPrepare(pref, hit.surah, hit.ayah);
+  if (navigator.onLine) {
+    if (hit.surah === 1 && hit.ayah === 1 && OWN_BASMALA[pref]) wbwPrepare(pref, 27, 30);
+    else wbwPrepare(pref, hit.surah, hit.ayah);
+  }
   clearTimeout(wbwGatherTimer);
   const token = wbwToken;
   wbwGatherTimer = setTimeout(() => { wbwGatherTimer = 0; if (token === wbwToken) wbwPlayGroup(token); }, wbwWindowMs);
@@ -29818,12 +29821,20 @@ async function wbwPlayGroup(token) {
         rid = alt; data = d2; break;
       }
     }
+    // The basmala (every surah's opening one maps to al-Fatiha 1): for a
+    // reciter whose al-Fatiha 1 file isn't in his own voice, its words come
+    // from his an-Naml 30, whose words 5-8 are the basmala.
+    let sa = r.surah, ay = r.ayah, wi = r.i, wj = r.j;
+    if (sa === 1 && ay === 1 && OWN_BASMALA[rid]) {
+      const d27 = await wbwLoadSurah(rid, 27);
+      if (d27 && d27[29] && d27[29].length >= 16) { data = d27; sa = 27; ay = 30; wi += 4; wj += 4; }
+    }
     if (token !== wbwToken) return;
-    if (!(await wbwReady(rid, r.surah, r.ayah, token))) { if (token === wbwToken && !navigator.onLine) toast(wbwKeep ? 'هذه الآية غير محفوظة في الجهاز بعد، وتحتاج إلى الاتصال بالإنترنت أول مرة' : 'قراءة الكلمات تحتاج إلى الاتصال بالإنترنت، أو اختيار الحفظ في الجهاز من «التخطيط» للعمل بدونه'); break; }
-    const span = wbwSpanOf(data, r.surah, r.ayah, r.i, r.j);
+    if (!(await wbwReady(rid, sa, ay, token))) { if (token === wbwToken && !navigator.onLine) toast(wbwKeep ? 'هذه الآية غير محفوظة في الجهاز بعد، وتحتاج إلى الاتصال بالإنترنت أول مرة' : 'قراءة الكلمات تحتاج إلى الاتصال بالإنترنت، أو اختيار الحفظ في الجهاز من «التخطيط» للعمل بدونه'); break; }
+    const span = wbwSpanOf(data, sa, ay, wi, wj);
     if (!span) continue;
     if (!(await wbwPlaySpan(span[0], span[1], token))) break;
-    wbwKeepAyah(rid, r.surah, r.ayah);
+    wbwKeepAyah(rid, sa, ay);
     if (k < runs.length - 1) await new Promise((res) => setTimeout(res, 180));
   }
   if (token === wbwToken) { setTimeout(() => { if (token === wbwToken && !wbwGatherTimer) { wbwPending = []; wbwClearHighlight(); } }, 250); }
@@ -33739,7 +33750,7 @@ function renderGuideTab() {
     { title: '٣. القائمة الجانبية (تُفتح بزر القائمة أعلى يمين الشاشة)', items: [
       '<b>التخطيط</b>: الاختيار بين نص المصحف (عثماني برسم المصحف، أو إملائي بتشكيل كامل، أو مجرَّد بدون تشكيل)، والاختيار بين الوضع القياسي المطابق للمصحف الورقي (١٥ سطراً في الصفحة) والوضع الحر القابل للتكبير والتصغير بحرية، وإظهار تلوين معاني الكلمات أو إخفاؤه.',
       '<b>خلفية النص</b>: اختيار لون خلفية صفحات المصحف من عشرة ألوان فاتحة: الكريمي (الأصلي)، والكريمي الداكن، والرملي، والذهبي الفاتح، والليموني، والبصلي، والوردي، والنعناعي، والسماوي، والخزامي.',
-      '<b>التلاوة</b>: اختيار القارئ لتلاوة الآيات صوتياً (وفيها أربعة قرّاء، ويمكن إضافة قرّاء آخرين من حقل البحث، أو حذف أيٍّ منهم).',
+      '<b>التلاوة</b>: اختيار القارئ لتلاوة الآيات صوتياً، بالنقر على اسمه أو على زر «تفعيل» (وفيها أربعة قرّاء، ويمكن إضافة قرّاء آخرين من حقل البحث، أو حذف أيٍّ منهم).',
       '<b>الأدعية</b>: مجموعة أدعية مأثورة خاصة بالتلاوة.',
       '<b>السور</b>: فهرس كامل لسور القرآن، للانتقال المباشر لأي سورة. ويمكن البحث عن سورة ما في حقل البحث الموجود في أعلى قائمة السور بإسمها أو تسلسلها.',
       '<b>الأجزاء</b>: فهرس الأجزاء الثلاثين.',
@@ -34295,7 +34306,8 @@ function attachReciterLongPress(el, id) {
   el.addEventListener('pointerdown', (e) => {
     startX = e.clientX; startY = e.clientY;
     cancel();
-    timer = setTimeout(() => { timer = null; showReciterActionSheet(id, el); }, THRESHOLD_MS);
+    el._longPressFired = false;
+    timer = setTimeout(() => { timer = null; el._longPressFired = true; showReciterActionSheet(id, el); }, THRESHOLD_MS);
   });
   el.addEventListener('pointermove', (e) => {
     if (!timer) return;
@@ -34311,7 +34323,7 @@ function renderRecitationTab() {
   const intro = document.createElement('div');
   intro.className = 'strong-note';
   intro.style.cssText = 'font-family:sans-serif;font-size:17px;font-weight:700;padding:4px 4px 10px;line-height:1.7;';
-  intro.textContent = 'اختر قارئا لتفعيل تلاوته من (زر "تفعيل")، وحمّل تلاوته من (زر "تحميل") لتشغيلها بدون أنترنت، واحذف قارئا من القائمة بالضغط المطول على اسمه واختيار "حذف القارئ"، واحذف التلاوة المخزنة (التي تم تحميلها من البرنامج لقارئ ما) بالضغط المطول على اسمه واختيار "حذف التلاوة"، وأضف قارئا إلى القائمة من حقل البحث أدناه.';
+  intro.textContent = 'اختر قارئا لتفعيل تلاوته بالنقر على اسمه أو على زر "تفعيل"، وحمّل تلاوته من (زر "تحميل") لتشغيلها بدون أنترنت، واحذف قارئا من القائمة بالضغط المطول على اسمه واختيار "حذف القارئ"، واحذف التلاوة المخزنة (التي تم تحميلها من البرنامج لقارئ ما) بالضغط المطول على اسمه واختيار "حذف التلاوة"، وأضف قارئا إلى القائمة من حقل البحث أدناه.';
   sidebarBody.appendChild(intro);
 
   // ---- add a reciter by name (search everyayah.com + mp3quran.net) ----
@@ -34417,6 +34429,14 @@ function renderRecitationTab() {
       '</div>' +
       '<span style="font-family:sans-serif;font-size:14.5px;color:' + badge.color + ';padding-right:4px;">' + badge.text + '</span>';
     row.querySelector('.recite-select-btn').addEventListener('click', () => setCurrentReciter(id));
+    // a tap on the name activates the reciter too (a long press on it opens
+    // its delete options instead, and must not also activate it)
+    const nameEl = row.querySelector('.recite-name');
+    nameEl.style.cursor = 'pointer';
+    nameEl.addEventListener('click', () => {
+      if (nameEl._longPressFired) { nameEl._longPressFired = false; return; }
+      if (id !== currentReciter) setCurrentReciter(id);
+    });
     row.querySelector('.recite-download-btn').addEventListener('click', () => renderReciterDownloadView(id));
     // Deleting a reciter, or its downloaded audio, now lives behind a
     // long-press on its name (see showReciterActionSheet) rather than an
