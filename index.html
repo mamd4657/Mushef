@@ -28491,6 +28491,8 @@ function findCurrentRubIndex(container, barBottomY, curPage) {
 // (the vSlot's own margin) visible to the gap-trigger calculation below;
 // measuring the wrapper directly collapses that gap to zero in bound mode.
 function computeFloatingBarTargets(containerEl, floatBarBottomLocalY) {
+  const scrollWrapEl = containerEl.closest ? containerEl.closest('#freeScrollWrap, #vScrollWrap') : null;
+  const visibleTopLocalY = scrollWrapEl ? localRect(scrollWrapEl).top : null;
   let bestPage = null;
   let bestSurah = null;
   let prevPageBottomLocalY = null;
@@ -28540,7 +28542,12 @@ function computeFloatingBarTargets(containerEl, floatBarBottomLocalY) {
     for (const h of headers) {
       const isPageOpeningHeader = contentRoot && contentRoot.firstElementChild === h;
       const headerTopLocalY = localRect(h).top;
-      if (isPageOpeningHeader || floatBarBottomLocalY >= headerTopLocalY - SURAH_BAR_LEAD_PX) {
+      // A surah name bar already sitting at the very top of the visible
+      // text (right after a jump to that surah, say) is the surah being
+      // read, even though the few px between the floating bar and the
+      // text area keep it short of the floating bar's own edge.
+      if (isPageOpeningHeader || floatBarBottomLocalY >= headerTopLocalY - SURAH_BAR_LEAD_PX ||
+          (visibleTopLocalY !== null && headerTopLocalY <= visibleTopLocalY + SURAH_BAR_LEAD_PX)) {
         bestSurah = parseInt(h.dataset.surah, 10);
       } else {
         break;
@@ -31653,6 +31660,16 @@ function catchUpBoundWindow() {
   reconcileBoundWindow();
 }
 
+// Page-by-page layout shows a whole page at once, so after a jump to a
+// surah that starts mid-page the page's first (previous) surah would still
+// be named in the floating bar - and ح/ج would count from it. Until the
+// reader leaves that page, the bar names the surah that was jumped to.
+let navSurahPin = null;
+function applyNavSurahPin(surah) {
+  if (!navSurahPin) return surah;
+  if (layoutMode === 'free' || pageNum !== navSurahPin.page || !segPageFit()) { navSurahPin = null; return surah; }
+  return navSurahPin.sid;
+}
 function updateBoundCurrentPage() {
   const wrap = vScrollWrap;
   const container = boundPagesContainer;
@@ -31687,6 +31704,7 @@ function updateBoundCurrentPage() {
     const fallbackSurah = findCurrentSurahFromHeaders(wrapTopLocalY, 'boundPagesContainer', atMaxScrollBottomY);
     if (fallbackSurah !== null) surahOverride = fallbackSurah;
   }
+  surahOverride = applyNavSurahPin(surahOverride);
   updateFloatingFrameBar(pageNum, surahOverride, findCurrentRubIndex(container, floatBarBottomLocalY, pageNum));
   // See the matching comment in updateFreeCurrentPage - keeps a running
   // record of what's centered so a rotation's resize handler has something
@@ -32286,6 +32304,7 @@ function scrollToSurahHeader(sid) {
 // Shared by the index's surah rows and the floating bar's ج/ح arrows.
 function goToSurahStart(sid) {
   if (!sid || sid < 1 || sid > 114) return;
+  navSurahPin = { page: SURAH_PAGES[sid], sid: sid };
   // Moving auto-scroll is stopped (but stays switched on); switched-off stays off.
   segStopAuto();
   hideSegPanel();
@@ -32307,6 +32326,9 @@ function goToSurahStart(sid) {
     }
     segHint = { s: sid }; segStartId = null;
     segGuard();
+    // the jump's own scroll doesn't run the page/surah tracker, so the
+    // floating bar is refreshed here to name the surah now at the top
+    if (layoutMode === 'free') updateFreeCurrentPage(); else updateBoundCurrentPage();
   };
   place();
   requestAnimationFrame(place);
