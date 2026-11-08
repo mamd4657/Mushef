@@ -592,13 +592,13 @@ body.dark-mode .cd-chips .cd-chip,body.dark-mode #cdList .cd-item,body.dark-mode
 /* what belongs to a main choice starts under its first letter (radio 20px + gap 8px) */
 .cd-sec > .cd-chips,.cd-sec > #cdList{margin-right:28px;}
 .cd-chk.dis,.cd-in.dis{opacity:.4;}
-#reciteModeBarInner.rb-surah{background:#B5561B !important;}
-#rbPicker{display:none;position:absolute;bottom:calc(100% + 6px);left:0;right:0;background:#B5561B;border-radius:16px;padding:6px;box-shadow:0 -2px 10px rgba(0,0,0,.3);}
+#reciteModeBarInner.rb-surah{background:#D86A1F !important;}
+#rbPicker{display:none;position:absolute;bottom:calc(100% + 6px);left:0;right:0;background:#D86A1F;border-radius:16px;padding:6px;box-shadow:0 -2px 10px rgba(0,0,0,.3);}
 #rbPicker .rbp-row{display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 40%;direction:rtl;}
 #rbPicker .rbp-row::-webkit-scrollbar{display:none;}
 #rbPicker.rbp-wrap .rbp-row{flex-wrap:wrap;justify-content:center;padding:2px;overflow:visible;}
 #rbPicker button{flex-shrink:0;scroll-snap-align:center;background:transparent;border:1.5px solid #F6EFDC;color:#F6EFDC;border-radius:12px;padding:6px 10px;font-size:17px;font-weight:700;font-family:sans-serif;cursor:pointer;white-space:nowrap;}
-#rbPicker button.on{background:#F6EFDC;color:#B5561B;}
+#rbPicker button.on{background:#F6EFDC;color:#D86A1F;}
 #repeatMenu{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#7B2E2E;border-radius:16px;padding:6px;gap:6px;box-shadow:0 -2px 10px rgba(0,0,0,.3);}
 #repeatMenu button{background:transparent;border:1.5px solid #F6EFDC;color:#F6EFDC;border-radius:12px;padding:6px 9px;font-size:17px;font-weight:700;font-family:sans-serif;cursor:pointer;white-space:nowrap;}
 #repeatMenu button.on{background:#F6EFDC;color:#7B2E2E;}
@@ -754,19 +754,23 @@ body.dark-mode .sajdah-side-bar{fill:#EFE8D6;}
    screen): an auto row started at the top and spilled out the bottom, so
    the words sat down near the lower edge */
 .qheader,.qcombo .cname{display:grid !important;grid-template-columns:minmax(max-content,1fr) auto minmax(max-content,1fr);grid-template-rows:minmax(0,1fr);align-content:center;align-items:center;column-gap:.32em;padding-left:calc(2.5mm - 1px) !important;padding-right:calc(2.5mm - 1px) !important;}
-.qheader .qh-side,.qcombo .cname .qh-side{display:flex;align-items:center;gap:.32em;min-width:0;}
-.qheader .qh-r,.qcombo .cname .qh-r{justify-self:start;}
-.qheader .qh-l,.qcombo .cname .qh-l{justify-self:end;}
-.qh-sep{display:block;flex-shrink:0;width:1.5px;height:1.15em;background:#3E7A5F;border-radius:1px;font-style:normal;}
-.qh-name .qh-word{margin-left:.28em;}
-/* free layout: the text size follows the reader's setting, so on a narrow
-   phone a long name (آل عمران, الكهف...) is capped against the frame's own
-   width - fixed in CSS, so nothing is resized (and nothing jumps) later */
-.freePageTextBlock{container-type:inline-size;}
-.freePageTextBlock .qheader .qh-name,.freePageTextBlock .qcombo .cname .qh-name{font-size:min(1.15em,var(--qhNameCap,6.6cqi));}
-.freePageTextBlock .qheader .qh-side,.freePageTextBlock .qcombo .cname .qh-side{font-size:min(1em,var(--qhSideCap,5.4cqi));}
-.qh-recite{font-family:sans-serif;font-weight:700;font-size:.62em;color:#F6EFDC;white-space:nowrap;cursor:pointer;padding:.35em .1em;position:relative;top:-.08em;-webkit-text-stroke:0;-webkit-tap-highlight-color:transparent;}
+/* ---- a surah's name bar: thin gold inner frame; three gold dividers that
+   meet it top and bottom; fixed columns (see surahHeaderInnerHTML). The
+   whole content scales with the frame's width (the same factor on every
+   bar), so the longest name (العنكبوت) and the largest numbers always fit. ---- */
+.freePageTextBlock,.pageLinesX{container-type:inline-size;}
+.qheader,.qcombo .cname{position:relative;grid-template-columns:1fr !important;padding:3px !important;column-gap:0 !important;}
+.qheader::before,.qcombo .cname::before{content:'';position:absolute;inset:3px;border:1px solid #D1A740;border-radius:4px;pointer-events:none;}
+.qh-grid{display:grid;direction:rtl;align-self:stretch;align-items:center;min-height:0;height:100%;grid-template-rows:minmax(0,1fr);
+  font-size:min(1em, calc((100cqi - 14px) / 19.3));
+  grid-template-columns:5.15em 1.5px 2.2em minmax(0,1fr) 1.5px 2.2em 1.5px 5.15em;}
+.qh-sep{display:block;align-self:stretch;width:1.5px;background:#D1A740;font-style:normal;}
+.qh-grid .qh-meta{min-width:0 !important;justify-self:stretch;justify-content:flex-start;padding:0 .3em;box-sizing:border-box;gap:.22em !important;}
+.qh-word,.qh-recite{justify-self:center;font-family:sans-serif;font-weight:700;font-size:.8em;white-space:nowrap;line-height:1;position:relative;top:-.06em;-webkit-text-stroke:0;}
+.qh-word{color:#F6EFDC;}
+.qh-recite{color:#D86A1F;cursor:pointer;padding:.5em .2em;-webkit-tap-highlight-color:transparent;}
 .qh-recite:active{opacity:.6;}
+.qh-grid .qh-name{justify-self:center;text-align:center;white-space:nowrap;overflow:visible;min-width:0;top:-.05em !important;-webkit-text-stroke:max(0.028em, 0.47px) currentColor;}
 .qheader .qh-name,.qcombo .cname .qh-name{min-width:0;}
 .qheader .qh-meta,.qcombo .cname .qh-meta{min-width:0 !important;align-items:center !important;gap:4px !important;}
 .qheader .qh-meta .qh-label,.qcombo .cname .qh-meta .qh-label{font-family:sans-serif !important;font-weight:500;font-size:.72em !important;letter-spacing:.02em;line-height:1;}
@@ -954,7 +958,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
 <div id="ayahPopup" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:55;">
   <div id="ayahPopupCard" class="ayah-popup-card" style="max-width:420px;margin:0 auto 4px;border-radius:16px;box-sizing:border-box;box-shadow:0 -4px 20px rgba(0,0,0,.3);max-height:65vh;display:flex;flex-direction:column;overflow:hidden;">
     <div style="display:flex;">
-      <button class="ayah-popup-title" data-action="recite">تلاوة</button>
+      <button class="ayah-popup-title" data-action="recite" style="color:#7B2E2E">تلاوة</button>
       <button class="ayah-popup-title" data-action="copy">نسخ الآية</button>
       <button class="ayah-popup-title" data-action="save">حفظ الآية</button>
     </div>
@@ -32652,10 +32656,19 @@ setInterval(() => { if (segEngaged) positionSegPanel(); }, 250);
 // the middle of the bar (as far as the two sides allow), thin dividers in a
 // shade close to the bar's own green. «تلاوة» opens the surah recitation bar.
 function surahHeaderInnerHTML(sid) {
-  return '<span class="qh-side qh-r"><span class="qh-meta"><span class="qh-label">ترتيبها</span><span class="qh-num">' + toArabicDigits(sid) + '</span></span><i class="qh-sep"></i></span>' +
-    '<span class="qh-name"><span class="qh-word">سورة</span>' + (SURAH_NAMES[sid] || '') + '</span>' +
-    '<span class="qh-side qh-l"><i class="qh-sep"></i><span class="qh-recite" role="button" data-surah="' + sid + '">تلاوة</span><i class="qh-sep"></i>' +
-    '<span class="qh-meta"><span class="qh-label">آياتها</span><span class="qh-num">' + toArabicDigits(SURAH_AYAH_COUNT[sid] || '') + '</span></span></span>';
+  // fixed columns, right to left: ترتيبها N | سورة · NAME | تلاوة | آياتها N
+  // (the two sides are equally wide, so the name sits mid-bar; every word
+  // and divider is in the same place on every surah's bar)
+  return '<span class="qh-grid">' +
+    '<span class="qh-meta qh-c1"><span class="qh-label">ترتيبها</span><span class="qh-num">' + toArabicDigits(sid) + '</span></span>' +
+    '<i class="qh-sep"></i>' +
+    '<span class="qh-word">سورة</span>' +
+    '<span class="qh-name">' + (SURAH_NAMES[sid] || '') + '</span>' +
+    '<i class="qh-sep"></i>' +
+    '<span class="qh-recite" role="button" data-surah="' + sid + '">تلاوة</span>' +
+    '<i class="qh-sep"></i>' +
+    '<span class="qh-meta qh-c5"><span class="qh-label">آياتها</span><span class="qh-num">' + toArabicDigits(SURAH_AYAH_COUNT[sid] || '') + '</span></span>' +
+  '</span>';
 }
 function scrollToSurahHeader(sid) {
   const el = document.querySelector('.qheader[data-surah="' + sid + '"], .qcombo[data-surah="' + sid + '"]');
