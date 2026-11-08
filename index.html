@@ -156,9 +156,9 @@ body.landscape-lock .rotateFabBtn{right:auto;left:8px;}
 .fab-btn-round{border:1.5px solid #F6EFDC;border-radius:50%;width:36px;height:36px;font-size:20px;padding:0;overflow:hidden;}
 .fab-btn-arrow svg{width:21px;height:21px;}
 .fab-btn:active{background:#ffffff20;}
-.ayah-popup-title{flex:1;padding:12px 4px;background:transparent;border:2px solid #0E4433;border-radius:9px;margin:4px 3px;font-family:sans-serif;font-weight:700;font-size:18px;color:#0E4433;cursor:pointer;}
+.ayah-popup-title{flex:1;height:var(--ayahBtnH,42px);box-sizing:border-box;padding:0 4px;background:transparent;border:2px solid #0E4433;border-radius:9px;margin:4px 3px;font-family:sans-serif;font-weight:700;font-size:18px;color:#0E4433;cursor:pointer;}
 .ayah-popup-title:active{background:#F3E9D1;}
-.ayah-content-tab{flex:1;padding:10px 2px;background:transparent;border:2px solid #0E4433;border-radius:9px;margin:4px 3px;font-family:sans-serif;font-weight:700;font-size:18px;color:#211C14;cursor:pointer;}
+.ayah-content-tab{flex:1;height:var(--ayahBtnH,42px);box-sizing:border-box;padding:0 2px;background:transparent;border:2px solid #0E4433;border-radius:9px;margin:4px 3px;font-family:sans-serif;font-weight:700;font-size:18px;color:#211C14;cursor:pointer;}
 .ayah-content-tab.active{background:#F3E9D1;color:#7B2E2E;border-color:#7B2E2E;}
 #ayahPopupContent{flex:1;overflow-y:auto;padding:14px;font-family:sans-serif;font-weight:700;font-size:19px;color:#211C14;min-height:90px;line-height:1.85;}
 #bookReader{position:fixed;top:0;left:0;right:0;bottom:calc(var(--floatBarH) + var(--navInset));z-index:56;background:#FBF5E4;flex-direction:column;color:#211C14;overflow:hidden;}
@@ -530,7 +530,7 @@ body.dark-mode .freePageTextBlock{color:#EFE8D6;}
    purpose - just a full text-line-height spacer, never a selectable/
    clickable line like a real reading line. */
 .qline.cover-blank-line{cursor:default;user-select:none;-webkit-user-select:none;}
-.ayah-seg.reciting-highlight{background:#B98A2A55;border-radius:3px;}
+.ayah-seg.reciting-highlight,.qbsm.reciting-highlight,.cbsm.reciting-highlight{background:#B98A2A55;border-radius:3px;}
 .ayah-seg.tap-highlight{background:#4CAF5055;border-radius:3px;}
 ::highlight(wbw){background-color:#2F7FD066;}
 body.wbw-on #floatingFrameBar .fbNameGroup{background:#2F7FD066;border-radius:8px;box-shadow:0 0 0 2px #2F7FD066;}
@@ -884,7 +884,7 @@ body.dark-mode input[type="search"],body.dark-mode input[type="text"],body.dark-
 body.dark-mode #headerSearch{border-color:#F6EFDC;}
 body.dark-mode .qline.centered-line,body.dark-mode .centered-page .qline{color:#EFE8D6;}
 body.dark-mode .qbsm,body.dark-mode .qcombo .cbsm{color:#EFE8D6;}
-body.dark-mode .ayah-seg.reciting-highlight{background:#C9A22755;}
+body.dark-mode .ayah-seg.reciting-highlight,body.dark-mode .qbsm.reciting-highlight,body.dark-mode .cbsm.reciting-highlight{background:#C9A22755;}
 body.dark-mode .ayah-seg.tap-highlight{background:#66BB6A55;}
 body.dark-mode ::highlight(wbw){background-color:#5A9DF066;}
 body.dark-mode.wbw-on #floatingFrameBar .fbNameGroup{background:#5A9DF066;box-shadow:0 0 0 2px #5A9DF066;}
@@ -924,7 +924,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
 <div id="floatingFrameBar" class="floating-frame-bar" style="display:none;position:fixed;left:0;right:0;z-index:29;padding:1px 8px 0;"></div>
 
 <div id="ayahPopup" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:55;">
-  <div id="ayahPopupCard" class="ayah-popup-card" style="max-width:420px;margin:0 auto;border-bottom:none;border-radius:16px 16px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,.3);max-height:65vh;display:flex;flex-direction:column;overflow:hidden;">
+  <div id="ayahPopupCard" class="ayah-popup-card" style="max-width:420px;margin:0 auto 4px;border-radius:16px;box-sizing:border-box;box-shadow:0 -4px 20px rgba(0,0,0,.3);max-height:65vh;display:flex;flex-direction:column;overflow:hidden;">
     <div style="display:flex;">
       <button class="ayah-popup-title" data-action="recite">تلاوة</button>
       <button class="ayah-popup-title" data-action="copy">نسخ الآية</button>
@@ -27337,6 +27337,7 @@ function buildPageContent(n) {
     } else if (typeof c === 'number') {
       if (c === 0) {
         div.className = 'qbsm';
+        div.dataset.surah = String(runningSurah); // its surah's header always comes before it
         div.style.fontSize = BASE_BSM_PX + 'px';
         div.textContent = BSM_TEXT;
       } else if (c <= -1000) {
@@ -27482,6 +27483,7 @@ function buildFreePageContent(n) {
       if (c === 0) {
         const div = document.createElement('div');
         div.className = 'qbsm';
+        div.dataset.surah = String(runningSurah);
         div.style.fontSize = BASE_BSM_PX + 'px';
         div.textContent = BSM_TEXT;
         frag.appendChild(div);
@@ -29197,8 +29199,32 @@ function highlightAyahSegments(surah, ayah) {
   if (segs.length === 0) return false;
   segs.forEach((el) => el.classList.add('reciting-highlight'));
   recitingKey = surah + ':' + ayah;
-  segs[0].scrollIntoView({ block: 'center', behavior: 'instant' });
+  reciteScrollToTop(segs[0]);
   return true;
+}
+// The ayah being recited is kept at the top of the text, right under the
+// floating bar. (In the page-by-page layout, where each page is exactly one
+// screen, the whole page is shown instead - an ayah can't move to the top
+// there without breaking the page apart.) Not while the reader has moved on
+// to another surah during the recitation (reciteViewDetached).
+function reciteScrollToTop(el) {
+  if (!el || reciteViewDetached) return;
+  const wrap = segWrap();
+  if (!wrap) return;
+  if (segPageFit()) { el.scrollIntoView({ block: 'nearest', behavior: 'instant' }); return; }
+  const t = Math.max(0, wrap.scrollTop + (localRect(el).top - localRect(wrap).top) - 4);
+  if (layoutMode === 'free') setFreeScrollTop(wrap, t); else setBoundScrollTop(t);
+}
+// A surah's opening basmala line (not al-Fatiha's, which is its ayah 1).
+function basmalaElOf(surah) {
+  return document.querySelector('.qbsm[data-surah="' + surah + '"], .qcombo[data-surah="' + surah + '"] .cbsm');
+}
+function highlightBasmala(surah) {
+  clearReciteHighlight();
+  const el = basmalaElOf(surah);
+  if (!el) return;
+  el.classList.add('reciting-highlight');
+  reciteScrollToTop(el);
 }
 
 let searchMatchHighlightPages = null; // {min, max} page range the current highlight spans, or null if none active
@@ -30036,6 +30062,11 @@ let reciteMode = 'continuous'; // 'single' (مرة) | 'repeat' (تكرار) | 'c
 let reciting = false;
 let reciteAudio = new Audio();
 let recitingKey = null; // "surah:ayah" currently highlighted
+// Moving to another surah (ج/ح arrows, the index) while a recitation plays:
+// the recitation carries on where it is but the view stays on the new
+// surah (reciteViewDetached), and the next ▶ starts from that surah's
+// basmala (reciteNavSurah).
+let reciteNavSurah = null, reciteViewDetached = false;
 let reciteGlobalIndex = null; // index into the full ayah search index
 let reciteSpeed = 1;
 const RECITE_SPEED_MIN = 0.5;
@@ -30211,7 +30242,7 @@ function playAyah(surah, ayah) {
   // simultaneously visible before the older one's turn came up.
   const myToken = ++reciteRequestToken;
   segmentBoundaryEndTime = null;
-  if (item.page !== pageNum) {
+  if (item.page !== pageNum && !reciteViewDetached) {
     centerOn(item.page);
     setTimeout(() => {
       if (myToken !== reciteRequestToken) return;
@@ -30439,7 +30470,10 @@ function playWithBasmala(surah, ayah) {
   reciteBasmalaThen = { surah, ayah };
   const token = ++reciteRequestToken;
   segmentBoundaryEndTime = null;
-  if (item.page !== pageNum) centerOn(item.page);
+  if (item.page !== pageNum && !reciteViewDetached) {
+    centerOn(item.page);
+    setTimeout(() => { if (token === reciteRequestToken && reciteBasmalaThen) highlightBasmala(surah); }, 250);
+  } else highlightBasmala(surah);
   const r = RECITERS[currentReciter];
   if (r && reciterKind(r) === 'segment') {
     const from = segmentSurahAvailable(r, 1) ? [1, 1] : (segmentSurahAvailable(r, 27) ? [27, 30] : null);
@@ -30527,6 +30561,20 @@ function startRecitation() {
   const tapSelected = getTapSelectedAyah();
   const resumeItem = (reciteGlobalIndex !== null && searchIndex) ? searchIndex[reciteGlobalIndex] : null;
   const selKey = tapSelected ? tapSelected.surah + ':' + tapSelected.ayah : null;
+  const navSurah = reciteNavSurah;
+  reciteNavSurah = null; reciteViewDetached = false;
+  if (navSurah && !(tapSelected && selKey !== reciteStartKey)) {
+    // moved to another surah since: start at its beginning, basmala first
+    start = { surah: navSurah, ayah: 1 };
+    reciteStartKey = null;
+    contForceFresh = false;
+    if (reciteMode === 'continuous') { start = beginContPlan(start); if (!start) return; contStopAt = currentContKind() === 'time' ? Date.now() + contTimeMin * 60000 : null; }
+    else { contQueue = null; contPlanBuiltFor = null; contStopAt = null; reciteRepeatLeft = repeatCount - 1; }
+    reciting = true;
+    syncRecitePlayButtons();
+    playWithBasmala(start.surah, start.ayah);
+    return;
+  }
   if (tapSelected && !(selKey === reciteStartKey && resumeItem && !contForceFresh)) {
     // A newly tap-selected ayah always takes priority as the starting point.
     start = tapSelected;
@@ -30584,29 +30632,36 @@ function positionReciteModeBar() {
   reciteModeBarEl.style.left = '0';
   reciteModeBarEl.style.right = '0';
   const rect = bar.getBoundingClientRect();
-  // While the ayah window is open the bar sits directly above it instead.
-  const popupOpen = ayahPopupEl && ayahPopupEl.style.display !== 'none';
+  // Always directly above the bottom bar; the ayah window, when open, is
+  // stacked above the red bar instead (see positionAyahPopup).
   if (!landscapeMode) {
     reciteModeBarEl.style.top = '';
-    const anchorTop = popupOpen ? document.getElementById('ayahPopupCard').getBoundingClientRect().top : rect.top;
-    reciteModeBarEl.style.bottom = (window.innerHeight - anchorTop) + 'px';
-  } else if (popupOpen) {
-    reciteModeBarEl.style.bottom = 'auto';
-    const barH = reciteModeBarEl.offsetHeight || 50;
-    reciteModeBarEl.style.top = Math.max(0, (parseFloat(ayahPopupEl.style.top) || 0) - barH) + 'px';
+    reciteModeBarEl.style.bottom = (window.innerHeight - rect.top) + 'px';
   } else {
-    // position:fixed + bottom under a CSS-transformed ancestor is
-    // unreliable (see positionChromeForRotation) - use an explicit top in
-    // pixels instead, derived from the target bar's already-correct
-    // (transform-aware) getBoundingClientRect.
+    // Landscape: the whole body is rotated, so both bars live in the same
+    // pre-rotation, body-local frame - stack it on the bottom bar there,
+    // with the same formula positionAyahPopup uses (the bar's on-screen
+    // getBoundingClientRect is in the rotated frame and can't be mixed in).
     reciteModeBarEl.style.bottom = 'auto';
     const barH = reciteModeBarEl.offsetHeight || 50;
-    reciteModeBarEl.style.top = Math.max(0, rect.top - barH) + 'px';
+    reciteModeBarEl.style.top = Math.max(0, trueViewportSize().w - bar.offsetHeight - barH) + 'px';
   }
 }
+// The red bar's own size (measured even while it's hidden): the ayah
+// window takes its width, and each of the window's buttons its height.
+function reciteBarMetrics() {
+  const inner = document.getElementById('reciteModeBarInner');
+  const shown = reciteModeBarEl.style.display !== 'none';
+  if (!shown) { reciteModeBarEl.style.visibility = 'hidden'; reciteModeBarEl.style.display = 'block'; }
+  const m = { w: inner.offsetWidth, h: inner.offsetHeight };
+  if (!shown) { reciteModeBarEl.style.display = 'none'; reciteModeBarEl.style.visibility = ''; }
+  return m;
+}
+function reciteBarShowing() { return reciteModeBarEl.style.display !== 'none'; }
 
 function closeReciteModeBarLayer() {
   reciteModeBarEl.style.display = 'none';
+  reciteNavSurah = null; reciteViewDetached = false;
   if (typeof hideRepeatMenu === 'function') hideRepeatMenu();
 }
 function openReciteModeBar() {
@@ -30619,11 +30674,12 @@ function openReciteModeBar() {
   }
   document.getElementById('reciteModeBarInner').style.transform = '';
   reciteModeBarEl.style.display = 'block';
-  reciteModeBarEl.style.zIndex = '56';
+  reciteModeBarEl.style.zIndex = '57'; // over the index, the tafsir reader, ... - it stays until Back closes it
   positionReciteModeBar();
   syncRecitePlayButtons();
-  // The ayah window stays open under the bar: Back first closes the bar,
-  // then a second Back closes the window together with its highlight.
+  // Its Back step sits where it was opened: windows opened later close
+  // first; reaching it, Back stops a playing recitation, and the next Back
+  // hides the bar (see the popstate handler).
   if (backLayerStack.lastIndexOf(closeReciteModeBarLayer) === -1) pushBackLayer(closeReciteModeBarLayer);
 }
 function closeReciteModeBar() {
@@ -31040,13 +31096,15 @@ function positionAyahPopup() {
   ayahPopupEl.style.width = 'auto';
   ayahPopupEl.style.left = '0';
   ayahPopupEl.style.right = '0';
+  // While the red recitation bar is showing, the window sits above it.
+  const redH = reciteBarShowing() ? (reciteModeBarEl.offsetHeight || 0) : 0;
   if (!landscapeMode) {
     // Portrait: fixed elements sit directly against the real viewport (no
     // rotation transform is in play), so the bar's own getBoundingClientRect()
     // is already in the same coordinate space the popup is positioned in.
     ayahPopupEl.style.top = '';
     const rect = bar.getBoundingClientRect();
-    ayahPopupEl.style.bottom = (window.innerHeight - rect.top) + 'px';
+    ayahPopupEl.style.bottom = (window.innerHeight - rect.top + redH) + 'px';
     return;
   }
   // Landscape: body.landscape-lock rotates the WHOLE body -90deg/90deg, and
@@ -31067,7 +31125,7 @@ function positionAyahPopup() {
   const bodyHeight = vp.w; // see positionChromeForRotation: landscape's body-local height is always the (pre-rotation) viewport width
   const fabH = bar.offsetHeight;
   const popupH = ayahPopupEl.offsetHeight;
-  ayahPopupEl.style.top = Math.max(0, bodyHeight - fabH - popupH) + 'px';
+  ayahPopupEl.style.top = Math.max(0, bodyHeight - fabH - redH - popupH) + 'px';
 }
 
 // Closing the ayah window (Back gesture, the ← button, ...) clears the ayah's
@@ -31076,7 +31134,9 @@ function positionAyahPopup() {
 let ayahPopupSwappingToRecite = false;
 function closeAyahPopupLayer() {
   ayahPopupEl.style.display = 'none';
-  if (!ayahPopupSwappingToRecite) {
+  const keep = ayahPopupSwappingToRecite;
+  ayahPopupSwappingToRecite = false;
+  if (!keep) {
     clearAyahTapSelection();
     if (!reciting) clearReciteHighlight();
   }
@@ -31103,17 +31163,26 @@ function showAyahPopup(surah, ayah) {
   ayahPopupEl.style.display = 'block';
   ayahPopupOpenedAt = Date.now();
   document.querySelectorAll('.ayah-content-tab').forEach((t) => t.classList.remove('active'));
+  // As wide as the red bar (so it stays inside the text frame) and each
+  // button as tall as it.
+  const m = reciteBarMetrics();
+  const card = document.getElementById('ayahPopupCard');
+  if (m.w > 0) { card.style.width = m.w + 'px'; card.style.maxWidth = 'calc(100% - 12px)'; }
+  if (m.h > 0) document.documentElement.style.setProperty('--ayahBtnH', m.h + 'px');
   positionAyahPopup();
-  if (reciteModeBarEl.style.display !== 'none') {
-    swapTopBackLayer(closeReciteModeBarLayer, closeAyahPopupLayer);
-  } else {
-    pushBackLayer(closeAyahPopupLayer);
-  }
+  // opened over the red bar, the window closes first and the bar stays
+  pushBackLayer(closeAyahPopupLayer);
 }
 function hideAyahPopup() {
-  const barAbove = backLayerStack.lastIndexOf(closeReciteModeBarLayer) > backLayerStack.lastIndexOf(closeAyahPopupLayer) && backLayerStack.lastIndexOf(closeAyahPopupLayer) !== -1;
   closeSpecificLayer(closeAyahPopupLayer);
-  if (barAbove && !reciting) closeReciteModeBar();
+}
+// Closes the window in place of the next screen (the tafsir reader, the
+// red bar): that screen takes over the window's own Back step, so there's
+// no stray step left behind and Back from it doesn't bring the window back.
+function replaceAyahPopupWith(closeFn, keepSelection) {
+  ayahPopupSwappingToRecite = !!keepSelection;
+  if (backLayerStack[backLayerStack.length - 1] === closeAyahPopupLayer) swapTopBackLayer(closeAyahPopupLayer, closeFn);
+  else { closeSpecificLayer(closeAyahPopupLayer); ayahPopupEl.style.display = 'none'; if (closeFn) pushBackLayer(closeFn); }
 }
 
 // In landscape, the popup's own footprint (its width pre-rotation becomes
@@ -31152,11 +31221,26 @@ document.querySelectorAll('.ayah-popup-title').forEach((btn) => {
     if (ayahPopupCloseCooldownActive()) return;
     const action = btn.dataset.action;
     if (action === 'recite') {
-      openReciteModeBar();
+      // the window gives way to the red bar; the chosen ayah stays selected
+      // as the one the recitation starts from
+      if (!reciteBarShowing()) {
+        // the bar takes over the window's Back step
+        replaceAyahPopupWith(closeReciteModeBarLayer, true);
+        openReciteModeBar();
+      } else {
+        // the bar is already up (the window was opened over it): just close
+        // the window; a recitation that's playing moves to this ayah
+        ayahPopupSwappingToRecite = true;
+        ayahPopupEl.style.display = 'none';
+        closeSpecificLayer(closeAyahPopupLayer);
+        if (reciting) { reciteAudio.pause(); reciting = false; contForceFresh = true; startRecitation(); }
+      }
     } else if (action === 'copy') {
       copyAyahText(ayahPopupSurah, ayahPopupAyah);
+      hideAyahPopup();
     } else if (action === 'save') {
       addAyahBookmark(ayahPopupSurah, ayahPopupAyah);
+      hideAyahPopup();
     }
   });
 });
@@ -31323,11 +31407,11 @@ async function renderBookReader() {
 function closeBookReaderLayer() {
   bookReaderEl.style.display = 'none';
 }
-function openBookReader(kind, surah, ayah) {
+function openBookReader(kind, surah, ayah, layerAlreadyPushed) {
   bookIntroShown = false;
   bookReaderKind = kind; bookReaderSurah = surah; bookReaderAyah = ayah;
   bookReaderEl.style.display = 'flex';
-  pushBackLayer(closeBookReaderLayer);
+  if (!layerAlreadyPushed) pushBackLayer(closeBookReaderLayer);
   renderBookReader();
 }
 function stepBookReader(dir) {
@@ -31433,7 +31517,11 @@ document.querySelectorAll('.ayah-content-tab').forEach((btn) => {
   btn.addEventListener('click', () => {
     if (ayahPopupCloseCooldownActive()) return; // ignore a ghost click right after opening
     if (!ayahPopupSurah || !ayahPopupAyah) return;
-    openBookReader(btn.dataset.content, Number(ayahPopupSurah), Number(ayahPopupAyah));
+    // the window closes as the explanation opens; Back from the
+    // explanation returns to the text, not to the window
+    const kind = btn.dataset.content, s = Number(ayahPopupSurah), a = Number(ayahPopupAyah);
+    replaceAyahPopupWith(closeBookReaderLayer, false);
+    openBookReader(kind, s, a, true);
   });
 });
 
@@ -32393,6 +32481,10 @@ function scrollToSurahHeader(sid) {
 function goToSurahStart(sid) {
   if (!sid || sid < 1 || sid > 114) return;
   navSurahPin = { page: SURAH_PAGES[sid], sid: sid };
+  if (typeof reciteBarShowing === 'function' && reciteBarShowing()) {
+    reciteNavSurah = sid;
+    if (reciting) reciteViewDetached = true;
+  }
   // Moving auto-scroll is stopped (but stays switched on); switched-off stays off.
   segStopAuto();
   hideSegPanel();
@@ -33491,16 +33583,10 @@ window.addEventListener('popstate', () => {
   if (backIgnorePops > 0) { backIgnorePops--; return; }
   const closeFn = backLayerStack.pop();
   if (closeFn === closeReciteModeBarLayer && reciting) {
-    // While a recitation is playing, Back never hides its bar: it closes
-    // whatever is open beneath the bar instead (the ayah window, ...),
-    // and with nothing beneath it simply does nothing.
-    if (backLayerStack.length) {
-      const below = backLayerStack.pop();
-      below();
-      backLayerStack.push(closeReciteModeBarLayer);
-    } else {
-      pushBackLayer(closeReciteModeBarLayer);
-    }
+    // Back reaching the red bar while a recitation plays only stops it; the
+    // bar stays (its step is put back) and the next Back hides it.
+    stopRecitation();
+    pushBackLayer(closeReciteModeBarLayer);
     if (typeof ghResumeCheck === 'function') ghResumeCheck();
     return;
   }
@@ -33760,17 +33846,21 @@ function renderGuideTab() {
     ]},
     { title: '٤. نافذة الآية (تظهر بالنقر على الآية)', items: [
       'تُفتح نافذة الآية بالنقر على <b>أي كلمة من الآية أو على رقمها</b> عدا الكلمات الخضراء (والتمرير التلقائي غير مفعّل)، وتُغلق مع تظليل الآية بالنقر على أي موضع من النص (حتى لو كان كلمة خضراء)، أو بالرجوع، أو بالانتقال إلى أي عمل آخر. وتبدأ التلاوة الصوتية من النافذة.',
-      '<b>تلاوة</b>: الاستماع لتلاوة الآية بصوت القارئ المختار. يظهر شريط التلاوة فوق نافذة الآية مباشرة، وفيه زر التشغيل والإيقاف، واختيارات قراءة الآية <b>مرة</b> واحدة أو <b>تكرارها</b> أو <b>الاستمرار</b>. وفي كل مرة يُفتح فيها شريط التلاوة يكون الاختيار على <b>استمرار</b>، ولمن أراد غيره أن يختار «مرة» أو «تكرار».',
-      'يمكن تحريك شريط التلاوة بالإصبع إلى أي موضع في الشاشة، ويعود إلى مكانه فوق النافذة عند فتحه من جديد. وأثناء التلاوة لا يختفي الشريط بالرجوع، بل يغلق الرجوع النافذة التي تحته، ويختفي الشريط بالرجوع بعد إيقاف التلاوة.',
+      '<b>نسخ الآية</b> و<b>حفظ الآية</b>: تُنفَّذ وتُغلق النافذة مباشرة.',
+      '<b>تلاوة</b>: الاستماع لتلاوة الآية بصوت القارئ المختار. عند النقر عليها تُغلق النافذة ويظهر شريط التلاوة الأحمر فوق الشريط السفلي مباشرة، وتبقى الآية مظللة لتبدأ منها التلاوة، وفي الشريط زر التشغيل والإيقاف، واختيارات قراءة الآية <b>مرة</b> واحدة أو <b>تكرارها</b> أو <b>الاستمرار</b>. وفي كل مرة يُفتح فيها شريط التلاوة يكون الاختيار على <b>استمرار</b>، ولمن أراد غيره أن يختار «مرة» أو «تكرار».',
+      'يمكن تحريك شريط التلاوة بالإصبع إلى أي موضع في الشاشة، ويعود إلى مكانه فوق الشريط السفلي عند فتحه من جديد. ويبقى الشريط ظاهراً فوق النوافذ والقوائم الأخرى، وتظهر نافذة الآية فوقه إذا فُتحت والشريط ظاهر. وعند الرجوع (بالإيماءة أو بسهم الرجوع) تُغلق أولاً النوافذ والوظائف التي فُتحت بعده، ثم يوقف الرجوع التلاوة إن كانت جارية، ثم يُخفي الشريط، ثم يعود إلى قائمة السور.',
+      'أثناء التلاوة تبقى الآية المظللة في أعلى النص (وفي العرض بحجم الصفحة تبقى الصفحة كاملة ظاهرة)، وتُظلَّل البسملة أيضاً أثناء تلاوتها.',
+      'إذا انتقلت أثناء التلاوة إلى سورة أخرى (بسهمي «ج» و«ح» في الإطار العائم أو من قائمة السور)، استمرت التلاوة في سورتها وبقي العرض على السورة الجديدة؛ فإذا أُوقفت التلاوة ثم شُغّلت، بدأت من بسملة السورة الجديدة الظاهرة ثم آياتها.',
       'عند اختيار <b>تكرار</b> تظهر قائمة لعدد مرات قراءة الآية (من مرتين إلى سبع)، ويظهر العدد المختار في الشريط مكان كلمة «تكرار»، ويبقى محفوظاً حتى يُغيَّر.',
       'عند اختيار <b>استمرار</b> تظهر نافذة فيها أربعة خيارات منفصلة، يتفعّل واحد منها فقط: <b>حسب الوقت</b> (تستمر التلاوة من الآية المختارة حتى ينتهي الوقت المحدد، من خمس دقائق إلى خمس ساعات، ويبقى الوقت المحدد محفوظاً حتى يُغيَّر)، أو <b>ابتداءً من الآية المختارة حتى نهاية السورة</b>، أو <b>ابتداءً من بداية السورة حتى نهايتها</b>، أو <b>سور وآيات مختارة</b>. ويبقى آخر ما اختير من الخيارات الثلاثة الأولى مفعّلاً، وعليه يكون التشغيل من شريط التلاوة.',
-      'وتبدأ تلاوة <b>الاستمرار</b> بالبسملة بصوت القارئ نفسه (من تلاوته للفاتحة، وللقارئ ماهر المعيقلي من تلاوته الكاملة للفاتحة في موقع mp3quran، وهي أيضاً بسملة الفاتحة عنده)، سواء بدأت من أول السورة أو من وسطها، وكذلك عند الانتقال إلى كل سورة جديدة، عدا سورة التوبة.',
+      'وتبدأ تلاوة <b>الاستمرار</b> بالبسملة بصوت القارئ نفسه (من تلاوته للفاتحة، وللقارئ ماهر المعيقلي من تلاوته للآية ٣٠ من سورة النمل، وهي أيضاً بسملة الفاتحة عنده)، سواء بدأت من أول السورة أو من وسطها، وكذلك عند الانتقال إلى كل سورة جديدة، عدا سورة التوبة.',
       'في <b>سور وآيات مختارة</b>: يُكتب اسم السورة؛ فإن وُضعت علامة في مربع <b>سورة</b> قُرئت السورة كاملة وتفعّل عدد مرات تكرارها، وتُكتب أرقام آيات منها (مثل: ٥ أو ١-٧ أو ٣، ٩) ويتفعّل عدد تكرارها بوضع علامة في مربع <b>الآية</b>. ويمكن الجمع بين المربعين، فتُقرأ السورة كاملة ثم الآيات المختارة منها. ويمكن إضافة سور أخرى، و<b>حفظ</b> الاختيار في المرجعيات باسم «تلاوة». ويكون التشغيل وفق هذا الخيار عند اختياره أو عند اختيار تلاوة من المرجعيات، وبعد انتهائه يعود التشغيل إلى آخر ما اختير من الخيارات الثلاثة الأولى.',
       '<b>نسخ الآية</b>: نسخ نص الآية.',
       '<b>حفظ الآية</b>: وضع علامة مرجعية على آية بعينها.',
       '<b>تفسير القرآن</b> و<b>اللغة</b> و<b>الإعراب</b>: تفتح كلٌّ منها صفحة خاصة على الآية نفسها (انظر الفقرة التالية).',
     ]},
     { title: '٥. التفسير واللغة والإعراب (من نافذة الآية)', items: [
+      'عند النقر على «تفسير القرآن» أو «اللغة» أو «الإعراب» تُغلق نافذة الآية وتظهر صفحة الشرح، والرجوع منها يعود إلى النص دون إعادة فتح النافذة.',
       '<b>تفسير القرآن</b>: تفسير البرهان للسيد هاشم البحراني، مرتّباً حسب السور والآيات.',
       'في أعلى صفحة التفسير واللغة والإعراب زرّان لحجم الخط: (A−) في أقصى اليمين للتصغير، و(A+) في أقصى اليسار للتكبير، ويبقى الحجم المختار محفوظاً.',
       '<b>اللغة</b> و<b>الإعراب</b>: فقرتا «اللغة» و«الإعراب» من تفسير مجمع البيان للشيخ الطبرسي، مربوطتان بآيات كل مقطع.',
