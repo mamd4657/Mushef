@@ -33618,6 +33618,10 @@ function renderGuideTab() {
   const bookmarkIcon = '<span class="bookmarkBtn guide-bookmark-inline"></span>';
   const badge = (inner) => '<span class="guide-icon-badge"><span class="fab-btn" style="pointer-events:none;">' + inner + '</span></span>';
   const roundBadge = (inner, fs) => '<span class="guide-icon-badge"><span class="fab-btn fab-btn-round" style="pointer-events:none;display:flex;align-items:center;justify-content:center;"><span style="font-family:sans-serif;font-size:' + fs + 'px;line-height:1;font-weight:700;">' + inner + '</span></span></span>';
+  // the same arrow drawn over ج / ح in the floating bar
+  const navArrow = (right) => '<svg width="26" height="11" viewBox="0 0 26 11" style="vertical-align:middle;color:currentColor" aria-hidden="true">' +
+    (right ? '<rect x="0" y="4" width="18" height="3" rx="1.5" fill="currentColor"/><polygon points="16,0 26,5.5 16,11" fill="currentColor"/>'
+           : '<rect x="8" y="4" width="18" height="3" rx="1.5" fill="currentColor"/><polygon points="10,0 0,5.5 10,11" fill="currentColor"/>') + '</svg>';
   const SECTIONS = [
     { title: '١. شريط الرأس (أعلى الشاشة)', items: [
       'الساعة واليوم والتاريخ (الهجري والميلادي).',
@@ -33630,6 +33634,8 @@ function renderGuideTab() {
       'أقصى يمين الإطار: علامة مرجعية لحفظ الصفحة ' + bookmarkIcon + '، وبجانبها مباشرة "من [رقم] إلى [رقم]" تبيّن صفحتي بداية السورة الحالية ونهايتها، وتبقى ثابتة طوال صفحات السورة نفسها.',
       'أقصى يسار الإطار: دائرة رقم الصفحة الحالية.',
       'بين ذلك وقوسي اسم السورة: أرقام الجزء (ج) والحزب (ح) والربع (ر) الحاليّة - وفي الاتجاه الأفقي تظهر الكلمات كاملة (جزء/حزب/ربع) بدل الحرف الواحد.',
+      '<b>الانتقال إلى السورة السابقة والتالية</b>: فوق «ج» ورقمه سهم يشير إلى اليمين <span style="white-space:nowrap">(' + navArrow(true) + ')</span>، والنقر على «ج» أو رقمه أو السهم ينقل إلى بداية <b>السورة السابقة</b>. وفوق «ح» ورقمه سهم يشير إلى اليسار <span style="white-space:nowrap">(' + navArrow(false) + ')</span>، والنقر عليه ينقل إلى بداية <b>السورة التالية</b>. ويظهر شريط اسم السورة المنتقَل إليها في أعلى النص، ويتغيّر اسمها في الإطار العائم معه. ولا يظهر سهم «ج» في الفاتحة، ولا سهم «ح» في الناس.',
+      'وعند الانتقال بهذين السهمين: إن كان التمرير التلقائي غير مفعّل بقي غير مفعّل، وإن كان مفعّلاً بقي مفعّلاً لكن النص يكون متوقفاً عند بداية السورة، حتى لو كان متحركاً قبل الانتقال.',
       'علامة المرجعية ودائرة رقم الصفحة وبقية عناصر الإطار ثابتة في مكانها دائماً، سواء كانت الصفحة فردية أو زوجية.',
       'يتحدّث تلقائياً أثناء التمرير ليطابق ما تقرأه.',
       'النقر على اسم السورة يفعّل <b>قراءة الكلمات</b> أو يوقفها (انظر الفقرة ١١).',
