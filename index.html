@@ -30329,7 +30329,48 @@ let reciteBasmalaThen = null; // { surah, ayah } to play once the basmala ends
 // mp3quran.net (the part its ayah timing marks as ayah 1) - used for al-Fatiha
 // 1 itself and before every surah. (an-Naml 30 can't serve: it begins with
 // «إنه من سليمان وإنه» with no pause before the basmala.)
-const OWN_BASMALA = { maher: { server: 'https://server12.mp3quran.net/maher/', moshafId: 102 } };
+// Two independent sources are tried in turn, so the basmala doesn't hang on
+// one site's timing data being reachable: mp3quran's recording + ayat_timing
+// first, then quran.com's (QDC) complete recording of the same reciter with
+// its own per-ayah timestamps.
+const OWN_BASMALA = { maher: { server: 'https://server12.mp3quran.net/maher/', moshafId: 102, qdcReciterId: 49 } };
+const ownBasmalaQdcCache = {};
+async function fetchQdcBasmala(qdcId) {
+  if (ownBasmalaQdcCache[qdcId]) return ownBasmalaQdcCache[qdcId];
+  let res = null;
+  try {
+    const resp = await fetch('https://api.qurancdn.com/api/qdc/audio/reciters/' + qdcId + '/audio_files?chapter=1&segments=true');
+    const data = await resp.json();
+    const f = data && data.audio_files && data.audio_files[0];
+    const t = f && Array.isArray(f.verse_timings) ? f.verse_timings.find((v) => v.verse_key === '1:1') : null;
+    if (f && f.audio_url && t && t.timestamp_to > t.timestamp_from) res = { url: f.audio_url, from: t.timestamp_from, to: t.timestamp_to };
+  } catch (e) { /* unreachable - handled by the caller */ }
+  if (res) ownBasmalaQdcCache[qdcId] = res;
+  return res;
+}
+// Plays [fromMs, toMs] of a whole-surah file; its end is caught by the same
+// timeupdate boundary watch the mp3quran segment reciters use, which then
+// runs handleAyahAudioEnded exactly as a finished ayah file would.
+function playAudioRange(url, fromMs, toMs, token) {
+  if (token !== reciteRequestToken) return;
+  const go = () => {
+    if (token !== reciteRequestToken) return;
+    reciteAudio.playbackRate = reciteSpeed;
+    reciteAudio.currentTime = fromMs / 1000;
+    segmentBoundaryEndTime = toMs / 1000;
+    segmentBoundaryToken = token;
+    reciteAudio.play().catch((err) => {
+      if (token !== reciteRequestToken || (err && err.name === 'AbortError')) return;
+      toast('تعذّر تشغيل الصوت: ' + (err && err.name ? err.name : 'خطأ غير معروف'));
+      stopRecitation();
+    });
+  };
+  segmentBoundaryEndTime = null;
+  if (reciteAudio.src !== url) {
+    reciteAudio.src = url;
+    reciteAudio.addEventListener('loadedmetadata', go, { once: true });
+  } else go();
+}
 async function playOwnBasmala(token, onUnavailable) {
   const src = OWN_BASMALA[currentReciter];
   const r = { kind: 'segment', server: src.server, moshafId: src.moshafId, surahList: 'A' };
@@ -30337,8 +30378,11 @@ async function playOwnBasmala(token, onUnavailable) {
   const timing = await fetchSegmentTimings(key, r, 1);
   if (token !== reciteRequestToken) return;
   const entry = timing.status === 'ok' && timing.entries.find((it) => it.ayah === 1);
-  if (!entry) { onUnavailable(); return; }
-  playSegmentAyah(key, r, 1, 1, token);
+  if (entry) { playSegmentAyah(key, r, 1, 1, token); return; }
+  const q = src.qdcReciterId ? await fetchQdcBasmala(src.qdcReciterId) : null;
+  if (token !== reciteRequestToken) return;
+  if (q) { playAudioRange(q.url, q.from, q.to, token); return; }
+  onUnavailable();
 }
 function needsBasmala(surah, ayah) { return surah !== 9 && !(surah === 1 && ayah === 1); }
 function playWithBasmala(surah, ayah) {
@@ -33347,7 +33391,16 @@ function pushBackLayer(closeFn) {
 // only in the popstate listener below, never here directly, so there is
 // exactly one place state and UI can ever drift apart.
 function closeTopBackLayer() {
-  if (backLayerStack.length > 0) history.back();
+  if (backLayerStack.length > 0) { history.back(); return; }
+  // Nothing left to step back out of: on the index the app opens on, the
+  // arrow does the gesture's last step - leaving the app. A page may only
+  // close itself while its history holds a single entry (the browser's own
+  // rule), i.e. before any window/panel was ever opened in this session; if
+  // the browser refuses, say how to leave instead of doing nothing.
+  if (homeSidebarShowing && sidebar.classList.contains('open')) {
+    try { window.close(); } catch (e) { /* refused */ }
+    setTimeout(() => { if (!document.hidden) toast('للخروج من التطبيق استعمل إيماءة الرجوع'); }, 350);
+  }
 }
 
 // Closes one specific layer by its registered close-function, wherever it
@@ -33503,6 +33556,16 @@ function updateResumeBox() {
   box.style.display = 'flex';
 }
 function closeSidebar() {
+  // Picking something in a non-home tab (a juz, a page, a bookmark...)
+  // closes the index while that tab's «back to السور» step is still on
+  // the stack - left there, the next Back would only switch tabs inside
+  // the now-hidden index (a dead press) and the one after would leave the
+  // app. The step goes with the index; its history slot is reused by the
+  // next layer (the home step pushed just below) or retired shortly.
+  if (homeTabLayerActive) {
+    homeTabLayerActive = false;
+    dropBackLayer(closeToHomeTabLayer);
+  }
   if (backLayerStack.lastIndexOf(closeSidebarLayer) === -1 && sidebar.classList.contains('open')) {
     closeSidebarLayer(); // the home index has no Back step of its own
     if (homeArmed && !backLayerStack.length) pushBackLayer(homeBackLayer);
@@ -33687,7 +33750,7 @@ function renderGuideTab() {
       'زر تشغيل/إيقاف التمرير التلقائي (' + badge(PLAY_ARROW_SVG) + '/' + badge('⏸') + ')، ويُضغط عليه أو على الرقم الذي تحته أو بجانبيه، مع زري إبطاء (' + roundBadge('−', 18) + ') وتسريع (' + roundBadge('+', 18) + ') التمرير. ويبقى التمرير مفعّلاً حتى لو توقفت حركة النص مؤقتاً (بالنقر على النص، أو بالوصول إلى آخر سورة أو جزء، أو بالانتقال إلى عمل آخر)، ولا يُلغى تفعيله إلا بالضغط على زره.',
       'أثناء التمرير التلقائي: النقر في أي موضع من النص يوقفه، والنقر بعدها على أي موضع من الصفحة عدا الكلمات الخضراء يعيده (والسحب بالإصبع يحرّك الصفحة يدوياً والتمرير متوقف). وزر الرجوع أو إيماءته: الأولى توقف التمرير إن كان متحركاً، والثانية تلغي تفعيله.',
       'زر تبديل اتجاه العرض بين الوضعين الأفقي والعمودي (' + badge(document.getElementById('rotateBtn').innerHTML) + ')؛ بالنقرة الأولى يتحول المصحف إلى الاتجاه الأفقي، وبالنقرة الثانية يعود إلى الاتجاه العمودي مباشرة، أياً كانت الجهة الأفقية الحالية. أما التنقل بين الجهتين الأفقيتين فيكون بالتدوير التلقائي للجهاز فقط.',
-      'زر رجوع (' + badge(document.getElementById('backBtn').innerHTML) + ') يقوم بعمل إيماءة الرجوع نفسها (العودة خطوة للخلف في البرنامج، كإغلاق نافذة أو نتائج بحث)، تسهيلاً على من لا تتوفر لديه إيماءة الرجوع في نظام جهازه. وفي الاتجاه الأفقي يعيد هو (وكذلك إيماءة الرجوع) إلى الاتجاه العمودي مباشرة، أياً كانت الجهة الأفقية الحالية.',
+      'زر رجوع (' + badge(document.getElementById('backBtn').innerHTML) + ') يقوم بعمل إيماءة الرجوع نفسها (العودة خطوة للخلف في البرنامج، كإغلاق نافذة أو نتائج بحث)، تسهيلاً على من لا تتوفر لديه إيماءة الرجوع في نظام جهازه. وفي الاتجاه الأفقي يعيد هو (وكذلك إيماءة الرجوع) إلى الاتجاه العمودي مباشرة، أياً كانت الجهة الأفقية الحالية. وفي قائمة السور التي يفتح عليها المصحف يُغلق التطبيق إن ضُغط مباشرة بعد فتحه؛ أما بعد استعمال أي نافذة أو وظيفة فالجهاز لا يسمح له بذلك، فتظهر عبارة تنبّه إلى استعمال إيماءة الرجوع للخروج.',
     ]},
     { title: '٨. تقسيم آيات المصحف إلى خمسينات ومئات', items: [
       'مجموع آيات المصحف ٦٢٣٦ آية، مقسّمة حسب الترتيب المتسلسل من أول الفاتحة إلى آخر الناس.',

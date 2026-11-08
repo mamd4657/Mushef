@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mushaf-cache-v109';
+const CACHE_NAME = 'mushaf-cache-v110';
 // Book files (books/<id>/NNN.json - تفسير البرهان etc.), one per surah: served
 // cache-first from their own cache, which app updates never clear.
 const BOOKS_CACHE_NAME = 'mushaf-books-v1';
@@ -9,7 +9,7 @@ const APP_SHELL = ['./', './index.html', './manifest.json'];
 // for it is to serve a matching request from that cache first, so a
 // downloaded ayah/surah plays back offline exactly like it would online.
 const AUDIO_CACHE_NAME = 'mushaf-audio-v1';
-const AUDIO_HOSTS = ['everyayah.com', 'mp3quran.net', 'cdn.islamic.network'];
+const AUDIO_HOSTS = ['everyayah.com', 'mp3quran.net', 'cdn.islamic.network', 'quranicaudio.com', 'audio.qurancdn.com'];
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).catch(() => {}));
   self.skipWaiting();
