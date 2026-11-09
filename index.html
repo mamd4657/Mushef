@@ -592,13 +592,13 @@ body.dark-mode .cd-chips .cd-chip,body.dark-mode #cdList .cd-item,body.dark-mode
 /* what belongs to a main choice starts under its first letter (radio 20px + gap 8px) */
 .cd-sec > .cd-chips,.cd-sec > #cdList{margin-right:28px;}
 .cd-chk.dis,.cd-in.dis{opacity:.4;}
-#reciteModeBarInner.rb-surah{background:#D86A1F !important;}
-#rbPicker{display:none;position:absolute;bottom:calc(100% + 6px);left:0;right:0;background:#D86A1F;border-radius:16px;padding:6px;box-shadow:0 -2px 10px rgba(0,0,0,.3);}
+#reciteModeBarInner.rb-surah{background:#8E4513 !important;}
+#rbPicker{display:none;position:absolute;bottom:calc(100% + 6px);left:0;right:0;background:#8E4513;border-radius:16px;padding:6px;box-shadow:0 -2px 10px rgba(0,0,0,.3);}
 #rbPicker .rbp-row{display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 40%;direction:rtl;}
 #rbPicker .rbp-row::-webkit-scrollbar{display:none;}
 #rbPicker.rbp-wrap .rbp-row{flex-wrap:wrap;justify-content:center;padding:2px;overflow:visible;}
 #rbPicker button{flex-shrink:0;scroll-snap-align:center;background:transparent;border:1.5px solid #F6EFDC;color:#F6EFDC;border-radius:12px;padding:6px 10px;font-size:17px;font-weight:700;font-family:sans-serif;cursor:pointer;white-space:nowrap;}
-#rbPicker button.on{background:#F6EFDC;color:#D86A1F;}
+#rbPicker button.on{background:#F6EFDC;color:#8E4513;}
 #repeatMenu{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#7B2E2E;border-radius:16px;padding:6px;gap:6px;box-shadow:0 -2px 10px rgba(0,0,0,.3);}
 #repeatMenu button{background:transparent;border:1.5px solid #F6EFDC;color:#F6EFDC;border-radius:12px;padding:6px 9px;font-size:17px;font-weight:700;font-family:sans-serif;cursor:pointer;white-space:nowrap;}
 #repeatMenu button.on{background:#F6EFDC;color:#7B2E2E;}
@@ -763,12 +763,18 @@ body.dark-mode .sajdah-side-bar{fill:#EFE8D6;}
 .qheader::before,.qcombo .cname::before{content:'';position:absolute;inset:3px;border:1px solid #D1A740;border-radius:4px;pointer-events:none;}
 .qh-grid{display:grid;direction:rtl;align-self:stretch;align-items:center;min-height:0;height:100%;grid-template-rows:minmax(0,1fr);
   font-size:min(1em, calc((100cqi - 14px) / 19.3));
-  grid-template-columns:5.15em 1.5px 2.2em minmax(0,1fr) 1.5px 2.2em 1.5px 5.15em;}
+  grid-template-columns:4.8em 1.5px 2.55em minmax(0,1fr) 1.5px 2.55em 1.5px 4.8em;}
 .qh-sep{display:block;align-self:stretch;width:1.5px;background:#D1A740;font-style:normal;}
-.qh-grid .qh-meta{min-width:0 !important;justify-self:stretch;justify-content:flex-start;padding:0 .3em;box-sizing:border-box;gap:.22em !important;}
-.qh-word,.qh-recite{justify-self:center;font-family:sans-serif;font-weight:700;font-size:.8em;white-space:nowrap;line-height:1;position:relative;top:-.06em;-webkit-text-stroke:0;}
+.qh-grid .qh-meta{min-width:0 !important;justify-self:stretch;justify-content:flex-start;padding:0;box-sizing:border-box;gap:.2em !important;}
+/* the same space from the frame's right edge to «ترتيبها» as from the
+   widest ayah count (٢٨٦) to its left edge; the two outer dividers equally
+   far in from either side */
+.qh-grid .qh-c1{padding-right:.35em;}
+.qh-grid .qh-c5{padding-right:.585em;}
+.qh-grid .qh-meta .qh-num{font-size:1.136em;}
+.qh-word,.qh-recite{justify-self:center;font-family:sans-serif;font-weight:700;font-size:.9em;white-space:nowrap;line-height:1;position:relative;top:-.06em;-webkit-text-stroke:0;}
 .qh-word{color:#F6EFDC;}
-.qh-recite{color:#D86A1F;cursor:pointer;padding:.5em .2em;-webkit-tap-highlight-color:transparent;}
+.qh-recite{color:#8E4513;background:#F6EBD9;border-radius:.45em;cursor:pointer;padding:.3em .42em .38em;-webkit-tap-highlight-color:transparent;}
 .qh-recite:active{opacity:.6;}
 .qh-grid .qh-name{justify-self:center;text-align:center;white-space:nowrap;overflow:visible;min-width:0;top:-.05em !important;-webkit-text-stroke:max(0.028em, 0.47px) currentColor;}
 .qheader .qh-name,.qcombo .cname .qh-name{min-width:0;}
