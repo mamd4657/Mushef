@@ -592,15 +592,15 @@ body.dark-mode .cd-chips .cd-chip,body.dark-mode #cdList .cd-item,body.dark-mode
 /* what belongs to a main choice starts under its first letter (radio 20px + gap 8px) */
 .cd-sec > .cd-chips,.cd-sec > #cdList{margin-right:28px;}
 .cd-chk.dis,.cd-in.dis{opacity:.4;}
-#reciteModeBarInner.rb-surah{background:#8E4513 !important;}
-#rbPicker{display:none;position:absolute;bottom:calc(100% + 6px);left:0;right:0;background:#8E4513;border-radius:16px;padding:6px;box-shadow:0 -2px 10px rgba(0,0,0,.3);}
+#reciteModeBarInner.rb-surah{background:#6B1D1D !important;}
+#rbPicker{display:none;position:absolute;bottom:calc(100% + 6px);left:0;right:0;background:#6B1D1D;border-radius:16px;padding:6px;box-shadow:0 -2px 10px rgba(0,0,0,.3);}
 #rbPicker .rbp-row{display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 40%;direction:rtl;}
 #rbPicker .rbp-row::-webkit-scrollbar{display:none;}
 #rbPicker button{flex-shrink:0;scroll-snap-align:center;background:transparent;border:1.5px solid #F6EFDC;color:#F6EFDC;border-radius:12px;padding:6px 10px;font-size:17px;font-weight:700;font-family:sans-serif;cursor:pointer;white-space:nowrap;}
-#rbPicker button.on{background:#F6EFDC;color:#8E4513;}
-#repeatMenu{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#7B2E2E;border-radius:16px;padding:6px;gap:6px;box-shadow:0 -2px 10px rgba(0,0,0,.3);}
+#rbPicker button.on{background:#F6EFDC;color:#6B1D1D;}
+#repeatMenu{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#C0463E;border-radius:16px;padding:6px;gap:6px;box-shadow:0 -2px 10px rgba(0,0,0,.3);}
 #repeatMenu button{background:transparent;border:1.5px solid #F6EFDC;color:#F6EFDC;border-radius:12px;padding:6px 9px;font-size:17px;font-weight:700;font-family:sans-serif;cursor:pointer;white-space:nowrap;}
-#repeatMenu button.on{background:#F6EFDC;color:#7B2E2E;}
+#repeatMenu button.on{background:#F6EFDC;color:#C0463E;}
 .cd-chip{display:flex;align-items:center;gap:6px;font-size:16px;font-weight:700;border:1.5px solid #0E4433;border-radius:10px;padding:6px 8px;}
 .cd-row{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;padding:5px 0;}
 .cd-item{border:1.5px solid #0E4433;border-radius:12px;padding:6px;margin:6px 0;}
@@ -773,7 +773,7 @@ body.dark-mode .sajdah-side-bar{fill:#EFE8D6;}
 .qh-grid .qh-meta .qh-num{font-size:1.136em;}
 .qh-word,.qh-recite{justify-self:center;font-family:sans-serif;font-weight:700;font-size:.9em;white-space:nowrap;line-height:1;position:relative;top:-.06em;-webkit-text-stroke:0;}
 .qh-word{color:#F6EFDC;}
-.qh-recite{color:#8E4513;background:#F6EBD9;border-radius:.45em;cursor:pointer;padding:.3em .42em .38em;-webkit-tap-highlight-color:transparent;}
+.qh-recite{color:#6B1D1D;background:#F6EBD9;border-radius:.45em;cursor:pointer;padding:.3em .42em .38em;-webkit-tap-highlight-color:transparent;}
 .qh-recite:active{opacity:.6;}
 .qh-grid .qh-name{justify-self:center;text-align:center;white-space:nowrap;overflow:visible;min-width:0;top:-.05em !important;-webkit-text-stroke:max(0.028em, 0.47px) currentColor;}
 .qheader .qh-name,.qcombo .cname .qh-name{min-width:0;}
@@ -963,7 +963,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
 <div id="ayahPopup" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:55;">
   <div id="ayahPopupCard" class="ayah-popup-card" style="max-width:420px;margin:0 auto 4px;border-radius:16px;box-sizing:border-box;box-shadow:0 -4px 20px rgba(0,0,0,.3);max-height:65vh;display:flex;flex-direction:column;overflow:hidden;">
     <div style="display:flex;">
-      <button class="ayah-popup-title" data-action="recite" style="color:#7B2E2E">تلاوة</button>
+      <button class="ayah-popup-title" data-action="recite" style="color:#C0463E">تلاوة</button>
       <button class="ayah-popup-title" data-action="copy">نسخ الآية</button>
       <button class="ayah-popup-title" data-action="save">حفظ الآية</button>
     </div>
@@ -977,7 +977,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
 </div>
 
 <div id="reciteModeBar" style="display:none;position:fixed;bottom:52px;left:0;right:0;z-index:49;background:#0E443300;pointer-events:none;">
-  <div id="reciteModeBarInner" style="position:relative;pointer-events:auto;touch-action:none;width:max-content;max-width:calc(100% - 12px);margin:0 auto;background:#7B2E2E;border-radius:22px;box-shadow:0 -2px 10px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 8px;box-sizing:border-box;--rbGap:22px;">
+  <div id="reciteModeBarInner" style="position:relative;pointer-events:auto;touch-action:none;width:max-content;max-width:calc(100% - 12px);margin:0 auto;background:#C0463E;border-radius:22px;box-shadow:0 -2px 10px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 8px;box-sizing:border-box;--rbGap:22px;">
     <button id="reciteModeBarPlayBtn" style="background:transparent;border:none;color:#F6EFDC;font-size:32px;cursor:pointer;line-height:1;padding:0 4px;min-width:36px;" aria-label="تشغيل/إيقاف التلاوة"><svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true" style="display:block;margin:auto"><path d="M6 3.5v17a1 1 0 0 0 1.5.87l14-8.5a1 1 0 0 0 0-1.74l-14-8.5A1 1 0 0 0 6 3.5z"/></svg></button>
     <div class="rb-frame" id="rbFrameAyah" style="flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:space-around;gap:var(--rbGap);border:1.5px solid #F6EFDC;border-radius:16px;padding:5px 10px;">
       <label class="rb-opt"><input type="radio" name="reciteModeRadio" id="reciteModeRadioOnce" value="single">مرة</label>
@@ -31237,43 +31237,30 @@ document.addEventListener('pointerdown', (e) => {
   hideRepeatMenu();
 }, true);
 
-// ---- dragging the recitation bar with a finger ----
-// Only from the bar itself (not from the choice rows above it), and only up
-// and down. On release it settles by these rules (local, possibly rotated,
-// coordinates; y grows downwards; S = where it was when the drag began,
-// H = its own place right above the bottom bar):
-//  - moved down: anywhere between S and H -> whichever of the two is nearer
-//  - moved up by half its height or less -> back to S
-//  - over the floating frame -> right above it or right below it, nearer one
-//  - between the top bar and the floating frame -> right under the top bar
-//    or right above the frame, nearer one
-//  - below the frame by half its height or less -> right below the frame
-//  - anywhere else it stays put. Reopened, it is back at H.
+// ---- moving the recitation bar with a finger ----
+// The bar has just two places: its own (right above the bottom bar) and
+// lowered over the bottom bar. Dragged from the bar itself (not from the
+// choice rows above it) it follows the finger only between the two, and on
+// release settles on the nearer one. Reopened, it is back in its own place.
 let reciteBarDX = 0, reciteBarDY = 0, reciteBarJustDragged = false;
+function reciteBarDownDY() {
+  // lowered: centred over the bottom bar, never past its lower edge
+  const fab = layoutMode === 'free' ? document.getElementById('freeAutoFab') : document.getElementById('autoFab');
+  const inner = document.getElementById('reciteModeBarInner');
+  const fh = fab ? fab.offsetHeight : 0, bh = inner.offsetHeight;
+  return Math.max(0, Math.min(fh, (fh + bh) / 2));
+}
 function reciteBarSetDY(dy, animate) {
   const inner = document.getElementById('reciteModeBarInner');
   reciteBarDY = dy;
   inner.style.transition = animate ? 'transform .18s ease-out' : 'none';
   inner.style.transform = dy ? 'translateY(' + dy + 'px)' : '';
-  placeReciteBarMenus();
+  if (animate && typeof positionAyahPopup === 'function' && ayahPopupEl && ayahPopupEl.style.display !== 'none') positionAyahPopup();
 }
-// the choice row / repeat menu open below the bar when there's no room above
-function placeReciteBarMenus() {
-  const inner = document.getElementById('reciteModeBarInner');
-  const hdr = document.querySelector('header');
-  const top = localRect(inner).top, hdrB = hdr ? localRect(hdr).bottom : 0;
-  ['rbPicker', 'repeatMenu'].forEach((id) => {
-    const m = document.getElementById(id);
-    if (!m) return;
-    const h = m.offsetHeight || 60;
-    const below = top - h - 8 < hdrB;
-    m.style.bottom = below ? 'auto' : 'calc(100% + 6px)';
-    m.style.top = below ? 'calc(100% + 6px)' : '';
-  });
-}
+function placeReciteBarMenus() { /* the choice rows always open above the bar */ }
 (function () {
   const inner = document.getElementById('reciteModeBarInner');
-  let pid = null, sx = 0, sy = 0, oy = 0, dragging = false, minDY = -1e9;
+  let pid = null, sx = 0, sy = 0, oy = 0, dragging = false, maxDY = 0;
   const localDY = (e) => {
     const dx = e.clientX - sx, dy = e.clientY - sy;
     if (landscapeMode && rotationState === 1) return dx;
@@ -31292,12 +31279,9 @@ function placeReciteBarMenus() {
       dragging = true;
       try { inner.setPointerCapture(pid); } catch (err) { /* ignore */ }
       hideRbPicker(); hideRepeatMenu();
-      // never above the top bar, never below its own place
-      const hdr = document.querySelector('header');
-      const homeTop = localRect(inner).top - reciteBarDY;
-      minDY = (hdr ? localRect(hdr).bottom : 0) - homeTop;
+      maxDY = reciteBarDownDY();
     }
-    reciteBarSetDY(Math.max(minDY, Math.min(0, oy + d)), false);
+    reciteBarSetDY(Math.max(0, Math.min(maxDY, oy + d)), false);
     e.preventDefault();
   });
   const end = (e) => {
@@ -31307,30 +31291,13 @@ function placeReciteBarMenus() {
     dragging = false;
     reciteBarJustDragged = true;
     setTimeout(() => { reciteBarJustDragged = false; }, 350);
-    const r = localRect(inner), h = r.height;
-    const Y = r.bottom, T = r.top, dy = reciteBarDY;
-    const H = Y - dy, S = H + oy;            // bottoms at home / at drag start
-    const hdr = document.querySelector('header');
-    const hdrB = hdr ? localRect(hdr).bottom : 0;
-    const fbEl = document.querySelector('#floatingFrameBar .frame-bar');
-    const fr = fbEl && fbEl.offsetHeight ? localRect(fbEl) : null;
-    const toBottom = (b) => dy + (b - Y), toTop = (t) => dy + (t - T);
-    const nearer = (a, da, b, db) => (Math.abs(da) <= Math.abs(db) ? a : b);
-    // is there room for the bar between the top bar and the frame?
-    const aboveOK = fr && fr.top - h >= hdrB - 1;
-    let t = dy;
-    if (dy > oy) t = Y >= H ? 0 : nearer(oy, Y - S, 0, H - Y);
-    else if (S - Y <= h / 2) t = oy;
-    else if (fr && Y > fr.top && T < fr.bottom) t = aboveOK ? nearer(toBottom(fr.top), Y - fr.top, toTop(fr.bottom), T - fr.bottom) : toTop(fr.bottom);
-    else if (fr && Y <= fr.top) t = aboveOK ? nearer(toTop(hdrB), T - hdrB, toBottom(fr.top), Y - fr.top) : toTop(fr.bottom);
-    else if (fr && T >= fr.bottom && T - fr.bottom <= h / 2) t = toTop(fr.bottom);
-    else if (!fr && T - hdrB <= h / 2) t = toTop(hdrB);
-    reciteBarSetDY(Math.max(minDY, Math.min(0, t)), true);
+    reciteBarSetDY(reciteBarDY > maxDY / 2 ? maxDY : 0, true);
   };
   inner.addEventListener('pointerup', end);
   inner.addEventListener('pointercancel', end);
   inner.addEventListener('click', (e) => { if (reciteBarJustDragged) { e.preventDefault(); e.stopPropagation(); } }, true);
 })();
+
 
 // ---------------- ayah popup (تلاوة / نسخ الآية / حفظ الآية + معاني / تفسير / إعراب) ----------------
 let ayahPopupSurah = null, ayahPopupAyah = null;
@@ -31349,7 +31316,7 @@ function positionAyahPopup() {
   ayahPopupEl.style.left = '0';
   ayahPopupEl.style.right = '0';
   // While the red recitation bar is showing, the window sits above it.
-  const redH = (reciteBarShowing() && !reciteBarDY) ? (reciteModeBarEl.offsetHeight || 0) : 0;
+  const redH = reciteBarShowing() ? Math.max(0, (reciteModeBarEl.offsetHeight || 0) - reciteBarDY) : 0;
   if (!landscapeMode) {
     // Portrait: fixed elements sit directly against the real viewport (no
     // rotation transform is in play), so the bar's own getBoundingClientRect()
@@ -34125,7 +34092,7 @@ function renderGuideTab() {
       'تُفتح نافذة الآية بالنقر على <b>أي كلمة من الآية أو على رقمها</b> عدا الكلمات الخضراء (والتمرير التلقائي غير مفعّل)، وتُغلق مع تظليل الآية بالنقر على أي موضع من النص (حتى لو كان كلمة خضراء)، أو بالرجوع، أو بالانتقال إلى أي عمل آخر. وتبدأ التلاوة الصوتية من النافذة.',
       '<b>نسخ الآية</b> و<b>حفظ الآية</b>: تُنفَّذ وتُغلق النافذة مباشرة.',
       '<b>تلاوة</b>: الاستماع لتلاوة الآية بصوت القارئ المختار. عند النقر عليها تُغلق النافذة ويظهر شريط التلاوة الأحمر فوق الشريط السفلي مباشرة، وتبقى الآية مظللة لتبدأ منها التلاوة، وفي الشريط زر التشغيل والإيقاف، وزر الإغلاق (✕) الذي يوقف التلاوة ويُغلق الشريط مباشرة، واختيارات قراءة الآية <b>مرة</b> واحدة أو <b>تكرارها</b> أو <b>الاستمرار</b>. وفي كل مرة يُفتح فيها شريط التلاوة يكون الاختيار على <b>استمرار</b>، ولمن أراد غيره أن يختار «مرة» أو «تكرار». ولا تعمل قراءة الكلمات مع التلاوة: تُلغى عند فتح الشريط، وتفعيلها يُغلقه.',
-      'يمكن تحريك شريط التلاوة (الأحمر أو البرتقالي) بالإصبع من الشريط نفسه، لأعلى ولأسفل فقط. وعند تركه يستقر تلقائياً في أقرب موضع مناسب: فوق الشريط السفلي، أو تحت الشريط العلوي، أو فوق الإطار العائم أو تحته ملاصقاً له، أو يرجع إلى موضعه إن حُرّك قليلاً، وإلا بقي حيث تُرك. ويعود إلى مكانه فوق الشريط السفلي عند فتحه من جديد. وفي شريط تلاوة السورة تبقى الإشارة على آخر ما اخترته (السورة أو الجزء أو التوقيت). ويبقى الشريط ظاهراً فوق النوافذ والقوائم الأخرى، وتظهر نافذة الآية فوقه إذا فُتحت والشريط ظاهر. وعند الرجوع (بالإيماءة أو بسهم الرجوع) تُغلق أولاً النوافذ والوظائف التي فُتحت بعده، ثم يوقف الرجوع التلاوة إن كانت جارية، ثم يُخفي الشريط، ثم يعود إلى قائمة السور.',
+      'شريط التلاوة (شريط الآية الأحمر الفاتح، وشريط السورة الأحمر الغامق) ثابت في مكانه فوق الشريط السفلي، ويمكن سحبه بالإصبع من الشريط نفسه إلى الأسفل ليكون فوق الشريط السفلي مغطياً له، وسحبه إلى الأعلى ليرجع إلى مكانه، ويعود إلى مكانه عند فتحه من جديد. وفي شريط تلاوة السورة تبقى الإشارة على آخر ما اخترته (السورة أو الجزء أو التوقيت). ويبقى الشريط ظاهراً فوق النوافذ والقوائم الأخرى، وتظهر نافذة الآية فوقه إذا فُتحت والشريط ظاهر. وعند الرجوع (بالإيماءة أو بسهم الرجوع) تُغلق أولاً النوافذ والوظائف التي فُتحت بعده، ثم يوقف الرجوع التلاوة إن كانت جارية، ثم يُخفي الشريط، ثم يعود إلى قائمة السور.',
       'أثناء التلاوة تبقى الآية المظللة في أعلى النص (وفي العرض بحجم الصفحة تبقى الصفحة كاملة ظاهرة)، وتُظلَّل البسملة أيضاً أثناء تلاوتها.',
       'إذا انتقلت أثناء التلاوة إلى سورة أخرى (بسهمي «ج» و«ح» في الإطار العائم أو من قائمة السور)، استمرت التلاوة في سورتها وبقي العرض على السورة الجديدة؛ فإذا أُوقفت التلاوة ثم شُغّلت، بدأت من بسملة السورة الجديدة الظاهرة ثم آياتها.',
       'يظهر في الشريط <b>تكرار</b> ومعه عدد المرات (٢ في البداية). وعند اختياره تظهر قائمة لعدد مرات قراءة الآية (من مرتين إلى سبع)، فيتغير العدد بجانب كلمة «تكرار» إلى المختار، ويبقى محفوظاً حتى يُغيَّر.',
