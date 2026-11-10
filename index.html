@@ -596,7 +596,6 @@ body.dark-mode .cd-chips .cd-chip,body.dark-mode #cdList .cd-item,body.dark-mode
 #rbPicker{display:none;position:absolute;bottom:calc(100% + 6px);left:0;right:0;background:#8E4513;border-radius:16px;padding:6px;box-shadow:0 -2px 10px rgba(0,0,0,.3);}
 #rbPicker .rbp-row{display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 40%;direction:rtl;}
 #rbPicker .rbp-row::-webkit-scrollbar{display:none;}
-#rbPicker.rbp-wrap .rbp-row{flex-wrap:wrap;justify-content:center;padding:2px;overflow:visible;}
 #rbPicker button{flex-shrink:0;scroll-snap-align:center;background:transparent;border:1.5px solid #F6EFDC;color:#F6EFDC;border-radius:12px;padding:6px 10px;font-size:17px;font-weight:700;font-family:sans-serif;cursor:pointer;white-space:nowrap;}
 #rbPicker button.on{background:#F6EFDC;color:#8E4513;}
 #repeatMenu{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#7B2E2E;border-radius:16px;padding:6px;gap:6px;box-shadow:0 -2px 10px rgba(0,0,0,.3);}
@@ -30746,6 +30745,7 @@ function openReciteModeBar() {
   reciteModeBarEl.style.display = 'block';
   reciteModeBarEl.style.zIndex = '57'; // over the index, the tafsir reader, ... - it stays until Back closes it
   positionReciteModeBar();
+  placeReciteBarMenus();
   syncRecitePlayButtons();
   // Its Back step sits where it was opened: windows opened later close
   // first; reaching it, Back stops a playing recitation, and the next Back
@@ -31030,6 +31030,20 @@ let orangeSurah = 1;                // the surah whose name bar opened it
 let orangePlan = null;              // {kind:'surah',s} | {kind:'juz',j} | {kind:'time',s,min} | {kind:'list',items}
 let orangeSession = false;          // a plan has been started and isn't finished
 let orangeTimeLeft = null;          // ms left of a «توقيت» plan while paused
+// the reader's last choice on the orange bar (kept between visits):
+// السورة / الجزء / توقيت, and for توقيت its minutes
+let orangeLastKind = store.get('orange-kind') || null;
+let orangeLastMin = parseInt(store.get('orange-min'), 10) || null;
+// with nothing playing, ▶ plays the last kind chosen, for the bar's surah
+function orangeDefaultPlan() {
+  if (orangeLastKind === 'juz') return { kind: 'juz', j: juzOfAyah(orangeSurah, 1) };
+  if (orangeLastKind === 'time' && orangeLastMin) return { kind: 'time', s: orangeSurah, min: orangeLastMin };
+  return { kind: 'surah', s: orangeSurah };
+}
+function syncOrangeRadios() {
+  const k = orangePlan ? (orangePlan.kind === 'list' ? null : orangePlan.kind) : orangeLastKind;
+  document.querySelectorAll('input[name="rbSurahKind"]').forEach((r) => { r.checked = r.value === k; });
+}
 function setReciteBarVariant(v) {
   const changing = v !== reciteBarVariant;
   if (changing && reciting) stopRecitation();
@@ -31054,7 +31068,7 @@ function openSurahReciteBar(sid) {
     if (reciting) stopRecitation();
     orangeSurah = sid; orangePlan = null; orangeSession = false;
   }
-  document.querySelectorAll('input[name="rbSurahKind"]').forEach((r) => { r.checked = !!(orangePlan && orangePlan.kind === r.value); });
+  syncOrangeRadios();
   if (!reciteBarShowing()) openReciteModeBar(); else { sizeReciteBar(); positionReciteModeBar(); }
 }
 function juzAyahQueue(j) {
@@ -31093,7 +31107,11 @@ function startOrangePlan(plan) {
   if (contQueue) { if (!contQueue.length) return; first = contQueue[0]; }
   contPlanBuiltFor = 'orange';
   orangePlan = plan; orangeSession = true;
-  document.querySelectorAll('input[name="rbSurahKind"]').forEach((r) => { r.checked = plan.kind === r.value; });
+  if (plan.kind !== 'list') {
+    orangeLastKind = plan.kind; store.set('orange-kind', plan.kind);
+    if (plan.kind === 'time') { orangeLastMin = plan.min; store.set('orange-min', String(plan.min)); }
+  }
+  syncOrangeRadios();
   reciting = true;
   syncRecitePlayButtons();
   playWithBasmala(first[0], first[1]);
@@ -31115,7 +31133,7 @@ function orangePlayToggle() {
     playAyah(resumeItem.surah, resumeItem.ayah);
     return;
   }
-  startOrangePlan(orangePlan || { kind: 'surah', s: orangeSurah });
+  startOrangePlan(orangePlan || orangeDefaultPlan());
 }
 // «تلاوة» in any surah name bar
 document.addEventListener('click', (e) => {
@@ -31135,8 +31153,8 @@ function openRbPicker(kind) {
   let items = [], current = null;
   if (kind === 'surah') { for (let i = 1; i <= 114; i++) items.push([i, SURAH_NAMES[i]]); current = (orangePlan && orangePlan.kind === 'surah') ? orangePlan.s : orangeSurah; }
   else if (kind === 'juz') { for (let j = 1; j <= 30; j++) items.push([j, toArabicDigits(j)]); current = (orangePlan && orangePlan.kind === 'juz') ? orangePlan.j : juzOfAyah(orangeSurah, 1); }
-  else { items = CONT_TIMES.map(([m, t]) => [m, t]); current = (orangePlan && orangePlan.kind === 'time') ? orangePlan.min : null; }
-  rbPickerEl.className = kind === 'time' ? 'rbp-wrap' : '';
+  else { items = CONT_TIMES.map(([m, t]) => [m, t]); current = (orangePlan && orangePlan.kind === 'time') ? orangePlan.min : (orangeLastMin || items[0][0]); }
+  rbPickerEl.className = '';
   rbPickerEl.innerHTML = '<div class="rbp-row">' + items.map(([v, t]) => '<button data-v="' + v + '" class="' + (v === current ? 'on' : '') + '">' + t + '</button>').join('') + '</div>';
   rbPickerEl.querySelectorAll('button').forEach((btn) => btn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -31149,17 +31167,17 @@ function openRbPicker(kind) {
   rbPickerEl.style.display = 'block';
   // the bar's own surah (or juz) is the one in the middle of the row
   const on = rbPickerEl.querySelector('button.on') || rbPickerEl.querySelector('button[data-v="' + current + '"]');
-  if (on && kind !== 'time') on.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'instant' });
+  placeReciteBarMenus();
+  if (on) on.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'instant' });
   if (backLayerStack.lastIndexOf(closeRbPickerLayer) === -1) pushBackLayer(closeRbPickerLayer);
 }
 document.querySelectorAll('#rbFrameSurah .rb-opt').forEach((lab) => lab.addEventListener('click', (e) => {
   if (reciteBarJustDragged) return;
   if (e.target.tagName !== 'INPUT') return; // a tap on the word arrives here twice - react once
   const kind = lab.dataset.pick;
-  const keep = orangePlan ? orangePlan.kind : null;
   setTimeout(() => {
-    // the radio shows the plan that's playing, not merely the one being browsed
-    document.querySelectorAll('input[name="rbSurahKind"]').forEach((r) => { r.checked = r.value === keep; });
+    // the radio shows the plan that's playing (or the last one chosen), not merely the one being browsed
+    syncOrangeRadios();
     openRbPicker(kind);
   }, 0);
 }));
@@ -31200,6 +31218,7 @@ function openRepeatMenu() {
     closeSpecificLayer(closeRepeatMenuLayer);
   }));
   repeatMenuEl.style.display = 'flex';
+  placeReciteBarMenus();
   if (backLayerStack.lastIndexOf(closeRepeatMenuLayer) === -1) pushBackLayer(closeRepeatMenuLayer);
 }
 function repeatMenuShown() { return !!repeatMenuEl && repeatMenuEl.style.display !== 'none'; }
@@ -31219,41 +31238,94 @@ document.addEventListener('pointerdown', (e) => {
 }, true);
 
 // ---- dragging the recitation bar with a finger ----
+// Only from the bar itself (not from the choice rows above it), and only up
+// and down. On release it settles by these rules (local, possibly rotated,
+// coordinates; y grows downwards; S = where it was when the drag began,
+// H = its own place right above the bottom bar):
+//  - moved down: anywhere between S and H -> whichever of the two is nearer
+//  - moved up by half its height or less -> back to S
+//  - over the floating frame -> right above it or right below it, nearer one
+//  - between the top bar and the floating frame -> right under the top bar
+//    or right above the frame, nearer one
+//  - below the frame by half its height or less -> right below the frame
+//  - anywhere else it stays put. Reopened, it is back at H.
 let reciteBarDX = 0, reciteBarDY = 0, reciteBarJustDragged = false;
+function reciteBarSetDY(dy, animate) {
+  const inner = document.getElementById('reciteModeBarInner');
+  reciteBarDY = dy;
+  inner.style.transition = animate ? 'transform .18s ease-out' : 'none';
+  inner.style.transform = dy ? 'translateY(' + dy + 'px)' : '';
+  placeReciteBarMenus();
+}
+// the choice row / repeat menu open below the bar when there's no room above
+function placeReciteBarMenus() {
+  const inner = document.getElementById('reciteModeBarInner');
+  const hdr = document.querySelector('header');
+  const top = localRect(inner).top, hdrB = hdr ? localRect(hdr).bottom : 0;
+  ['rbPicker', 'repeatMenu'].forEach((id) => {
+    const m = document.getElementById(id);
+    if (!m) return;
+    const h = m.offsetHeight || 60;
+    const below = top - h - 8 < hdrB;
+    m.style.bottom = below ? 'auto' : 'calc(100% + 6px)';
+    m.style.top = below ? 'calc(100% + 6px)' : '';
+  });
+}
 (function () {
   const inner = document.getElementById('reciteModeBarInner');
-  let pid = null, sx = 0, sy = 0, ox = 0, oy = 0, dragging = false;
-  inner.addEventListener('pointerdown', (e) => { pid = e.pointerId; sx = e.clientX; sy = e.clientY; ox = reciteBarDX; oy = reciteBarDY; dragging = false; });
+  let pid = null, sx = 0, sy = 0, oy = 0, dragging = false, minDY = -1e9;
+  const localDY = (e) => {
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    if (landscapeMode && rotationState === 1) return dx;
+    if (landscapeMode && rotationState === 2) return -dx;
+    return dy;
+  };
+  inner.addEventListener('pointerdown', (e) => {
+    if (e.target && e.target.closest && e.target.closest('#rbPicker, #repeatMenu')) return;
+    pid = e.pointerId; sx = e.clientX; sy = e.clientY; oy = reciteBarDY; dragging = false;
+  });
   inner.addEventListener('pointermove', (e) => {
     if (e.pointerId !== pid) return;
-    const dx = e.clientX - sx, dy = e.clientY - sy;
+    const d = localDY(e);
     if (!dragging) {
-      if (Math.hypot(dx, dy) < 10) return;
+      if (Math.abs(d) < 10) return;
       dragging = true;
       try { inner.setPointerCapture(pid); } catch (err) { /* ignore */ }
+      hideRbPicker(); hideRepeatMenu();
+      // never above the top bar, never below its own place
+      const hdr = document.querySelector('header');
+      const homeTop = localRect(inner).top - reciteBarDY;
+      minDY = (hdr ? localRect(hdr).bottom : 0) - homeTop;
     }
-    // the screen movement, turned into the page's own (possibly rotated) frame
-    let lx = dx, ly = dy;
-    if (landscapeMode && rotationState === 1) { lx = -dy; ly = dx; }
-    else if (landscapeMode && rotationState === 2) { lx = dy; ly = -dx; }
-    reciteBarDX = ox + lx; reciteBarDY = oy + ly;
-    inner.style.transform = 'translate(' + reciteBarDX + 'px,' + reciteBarDY + 'px)';
+    reciteBarSetDY(Math.max(minDY, Math.min(0, oy + d)), false);
     e.preventDefault();
   });
   const end = (e) => {
     if (e.pointerId !== pid) return;
     pid = null;
-    if (dragging) {
-      dragging = false;
-      reciteBarJustDragged = true;
-      setTimeout(() => { reciteBarJustDragged = false; }, 350);
-      // keep at least part of the bar on screen
-      const r = inner.getBoundingClientRect();
-      const W = window.innerWidth, H = window.innerHeight;
-      if (r.right < 40 || r.left > W - 40 || r.bottom < 30 || r.top > H - 30) {
-        reciteBarDX = 0; reciteBarDY = 0; inner.style.transform = '';
-      }
-    }
+    if (!dragging) return;
+    dragging = false;
+    reciteBarJustDragged = true;
+    setTimeout(() => { reciteBarJustDragged = false; }, 350);
+    const r = localRect(inner), h = r.height;
+    const Y = r.bottom, T = r.top, dy = reciteBarDY;
+    const H = Y - dy, S = H + oy;            // bottoms at home / at drag start
+    const hdr = document.querySelector('header');
+    const hdrB = hdr ? localRect(hdr).bottom : 0;
+    const fbEl = document.querySelector('#floatingFrameBar .frame-bar');
+    const fr = fbEl && fbEl.offsetHeight ? localRect(fbEl) : null;
+    const toBottom = (b) => dy + (b - Y), toTop = (t) => dy + (t - T);
+    const nearer = (a, da, b, db) => (Math.abs(da) <= Math.abs(db) ? a : b);
+    // is there room for the bar between the top bar and the frame?
+    const aboveOK = fr && fr.top - h >= hdrB - 1;
+    let t = dy;
+    if (dy > oy) t = Y >= H ? 0 : nearer(oy, Y - S, 0, H - Y);
+    else if (S - Y <= h / 2) t = oy;
+    else if (fr && Y > fr.top && T < fr.bottom) t = aboveOK ? nearer(toBottom(fr.top), Y - fr.top, toTop(fr.bottom), T - fr.bottom) : toTop(fr.bottom);
+    else if (fr && Y <= fr.top) t = aboveOK ? nearer(toTop(hdrB), T - hdrB, toBottom(fr.top), Y - fr.top) : toTop(fr.bottom);
+    else if (fr && T >= fr.bottom && T - fr.bottom <= h / 2) t = toTop(fr.bottom);
+    else if (!fr && T - hdrB <= h / 2) t = toTop(hdrB);
+    reciteBarSetDY(Math.max(minDY, Math.min(0, t)), true);
   };
   inner.addEventListener('pointerup', end);
   inner.addEventListener('pointercancel', end);
@@ -31277,7 +31349,7 @@ function positionAyahPopup() {
   ayahPopupEl.style.left = '0';
   ayahPopupEl.style.right = '0';
   // While the red recitation bar is showing, the window sits above it.
-  const redH = reciteBarShowing() ? (reciteModeBarEl.offsetHeight || 0) : 0;
+  const redH = (reciteBarShowing() && !reciteBarDY) ? (reciteModeBarEl.offsetHeight || 0) : 0;
   if (!landscapeMode) {
     // Portrait: fixed elements sit directly against the real viewport (no
     // rotation transform is in play), so the bar's own getBoundingClientRect()
@@ -34053,7 +34125,7 @@ function renderGuideTab() {
       'تُفتح نافذة الآية بالنقر على <b>أي كلمة من الآية أو على رقمها</b> عدا الكلمات الخضراء (والتمرير التلقائي غير مفعّل)، وتُغلق مع تظليل الآية بالنقر على أي موضع من النص (حتى لو كان كلمة خضراء)، أو بالرجوع، أو بالانتقال إلى أي عمل آخر. وتبدأ التلاوة الصوتية من النافذة.',
       '<b>نسخ الآية</b> و<b>حفظ الآية</b>: تُنفَّذ وتُغلق النافذة مباشرة.',
       '<b>تلاوة</b>: الاستماع لتلاوة الآية بصوت القارئ المختار. عند النقر عليها تُغلق النافذة ويظهر شريط التلاوة الأحمر فوق الشريط السفلي مباشرة، وتبقى الآية مظللة لتبدأ منها التلاوة، وفي الشريط زر التشغيل والإيقاف، وزر الإغلاق (✕) الذي يوقف التلاوة ويُغلق الشريط مباشرة، واختيارات قراءة الآية <b>مرة</b> واحدة أو <b>تكرارها</b> أو <b>الاستمرار</b>. وفي كل مرة يُفتح فيها شريط التلاوة يكون الاختيار على <b>استمرار</b>، ولمن أراد غيره أن يختار «مرة» أو «تكرار». ولا تعمل قراءة الكلمات مع التلاوة: تُلغى عند فتح الشريط، وتفعيلها يُغلقه.',
-      'يمكن تحريك شريط التلاوة بالإصبع إلى أي موضع في الشاشة، ويعود إلى مكانه فوق الشريط السفلي عند فتحه من جديد. ويبقى الشريط ظاهراً فوق النوافذ والقوائم الأخرى، وتظهر نافذة الآية فوقه إذا فُتحت والشريط ظاهر. وعند الرجوع (بالإيماءة أو بسهم الرجوع) تُغلق أولاً النوافذ والوظائف التي فُتحت بعده، ثم يوقف الرجوع التلاوة إن كانت جارية، ثم يُخفي الشريط، ثم يعود إلى قائمة السور.',
+      'يمكن تحريك شريط التلاوة (الأحمر أو البرتقالي) بالإصبع من الشريط نفسه، لأعلى ولأسفل فقط. وعند تركه يستقر تلقائياً في أقرب موضع مناسب: فوق الشريط السفلي، أو تحت الشريط العلوي، أو فوق الإطار العائم أو تحته ملاصقاً له، أو يرجع إلى موضعه إن حُرّك قليلاً، وإلا بقي حيث تُرك. ويعود إلى مكانه فوق الشريط السفلي عند فتحه من جديد. وفي شريط تلاوة السورة تبقى الإشارة على آخر ما اخترته (السورة أو الجزء أو التوقيت). ويبقى الشريط ظاهراً فوق النوافذ والقوائم الأخرى، وتظهر نافذة الآية فوقه إذا فُتحت والشريط ظاهر. وعند الرجوع (بالإيماءة أو بسهم الرجوع) تُغلق أولاً النوافذ والوظائف التي فُتحت بعده، ثم يوقف الرجوع التلاوة إن كانت جارية، ثم يُخفي الشريط، ثم يعود إلى قائمة السور.',
       'أثناء التلاوة تبقى الآية المظللة في أعلى النص (وفي العرض بحجم الصفحة تبقى الصفحة كاملة ظاهرة)، وتُظلَّل البسملة أيضاً أثناء تلاوتها.',
       'إذا انتقلت أثناء التلاوة إلى سورة أخرى (بسهمي «ج» و«ح» في الإطار العائم أو من قائمة السور)، استمرت التلاوة في سورتها وبقي العرض على السورة الجديدة؛ فإذا أُوقفت التلاوة ثم شُغّلت، بدأت من بسملة السورة الجديدة الظاهرة ثم آياتها.',
       'يظهر في الشريط <b>تكرار</b> ومعه عدد المرات (٢ في البداية). وعند اختياره تظهر قائمة لعدد مرات قراءة الآية (من مرتين إلى سبع)، فيتغير العدد بجانب كلمة «تكرار» إلى المختار، ويبقى محفوظاً حتى يُغيَّر.',
