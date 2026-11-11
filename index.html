@@ -187,6 +187,16 @@ body.landscape-lock .rotateFabBtn{right:auto;left:8px;}
 .book-btn{display:block;margin:14px auto;background:#0E4433;color:#F6EFDC;border:none;border-radius:18px;padding:9px 18px;font-family:sans-serif;font-weight:700;font-size:15px;cursor:pointer;}
 .book-btn.alt{background:transparent;color:#0E4433;border:2px solid #0E4433;}
 body.dark-mode #bookReader{background:#171C18;color:#EFE8D6;}
+#selReader{position:fixed;inset:0;z-index:54;background:#E9E1CB;flex-direction:column;overflow:hidden;}
+#selReaderHead{display:flex;align-items:center;gap:6px;background:#0E4433;color:#FFFFFF;padding:6px 8px;padding-top:calc(6px + var(--topInset));flex:0 0 auto;}
+#selReaderTitle{flex:1;min-width:0;font-family:'Amiri',serif;font-weight:700;font-size:18px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sel-hbtn{direction:ltr;background:transparent;border:2px solid #E8B84B;border-radius:8px;color:#FFFFFF;font-family:sans-serif;font-weight:700;font-size:17px;line-height:1;padding:6px 8px;cursor:pointer;flex:0 0 auto;}
+#selReaderBody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 8px calc(90px + var(--navInset));}
+#selReaderBody .sel-times{font-family:sans-serif;font-weight:700;font-size:16px;color:#7B2E2E;text-align:center !important;text-align-last:center !important;-webkit-text-stroke:0;line-height:1.6;margin:2px 0 4px;}
+body.dark-mode #selReaderBody .sel-times{color:#E8B84B;}
+#selReaderBody .sel-frame{height:auto !important;min-height:0 !important;max-width:760px;margin:0 auto;padding:6px 0 10px;}
+body.dark-mode #selReader{background:#101411;}
+body.dark-mode #selReaderHead{background:#08251C;}
 body.dark-mode #bookReaderHead{background:#08251C;}
 body.dark-mode #bookReaderBody q{color:#F0566A;}
 body.dark-mode #bookReaderBody h4,body.dark-mode .book-seg-label{color:#E8B84B;}
@@ -588,8 +598,11 @@ body.landscape-lock #boundPagesContainer .qcombo .cbsm{font-size:calc(var(--glob
 html,body{overflow:hidden;}
 #contDialog{display:none;position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:12px;box-sizing:border-box;}
 .sb-cr-title{font-family:sans-serif;font-weight:700;font-size:19px;padding:12px 4px 4px;margin:20px 0 4px;border-top:2px solid #C9B98A;}
-.sb-cr-sub{font-family:sans-serif;font-weight:700;font-size:16px;padding:2px 4px 6px;}
-.sb-custom-recite #cdList{display:block !important;}
+.sb-cr-sub{font-family:sans-serif;font-weight:700;font-size:17px;padding:10px 4px 6px;color:#7B2E2E;}
+body.dark-mode .sb-cr-sub{color:#E8B84B;}
+.cr-part + .cr-part{margin-top:14px;border-top:1px dashed #C9B98A;}
+.cd-chk-lbl{font-weight:700;}
+.sb-custom-recite .cd-list{display:block !important;}
 .sb-custom-recite .cd-actions{display:flex;gap:8px;justify-content:center;margin-top:8px;}
 .cd-card{background:#FBF6E8;color:#0E4433;border:2px solid #0E4433;border-radius:16px;width:100%;max-width:440px;max-height:calc(100% - 8px);overflow-y:auto;padding:12px 14px;box-sizing:border-box;font-family:sans-serif;direction:rtl;}
 .cd-title{font-size:20px;font-weight:700;text-align:center;margin-bottom:8px;}
@@ -597,7 +610,7 @@ html,body{overflow:hidden;}
 .cd-head{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:700;margin-bottom:6px;}
 .cd-head input,.cd-row input,.cd-chk input,.cd-chip input{accent-color:#0E4433;width:20px;height:20px;margin:0;flex-shrink:0;}
 .cd-chips{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
-.cd-chips.off,#cdList.off{opacity:.45;}
+.cd-chips.off,.cd-list.off{opacity:.45;}
 .cd-main{font-size:20.5px;font-weight:800;padding:7px 0;}
 /* the four choices in one clear frame, with a clear line between them; the
    title above it and تشغيل / إغلاق below it stay outside */
@@ -606,15 +619,15 @@ html,body{overflow:hidden;}
 .cd-box > .cd-sec:first-child{border-top:none;}
 .cd-title{font-size:21px;}
 /* the details of حسب الوقت and سور وآيات مختارة in their own blue */
-.cd-chips,#cdList{--cdBlue:#1E5BB8;color:var(--cdBlue);}
-.cd-chips .cd-chip,#cdList .cd-item,#cdList .cd-in,#cdList .cd-btn{border-color:var(--cdBlue);color:var(--cdBlue);}
-.cd-chips input,#cdList input[type=checkbox]{accent-color:var(--cdBlue);}
-#cdList .cd-in::placeholder{color:var(--cdBlue);opacity:.55;}
-body.dark-mode .cd-chips,body.dark-mode #cdList{--cdBlue:#8DBBFF;}
+.cd-chips,.cd-list{--cdBlue:#1E5BB8;color:var(--cdBlue);}
+.cd-chips .cd-chip,.cd-list .cd-item,.cd-list .cd-in,.cd-list .cd-btn{border-color:var(--cdBlue);color:var(--cdBlue);}
+.cd-chips input,.cd-list input[type=checkbox]{accent-color:var(--cdBlue);}
+.cd-list .cd-in::placeholder{color:var(--cdBlue);opacity:.55;}
+body.dark-mode .cd-chips,body.dark-mode .cd-list{--cdBlue:#8DBBFF;}
 body.dark-mode .cd-box,body.dark-mode .cd-box > .cd-sec{border-color:#F6EFDC;}
-body.dark-mode .cd-chips .cd-chip,body.dark-mode #cdList .cd-item,body.dark-mode #cdList .cd-in,body.dark-mode #cdList .cd-btn{border-color:var(--cdBlue);color:var(--cdBlue);}
+body.dark-mode .cd-chips .cd-chip,body.dark-mode .cd-list .cd-item,body.dark-mode .cd-list .cd-in,body.dark-mode .cd-list .cd-btn{border-color:var(--cdBlue);color:var(--cdBlue);}
 /* what belongs to a main choice starts under its first letter (radio 20px + gap 8px) */
-.cd-sec > .cd-chips,.cd-sec > #cdList{margin-right:28px;}
+.cd-sec > .cd-chips,.cd-sec > .cd-list{margin-right:28px;}
 .cd-chk.dis,.cd-in.dis{opacity:.4;}
 #reciteModeBarInner.rb-surah{background:#6B1D1D !important;}
 #rbPicker{display:none;position:absolute;bottom:calc(100% + 6px);left:0;right:0;background:#6B1D1D;border-radius:16px;padding:6px;box-shadow:0 -2px 10px rgba(0,0,0,.3);}
@@ -786,14 +799,14 @@ body.dark-mode .sajdah-side-bar{fill:#EFE8D6;}
 .qheader::before,.qcombo .cname::before{content:'';position:absolute;inset:3px;border:1px solid #D1A740;border-radius:4px;pointer-events:none;}
 .qh-grid{display:grid;direction:rtl;align-self:stretch;align-items:center;min-height:0;height:100%;grid-template-rows:minmax(0,1fr);
   font-size:min(1em, calc((100cqi - 14px) / 19.3));
-  grid-template-columns:4.8em 1.5px 2.55em minmax(0,1fr) 1.5px 2.55em 1.5px 4.8em;}
+  grid-template-columns:4.7em 1.5px 2.65em minmax(0,1fr) 1.5px 3.1em 1.5px 4.25em;}
 .qh-sep{display:block;align-self:stretch;width:1.5px;background:#D1A740;font-style:normal;}
 .qh-grid .qh-meta{min-width:0 !important;justify-self:stretch;justify-content:flex-start;padding:0;box-sizing:border-box;gap:.2em !important;}
 /* the same space from the frame's right edge to «ترتيبها» as from the
    widest ayah count (٢٨٦) to its left edge; the two outer dividers equally
    far in from either side */
-.qh-grid .qh-c1{padding-right:.35em;}
-.qh-grid .qh-c5{padding-left:.35em;justify-content:flex-end;}
+.qh-grid .qh-c1{padding-right:.25em;}
+.qh-grid .qh-c5{padding-left:.25em;justify-content:flex-end;}
 .qh-grid .qh-meta .qh-num{font-size:1.136em;}
 .qh-word,.qh-recite{justify-self:center;font-family:sans-serif;font-weight:700;font-size:.9em;white-space:nowrap;line-height:1;position:relative;top:-.06em;-webkit-text-stroke:0;}
 .qh-word{color:#F6EFDC;}
@@ -982,12 +995,21 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
   </div>
   <div id="bookReaderBody"></div>
 </div>
+<div id="selReader" style="display:none;">
+  <div id="selReaderHead">
+    <button id="selFontDown" class="sel-hbtn" aria-label="تصغير الخط">A−</button>
+    <div id="selReaderTitle"></div>
+    <button id="selFontUp" class="sel-hbtn" aria-label="تكبير الخط">A+</button>
+    <button id="selReaderClose" class="sel-hbtn" aria-label="إغلاق">✕</button>
+  </div>
+  <div id="selReaderBody"></div>
+</div>
 <div id="floatingFrameBar" class="floating-frame-bar" style="display:none;position:fixed;left:0;right:0;z-index:29;padding:1px 8px 0;"></div>
 
 <div id="ayahPopup" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:55;">
   <div id="ayahPopupCard" class="ayah-popup-card" style="max-width:420px;margin:0 auto 4px;border-radius:16px;box-sizing:border-box;box-shadow:0 -4px 20px rgba(0,0,0,.3);max-height:65vh;display:flex;flex-direction:column;overflow:hidden;">
     <div style="display:flex;">
-      <button class="ayah-popup-title" data-action="recite" style="color:#C0463E">تلاوة</button>
+      <button class="ayah-popup-title" data-action="recite" style="color:#C0463E">استماع</button>
       <button class="ayah-popup-title" data-action="copy">نسخ الآية</button>
       <button class="ayah-popup-title" data-action="save">حفظ الآية</button>
     </div>
@@ -1042,17 +1064,17 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
   </div>
   <div class="sidebar-main">
     <div class="tabs" id="indexTabs">
+      <button class="tab" data-tab="fadl">فضل القرآن وآداب التلاوة</button>
+      <button class="tab" data-tab="tajweed">مختصر أحكام التجويد</button>
       <button class="tab" data-tab="font">التخطيط</button>
       <button class="tab" data-tab="pagebg">خلفية النص</button>
-      <button class="tab" data-tab="recitation">التلاوة</button>
+      <button class="tab" data-tab="recitation">الاستماع</button>
       <button class="tab" data-tab="duas">الأدعية</button>
       <button class="tab" data-tab="surah">السور</button>
       <button class="tab" data-tab="juz">الأجزاء</button>
       <button class="tab" data-tab="page">الصفحات</button>
       <button class="tab" data-tab="bookmarks">المرجعيات</button>
       <button class="tab" data-tab="hijri">تعديل هجري</button>
-      <button class="tab" data-tab="fadl">فضل القرآن وآداب تلاوته</button>
-      <button class="tab" data-tab="tajweed">مختصر أحكام التجويد</button>
       <button class="tab" data-tab="stats">إحصائيات قرآنية</button>
       <button class="tab" data-tab="guide">دليل القارئ</button>
       <button class="tab" data-tab="share">مشاركة التطبيق</button>
@@ -30962,42 +30984,59 @@ function playReciteBookmark(bm) {
   playCustomRecitation(JSON.parse(JSON.stringify(bm.items)));
 }
 
-// ---- «سور وآيات مختارة» (side menu ▸ التلاوة ▸ تلاوة مخصصة) ----
-// Each row: a surah name; «سورة» ticked = the whole surah (× its repeat
-// count); ayah numbers written = those ayahs (repeated when «الآية» is
-// ticked). ▶ تشغيل plays it on the surah bar; حفظ keeps it, under a name,
-// in المرجعيات ▸ تلاوة, to be played from there directly.
-let customReciteName = '';
+// ---- «سور وآيات مختارة» (side menu ▸ الاستماع) ----
+// Two lists built the same way: «للاستماع» (played on the surah bar) and
+// «للقراءة» (shown one after another in a reading page, without audio).
+// Each row: a surah name; «سورة» ticked = the whole surah; ayah numbers
+// written = those ayahs (for listening, each may be repeated). حفظ keeps a
+// list, under a name, in المرجعيات ▸ سور وآيات مختارة.
+let readList = [];
+try { readList = JSON.parse(store.get('read-list') || '[]') || []; } catch (e) { readList = []; }
+if (!Array.isArray(readList) || !readList.length) readList = [blankContItem()];
+function saveReadList() { store.set('read-list', JSON.stringify(readList)); }
+const selListNames = { listen: '', read: '' };
 function renderCustomReciteSection(host) {
-  const items = contList.map((it, i) =>
+  host.innerHTML = '<div class="sb-cr-title">سور وآيات مختارة</div>' +
+    '<div class="cr-part" data-mode="listen"></div><div class="cr-part" data-mode="read"></div>';
+  renderSelPart(host.querySelector('[data-mode="listen"]'), 'listen');
+  renderSelPart(host.querySelector('[data-mode="read"]'), 'read');
+}
+// read rows: no repeat counts (each ayah is shown once)
+function readItemsOf(list) {
+  return JSON.parse(JSON.stringify(list.filter((it) => contItemPlan(it))));
+}
+function renderSelPart(host, mode) {
+  const read = mode === 'read';
+  const list = read ? readList : contList;
+  const save = read ? saveReadList : saveContSettings;
+  const items = list.map((it, i) =>
     '<div class="cd-item" data-i="' + i + '">' +
       '<div class="cd-line"><label class="cd-chk"><input type="checkbox" data-f="whole"' + (it.whole ? ' checked' : '') + '>سورة</label>' +
       '<input class="cd-in cd-name" data-f="surah" list="cdSurahNames" placeholder="اسم السورة" value="' + escapeHtml(it.surah || '') + '">' +
       '<span class="cd-lbl">تكرار</span><input class="cd-in cd-num" data-f="wholeRep" inputmode="numeric" value="' + escapeHtml(String(it.wholeRep || 1)) + '">' +
-      (contList.length > 1 ? '<button class="cd-del" data-del="' + i + '" aria-label="حذف">✕</button>' : '') + '</div>' +
+      (list.length > 1 ? '<button class="cd-del" data-del="' + i + '" aria-label="حذف">✕</button>' : '') + '</div>' +
       '<div class="cd-line"><label class="cd-chk"><input type="checkbox" data-f="ayahOn"' + (it.ayahOn ? ' checked' : '') + '>الآية</label>' +
       '<input class="cd-in cd-name" data-f="ayahs" inputmode="text" placeholder="مثل: ٥ أو ١-٧ أو ٣، ٩" value="' + escapeHtml(it.ayahs || '') + '">' +
-      '<span class="cd-lbl">تكرار</span><input class="cd-in cd-num" data-f="ayahRep" inputmode="numeric" value="' + escapeHtml(String(it.ayahRep || 1)) + '"></div>' +
+      '<span class="cd-lbl">تكرار</span><input class="cd-in cd-num" data-f="ayahRep" inputmode="numeric" value="' + escapeHtml(String(it.ayahRep || 1)) + '">' + '</div>' +
     '</div>').join('');
   let names = '';
-  for (let i = 1; i <= 114; i++) names += '<option value="' + SURAH_NAMES[i] + '">';
+  if (!document.getElementById('cdSurahNames')) { for (let i = 1; i <= 114; i++) names += '<option value="' + SURAH_NAMES[i] + '">'; }
   host.innerHTML =
-    '<div class="sb-cr-title">تلاوة مخصصة</div>' +
-    '<div class="sb-cr-sub">سور وآيات مختارة</div>' +
-    '<div id="cdList">' + items +
-      '<div class="cd-actions"><button id="cdAdd" class="cd-btn light">+ إضافة سورة</button></div>' +
-      '<input id="crName" class="cd-in" style="width:100%;box-sizing:border-box;margin-top:6px" placeholder="اسم التلاوة عند حفظها (اختياري)" value="' + escapeHtml(customReciteName) + '">' +
+    '<div class="sb-cr-sub">' + (read ? '٢- للقراءة' : '١- للاستماع') + '</div>' +
+    '<div class="cd-list">' + items +
+      '<div class="cd-actions"><button class="cd-btn light" data-act="add">+ إضافة سورة</button></div>' +
+      '<input class="cd-in cr-name" style="width:100%;box-sizing:border-box;margin-top:6px" placeholder="الاسم عند الحفظ (اختياري)" value="' + escapeHtml(selListNames[mode]) + '">' +
     '</div>' +
-    '<datalist id="cdSurahNames">' + names + '</datalist>' +
-    '<div class="cd-actions main"><button id="crPlay" class="cd-btn">▶ تشغيل</button><button id="crSave" class="cd-btn light">حفظ</button></div>';
+    (names ? '<datalist id="cdSurahNames">' + names + '</datalist>' : '') +
+    '<div class="cd-actions main"><button class="cd-btn" data-act="play">' + (read ? 'قراءة' : '▶ تشغيل') + '</button><button class="cd-btn light" data-act="save">حفظ</button></div>';
   host.querySelectorAll('.cd-item').forEach((row) => {
     const i = parseInt(row.dataset.i, 10);
     const f = (n) => row.querySelector('[data-f="' + n + '"]');
     const sync = () => {
-      const it = contList[i];
+      const it = list[i];
       const hasName = String(it.surah || '').trim() !== '';
       const ayahsTyped = String(it.ayahs || '').trim() !== '';
-      const on = (el, yes) => { el.disabled = !yes; el.closest('label') ? el.closest('label').classList.toggle('dis', !yes) : el.classList.toggle('dis', !yes); };
+      const on = (el, yes) => { if (!el) return; el.disabled = !yes; el.closest('label') ? el.closest('label').classList.toggle('dis', !yes) : el.classList.toggle('dis', !yes); };
       on(f('whole'), hasName);
       on(f('wholeRep'), hasName && it.whole);
       on(f('ayahOn'), hasName);
@@ -31007,34 +31046,139 @@ function renderCustomReciteSection(host) {
     row.querySelectorAll('[data-f]').forEach((inp) => {
       const name = inp.dataset.f;
       inp.addEventListener(inp.type === 'checkbox' ? 'change' : 'input', () => {
-        contList[i][name] = inp.type === 'checkbox' ? inp.checked : inp.value;
-        saveContSettings();
+        list[i][name] = inp.type === 'checkbox' ? inp.checked : inp.value;
+        save();
         sync();
       });
     });
     sync();
   });
-  host.querySelector('#crName').addEventListener('input', (e) => { customReciteName = e.target.value; });
-  host.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => { contList.splice(parseInt(b.dataset.del, 10), 1); saveContSettings(); renderCustomReciteSection(host); }));
-  host.querySelector('#cdAdd').addEventListener('click', () => { contList.push(blankContItem()); saveContSettings(); renderCustomReciteSection(host); });
-  host.querySelector('#crSave').addEventListener('click', () => {
-    const q = buildContListQueue(contList);
+  host.querySelector('.cr-name').addEventListener('input', (e) => { selListNames[mode] = e.target.value; });
+  host.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => { list.splice(parseInt(b.dataset.del, 10), 1); save(); renderSelPart(host, mode); }));
+  host.querySelector('[data-act="add"]').addEventListener('click', () => { list.push(blankContItem()); save(); renderSelPart(host, mode); });
+  const chosen = () => (read ? readItemsOf(list) : JSON.parse(JSON.stringify(list.filter((it) => contItemPlan(it)))));
+  host.querySelector('[data-act="save"]').addEventListener('click', () => {
+    const q = buildContListQueue(list);
     if (typeof q === 'string') { toast(q); return; }
-    const items = JSON.parse(JSON.stringify(contList.filter((it) => contItemPlan(it))));
-    const label = contListLabel(items);
-    const name = customReciteName.trim() || label;
-    reciteBookmarks.push({ id: Date.now(), name, label, items });
+    const its = chosen();
+    const label = contListLabel(its);
+    const name = selListNames[mode].trim() || label;
+    reciteBookmarks.push(read ? { id: Date.now(), name, label, items: its, kind: 'read' } : { id: Date.now(), name, label, items: its });
     saveReciteBookmarks();
-    customReciteName = '';
-    renderCustomReciteSection(host);
+    selListNames[mode] = '';
+    renderSelPart(host, mode);
     toast('✓ حُفظت في المرجعيات باسم «' + name + '»');
   });
-  host.querySelector('#crPlay').addEventListener('click', () => {
-    const q = buildContListQueue(contList);
+  host.querySelector('[data-act="play"]').addEventListener('click', () => {
+    const q = buildContListQueue(list);
     if (typeof q === 'string') { toast(q); return; }
-    playCustomRecitation(JSON.parse(JSON.stringify(contList.filter((it) => contItemPlan(it)))));
+    if (read) openSelReader(chosen(), selListNames[mode].trim() || contListLabel(chosen()));
+    else playCustomRecitation(chosen());
   });
 }
+
+// ---- the reading page of «سور وآيات مختارة ▸ للقراءة»: the chosen surahs
+// and ayahs one after another, in the order they were chosen, with the
+// mushaf's own formatting (font, colours, word meanings, ayah numbers) and
+// no audio. The ayah text is taken from the very pages the mushaf builds,
+// so everything looks exactly as it does there. ----
+let selReaderFontPx = parseInt(store.get('sel-font-px'), 10) || 0;
+function closeSelReaderLayer() {
+  const el = document.getElementById('selReader');
+  el.style.display = 'none';
+  document.getElementById('selReaderBody').innerHTML = '';
+}
+function openSelReader(items, title) {
+  const runs = [];
+  for (const it of items) {
+    const s = resolveSurah(it.surah), plan = contItemPlan(it);
+    if (!s || !plan) continue;
+    const max = SURAH_AYAH_COUNT[s] || 0;
+    if (plan.whole) { const a = []; for (let i = 1; i <= max; i++) a.push(i); runs.push([s, a, plan.wholeRep, 'السورة']); }
+    if (plan.ayahs) { const a = parseAyahSpec(it.ayahs, max); if (a && a.length) runs.push([s, a, plan.ayahRep, a.length > 1 ? 'الآيات (' + toArabicDigits(latinDigits(it.ayahs).replace(/\s+/g, '')) + ')' : 'الآية ' + toArabicDigits(a[0])]); }
+  }
+  if (!runs.length) { toast('اكتب اسم سورة، ثم اختر السورة كاملة أو اكتب أرقام آيات منها'); return; }
+  if (!searchIndex) searchIndex = buildSearchIndex();
+  const pageSegs = new Map();   // page -> Map("s:a" -> [span, ...])
+  const segsOf = (n) => {
+    if (pageSegs.has(n)) return pageSegs.get(n);
+    const m = new Map();
+    if (n >= 1 && n <= PAGES.length) {
+      const holder = document.createElement('div');
+      holder.appendChild(buildFreePageContent(n).frag);
+      holder.querySelectorAll('.ayah-seg').forEach((sp) => {
+        const k = sp.dataset.surah + ':' + sp.dataset.ayah;
+        if (!m.has(k)) m.set(k, []);
+        m.get(k).push(sp);
+      });
+    }
+    pageSegs.set(n, m);
+    return m;
+  };
+  const byKey = new Map(searchIndex.map((x) => [x.surah + ':' + x.ayah, x]));
+  const text = document.createElement('div');
+  text.className = 'freePageTextBlock';
+  text.style.fontSize = (selReaderFontPx || freeFontPx) + 'px';
+  const TIMES = ['', 'مرة واحدة', 'مرتين', 'ثلاث مرات', 'أربع مرات', 'خمس مرات', 'ست مرات', 'سبع مرات', 'ثماني مرات', 'تسع مرات', 'عشر مرات'];
+  runs.forEach(([s, ayahs, times, what]) => {
+    const hd = document.createElement('div');
+    hd.className = 'qheader';
+    hd.dataset.surah = String(s);
+    hd.style.fontSize = BASE_HEADER_PX + 'px';
+    hd.innerHTML = surahHeaderInnerHTML(s);
+    text.appendChild(hd);
+    // how many times to read it, as chosen in «تكرار»
+    if (times > 1) {
+      const n = document.createElement('div');
+      n.className = 'sel-times';
+      n.textContent = 'تُقرأ ' + what + ' ' + (TIMES[times] || toArabicDigits(times) + ' مرة');
+      text.appendChild(n);
+    }
+    if (ayahs[0] === 1 && s !== 1 && s !== 9) {
+      const b = document.createElement('div');
+      b.className = 'qbsm';
+      b.dataset.surah = String(s);
+      b.style.fontSize = BASE_BSM_PX + 'px';
+      b.textContent = BSM_TEXT;
+      text.appendChild(b);
+    }
+    const para = document.createElement('div');
+    para.className = 'freePara';
+    ayahs.forEach((a) => {
+      const k = s + ':' + a, it = byKey.get(k);
+      if (!it) return;
+      // an ayah may run on to the next page
+      [it.page, it.page + 1].forEach((n) => (segsOf(n).get(k) || []).forEach((sp) => {
+        para.appendChild(sp.cloneNode(true));
+        para.appendChild(document.createTextNode(' '));
+      }));
+    });
+    text.appendChild(para);
+  });
+  highlightDivineNamesIn(text);
+  const el = document.getElementById('selReader');
+  document.getElementById('selReaderTitle').textContent = title || '';
+  const body = document.getElementById('selReaderBody');
+  body.innerHTML = '';
+  const frame = document.createElement('div');
+  frame.className = 'page-frame sel-frame';
+  frame.appendChild(text);
+  body.appendChild(frame);
+  body.scrollTop = 0;
+  if (reciting) stopRecitation();
+  closeSidebar();
+  el.style.display = 'flex';
+  if (backLayerStack.lastIndexOf(closeSelReaderLayer) === -1) pushBackLayer(closeSelReaderLayer);
+}
+document.getElementById('selReaderClose').addEventListener('click', () => closeSpecificLayer(closeSelReaderLayer));
+['selFontDown', 'selFontUp'].forEach((id, k) => document.getElementById(id).addEventListener('click', () => {
+  const t = document.querySelector('#selReaderBody .freePageTextBlock');
+  if (!t) return;
+  const cur = parseFloat(t.style.fontSize) || freeFontPx;
+  const nx = Math.max(16, Math.min(60, cur + (k ? 2 : -2)));
+  t.style.fontSize = nx + 'px';
+  selReaderFontPx = nx; store.set('sel-font-px', String(nx));
+}));
 // plays a list on the surah (orange) bar
 function playCustomRecitation(items) {
   const q = buildContListQueue(items);
@@ -31780,13 +31924,24 @@ document.querySelectorAll('.ayah-content-tab').forEach((btn) => {
 
 
 function getAyahFullText(surah, ayah) {
-  const segs = document.querySelectorAll('.ayah-seg[data-surah="' + surah + '"][data-ayah="' + ayah + '"]');
-  return Array.from(segs).map((s) => s.textContent.trim()).join(' ').replace(/\s+/g, ' ').trim();
+  let segs = Array.from(document.querySelectorAll('.ayah-seg[data-surah="' + surah + '"][data-ayah="' + ayah + '"]'));
+  // only the copy that is on screen (the other layout keeps its own hidden copy)
+  const shown = segs.filter((e) => e.getClientRects().length > 0);
+  if (shown.length) segs = shown;
+  const box = segs.length ? segs[0].closest('#selReaderBody, #freePagesContainer, #boundPagesContainer, #vScrollWrap, #freeScrollWrap') : null;
+  if (box) segs = segs.filter((e) => box.contains(e));
+  return segs.map((s) => {
+    const c = s.cloneNode(true);
+    c.querySelectorAll('.ayahnum, .ayahnum-badge, .rubmark, svg, .gh-tip').forEach((x) => x.remove());
+    return c.textContent.replace(/\u0640/g, '').replace(/[\u06DE\u06E9]/g, '').trim();
+  }).join(' ').replace(/\s+/g, ' ').trim();
 }
 
+// [نص الآية رقمها] اسم السورة - the same form as copying a selection
 function copyAyahText(surah, ayah) {
-  const text = getAyahFullText(surah, ayah);
-  if (!text) { toast('تعذّر نسخ الآية'); return; }
+  const body = getAyahFullText(surah, ayah);
+  if (!body) { toast('تعذّر نسخ الآية'); return; }
+  const text = '[' + body + ' ' + toArabicDigits(ayah) + '] ' + SURAH_NAMES[surah];
   const done = () => toast('✓ تم نسخ الآية');
   // The modern Clipboard API needs a secure context (https/localhost) and
   // can reject with NotAllowedError even when it's present and looks
@@ -32737,7 +32892,7 @@ function surahHeaderInnerHTML(sid) {
     '<span class="qh-word">سورة</span>' +
     '<span class="qh-name">' + (SURAH_NAMES[sid] || '') + '</span>' +
     '<i class="qh-sep"></i>' +
-    '<span class="qh-recite" role="button" data-surah="' + sid + '">تلاوة</span>' +
+    '<span class="qh-recite" role="button" data-surah="' + sid + '">استماع</span>' +
     '<i class="qh-sep"></i>' +
     '<span class="qh-meta qh-c5"><span class="qh-num">' + toArabicDigits(SURAH_AYAH_COUNT[sid] || '') + '</span><span class="qh-label">آياتها</span></span>' +
   '</span>';
@@ -33729,12 +33884,48 @@ document.getElementById('speedUpBtn').addEventListener('click', () => {
   store.set('auto-speed-px', String(speedPxPerSec));
 });
 
-// plain-text copy: wrap ayah numbers in ornamental brackets since circles can't survive as text
-vScrollWrap.addEventListener('copy', (e) => {
-  const selection = window.getSelection().toString();
-  if (!selection) return;
-  const formatted = selection.replace(/\u0640/g, ''); // strip decorative kashida - not part of the actual text
-  e.clipboardData.setData('text/plain', formatted);
+// Copying ayah text (from the mushaf or the reading page): the copied words
+// go between [ ], each ayah's number right after its own words, and the
+// surah's name after the closing bracket:
+//   [ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِينَ ٢] الفاتحة
+//   [… end of one ayah ٥ start of the next … ٦] البقرة
+document.addEventListener('copy', (e) => {
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount || !sel.toString()) return;
+  const range = sel.getRangeAt(0);
+  const root = range.commonAncestorContainer.nodeType === 1 ? range.commonAncestorContainer : range.commonAncestorContainer.parentNode;
+  const scope = root.closest ? (root.closest('.freePageTextBlock, .pageLinesX, #freePagesContainer, #boundPagesContainer, #vScrollWrap, #freeScrollWrap, #selReaderBody') || null) : null;
+  let segs = [];
+  if (root.closest && root.closest('.ayah-seg')) segs = [root.closest('.ayah-seg')];
+  else if (scope || root.querySelector) segs = [...(root.querySelectorAll ? root.querySelectorAll('.ayah-seg') : [])].filter((s) => range.intersectsNode(s));
+  if (!segs.length) {
+    if (scope) { e.clipboardData.setData('text/plain', sel.toString().replace(/ـ/g, '')); e.preventDefault(); }
+    return;
+  }
+  const parts = [];   // [{s, a, t}] in order, one per ayah
+  segs.forEach((sp) => {
+    const r = document.createRange();
+    r.selectNodeContents(sp);
+    if (sp.contains(range.startContainer)) r.setStart(range.startContainer, range.startOffset);
+    if (sp.contains(range.endContainer)) r.setEnd(range.endContainer, range.endOffset);
+    const frag = r.cloneContents();
+    frag.querySelectorAll('.ayahnum, .ayahnum-badge, .rubmark, svg, .gh-tip').forEach((x) => x.remove());
+    const t = frag.textContent.replace(/ـ/g, '').replace(/[۞۩]/g, '').replace(/\s+/g, ' ').trim();
+    if (!t) return;
+    const s = parseInt(sp.dataset.surah, 10), a = parseInt(sp.dataset.ayah, 10);
+    const last = parts[parts.length - 1];
+    if (last && last.s === s && last.a === a) last.t += ' ' + t;
+    else parts.push({ s, a, t });
+  });
+  if (!parts.length) return;
+  const out = [];
+  let i = 0;
+  while (i < parts.length) {
+    const s = parts[i].s, run = [];
+    while (i < parts.length && parts[i].s === s) { run.push(parts[i].t + ' ' + toArabicDigits(parts[i].a)); i++; }
+    out.push('[' + run.join(' ') + '] ' + SURAH_NAMES[s]);
+  }
+  e.clipboardData.setData('text/plain', out.join('\n'));
   e.preventDefault();
 });
 
@@ -34091,112 +34282,96 @@ function renderGuideTab() {
            : '<rect x="8" y="4" width="18" height="3" rx="1.5" fill="currentColor"/><polygon points="10,0 0,5.5 10,11" fill="currentColor"/>') + '</svg>';
   const SECTIONS = [
     { title: '١. شريط الرأس (أعلى الشاشة)', items: [
-      'الساعة واليوم والتاريخ (الهجري والميلادي).',
-      'حقل "بحث" للبحث عن أي كلمة أو عبارة أو جملة في القرآن الكريم، ويكون البحث بالكتابة الإملائية لا بالرسم العثماني (فتُكتب «الصلاة» لا «الصلوة»، وكلمة «بلغ» لا تُظهر «بلاغ» ولا «بالغ»). وعند ترك مسافة قبل الكلمة التي يراد بحثها -وذلك باستعمال مفتاح المسافة من لوحة المفاتيح- فلن تظهر النتائج التي تكون فيها هذه الكلمة مسبوقة بحرف أو أكثر في نفس الكلمة، وعند ترك مسافة بعد الكلمة فلن تظهر النتائج التي تكون فيها هذه الكلمة ملحقة بحرف أو أكثر في نفس الكلمة، وعند ترك مسافة قبل الكلمة وبعدها فستظهر النتائج التي تكون فيها الكلمة نفسها بلا زيادة. ويمكن بحث كلمتين من نفس الآية في نفس الوقت، بترك مسافة واحدة بينهما إذا كانتا متجاورتين في الآية، ومسافتين إذا كانتا غير متجاورتين.',
-      'زر الهلال/الشمس لتبديل الوضع الليلي والنهاري.',
-      'زر القائمة (' + document.getElementById('menuBtn').innerHTML.replace('width="22" height="22"', 'width="16" height="16" style="vertical-align:middle"') + ') لفتح القائمة الجانبية.',
+      'الساعة، واليوم، والتاريخ الهجري والميلادي.',
+      'زر القائمة (' + document.getElementById('menuBtn').innerHTML.replace('width="22" height="22"', 'width="16" height="16" style="vertical-align:middle"') + ') يفتح القائمة الجانبية، وزر الهلال/الشمس يبدّل بين الوضع الليلي والنهاري.',
+      '<b>البحث</b>: اكتب كلمة أو عبارة بالكتابة الإملائية لا بالرسم العثماني (فتُكتب «الصلاة» لا «الصلوة»). والبحث عن «بلغ» لا يُظهر «بلاغ» ولا «بالغ».',
+      'لضبط البحث بالمسافات: مسافة <b>قبل</b> الكلمة تستبعد ما سبقته حروف في أولها، ومسافة <b>بعدها</b> تستبعد ما لحقته حروف في آخرها، والمسافتان معاً تُظهران الكلمة نفسها بلا زيادة.',
+      'ويمكن البحث عن كلمتين من آية واحدة: بينهما مسافة واحدة إن كانتا متجاورتين، ومسافتان إن لم تكونا متجاورتين.',
     ]},
-    { title: '٢. الإطار العائم (أسفل شريط الرأس مباشرة)', items: [
-      'داخل القوسين: ترتيب السورة، ثم اسمها، ثم رمز يبيّن كونها مكية أو مدنية، ثم عدد آياتها.',
-      'أقصى يمين الإطار: علامة مرجعية لحفظ الصفحة ' + bookmarkIcon + '، وبجانبها مباشرة "من [رقم] إلى [رقم]" تبيّن صفحتي بداية السورة الحالية ونهايتها، وتبقى ثابتة طوال صفحات السورة نفسها.',
-      'أقصى يسار الإطار: دائرة رقم الصفحة الحالية.',
-      'بين ذلك وقوسي اسم السورة: أرقام الجزء (ج) والحزب (ح) والربع (ر) الحاليّة - وفي الاتجاه الأفقي تظهر الكلمات كاملة (جزء/حزب/ربع) بدل الحرف الواحد.',
-      '<b>الانتقال إلى السورة السابقة والتالية</b>: فوق «ج» ورقمه سهم يشير إلى اليمين <span style="white-space:nowrap">(' + navArrow(true) + ')</span>، والنقر على «ج» أو رقمه أو السهم ينقل إلى بداية <b>السورة السابقة</b>. وفوق «ح» ورقمه سهم يشير إلى اليسار <span style="white-space:nowrap">(' + navArrow(false) + ')</span>، والنقر عليه ينقل إلى بداية <b>السورة التالية</b>. ويظهر شريط اسم السورة المنتقَل إليها في أعلى النص، ويتغيّر اسمها في الإطار العائم معه. ولا يظهر سهم «ج» في الفاتحة، ولا سهم «ح» في الناس.',
-      'وعند الانتقال بهذين السهمين: إن كان التمرير التلقائي غير مفعّل بقي غير مفعّل، وإن كان مفعّلاً بقي مفعّلاً لكن النص يكون متوقفاً عند بداية السورة، حتى لو كان متحركاً قبل الانتقال.',
-      'علامة المرجعية ودائرة رقم الصفحة وبقية عناصر الإطار ثابتة في مكانها دائماً، سواء كانت الصفحة فردية أو زوجية.',
-      'يتحدّث تلقائياً أثناء التمرير ليطابق ما تقرأه.',
-      'النقر على اسم السورة يفعّل <b>قراءة الكلمات</b> أو يوقفها (انظر الفقرة ١١).',
+    { title: '٢. الإطار العائم (تحت شريط الرأس)', items: [
+      'بين القوسين: ترتيب السورة، واسمها، ورمز يبيّن أنها مكية أو مدنية، وعدد آياتها.',
+      'في أقصى اليمين علامة المرجعية ' + bookmarkIcon + ' لحفظ الصفحة، وبجانبها «من … إلى …»: صفحتا بداية السورة ونهايتها. وفي أقصى اليسار دائرة رقم الصفحة.',
+      'وبين ذلك: الجزء (ج) والحزب (ح) والربع (ر). وفي الاتجاه الأفقي تُكتب الكلمات كاملة (جزء، حزب، ربع).',
+      '<b>السورة السابقة والتالية</b>: النقر على «ج» أو رقمه أو السهم فوقه <span style="white-space:nowrap">(' + navArrow(true) + ')</span> ينقل إلى بداية السورة السابقة، والنقر على «ح» أو رقمه أو السهم فوقه <span style="white-space:nowrap">(' + navArrow(false) + ')</span> ينقل إلى بداية السورة التالية. والتمرير التلقائي يبقى على حاله، لكنه يتوقف عند بداية السورة إن كان مفعّلاً.',
+      'النقر على اسم السورة يفعّل <b>قراءة الكلمات</b> أو يوقفها (الفقرة ١١).',
+      'يتحدّث الإطار تلقائياً أثناء التمرير ليطابق ما تقرأه.',
     ]},
-    { title: '٣. القائمة الجانبية (تُفتح بزر القائمة أعلى يمين الشاشة)', items: [
-      '<b>التخطيط</b>: الاختيار بين نص المصحف (عثماني برسم المصحف، أو إملائي بتشكيل كامل، أو مجرَّد بدون تشكيل)، والاختيار بين الوضع القياسي المطابق للمصحف الورقي (١٥ سطراً في الصفحة) والوضع الحر القابل للتكبير والتصغير بحرية، وإظهار تلوين معاني الكلمات أو إخفاؤه.',
-      '<b>خلفية النص</b>: اختيار لون خلفية صفحات المصحف من عشرة ألوان فاتحة: الكريمي (الأصلي)، والكريمي الداكن، والرملي، والذهبي الفاتح، والليموني، والبصلي، والوردي، والنعناعي، والسماوي، والخزامي.',
-      '<b>التلاوة</b>: اختيار القارئ لتلاوة الآيات صوتياً، بالنقر على اسمه أو على زر «تفعيل» (وفيها أربعة قرّاء، ويمكن إضافة قرّاء آخرين من حقل البحث، أو حذف أيٍّ منهم).',
-      '<b>الأدعية</b>: مجموعة أدعية مأثورة خاصة بالتلاوة.',
-      '<b>السور</b>: فهرس كامل لسور القرآن، للانتقال المباشر لأي سورة. ويمكن البحث عن سورة ما في حقل البحث الموجود في أعلى قائمة السور بإسمها أو تسلسلها.',
-      '<b>الأجزاء</b>: فهرس الأجزاء الثلاثين.',
-      '<b>الصفحات</b>: الانتقال المباشر لأي رقم صفحة.',
-      '<b>المرجعيات</b>: قائمة الصفحات والآيات التي وضعت عليها علامة مرجعية، والتلاوات المحفوظة تحت عنوان «تلاوة» (تبدأ تلاوة أيٍّ منها بالنقر عليها).',
-      '<b>فضل القرآن وآداب تلاوته</b>: روايات مختارة عن النبي ﷺ وأهل البيت عليهم السلام من «الكافي» و«ثواب الأعمال»، في فضل القرآن، وأهله وحَمَلته، وتعلّمه وحفظه، وتلاوته وثوابها، والمصحف وتعظيمه، وآداب التلاوة.',
-      '<b>مختصر أحكام التجويد</b>: الأحكام الأساسية لرواية حفص: النون والميم الساكنتان، والغنة، واللامات، والإدغام، والمدود، والتفخيم والترقيق، والقلقلة، وهمزة الوصل، والوقف والابتداء، والسكت؛ مع أمثلة وإشارات تنقل إلى الآيات.',
-      '<b>إحصائيات قرآنية</b>: أعداد السور والآيات والصفحات، وفواتح السور، والأنبياء وعدد مرات ذكرهم، والتكرار، والسجدات، ومناصف القرآن، وترتيب النزول، وما نزل في أهل البيت عليهم السلام، وغرائب القراءة والرسم، والأسماء الأخرى للسور، وغيرها؛ والإشارات إلى الآيات فيها تنقل إلى مواضعها بالنقر.',
-      '<b>تعديل هجري</b>: ضبط دقيق للتاريخ الهجري المعروض (تقديم أو تأخير يوم أو يومين).',
+    { title: '٣. صفحة النص القرآني', items: [
+      'يفتح المصحف على القائمة الجانبية (عنوان السور)، وفي أعلاها إطار <b>العودة إلى آخر صفحة</b> للرجوع إلى الصفحة التي كانت مفتوحة.',
+      '<b>شريط اسم السورة</b> في أول كل سورة: من اليمين ترتيبها، ثم كلمة «سورة» واسمها في الوسط، ثم زر <b>استماع</b> (الفقرة ٧)، ثم عدد آياتها.',
+      '<b>النسخ</b>: اضغط مطوّلاً على النص واسحب لتحديد ما تريد، ثم انسخه. وعند لصقه يكون المنسوخ بين قوسين [ ] ورقم كل آية بعد نصها داخل القوسين، واسم السورة بعد القوس الأخير، مثل: [ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِينَ ٢] الفاتحة. وإن امتد المنسوخ من آخر آية إلى أول التي بعدها، كُتب رقم كل منهما بعد الجزء الخاص بها.',
+      'خط أخضر داكن على أحد جانبي الصفحة يبيّن أنها يمنى أو يسرى.',
+      '<b>علامة الربع</b> ' + rubGridSvg(3) + ': تظهر عند بداية كل ربع حزب، وهي ثمانية مربعات تمثّل أرباع الجزء الحالي (العمود الأيمن لحزبه الأول، والأيسر للثاني، من الأعلى إلى الأسفل). ويُملأ منها بعدد الأرباع التي وصلت إليها من الجزء، ففي المثال المجاور أنت في الربع الثالث.',
+      '<b>التوقف عند آخر السورة والجزء</b> (في الوضع الحر): يتوقف التمرير عند آخر السورة أو الجزء، وتظهر فوق الشريط السفلي ثلاثة أزرار: آخر السورة أو الجزء في الوسط، والسابق على اليمين، والتالي على اليسار. وسحبة خفيفة إلى أعلى تُكمل القراءة. ويُفعَّل هذا أو يُلغى بزر (' + badge(document.getElementById('segStopBtn').innerHTML) + ') في الشريط السفلي، أو من عنوان <b>التخطيط</b>.',
     ]},
-    { title: '٤. نافذة الآية (تظهر بالنقر على الآية)', items: [
-      'تُفتح نافذة الآية بالنقر على <b>أي كلمة من الآية أو على رقمها</b> عدا الكلمات الخضراء (والتمرير التلقائي غير مفعّل)، وتُغلق مع تظليل الآية بالنقر على أي موضع من النص (حتى لو كان كلمة خضراء)، أو بالرجوع، أو بالانتقال إلى أي عمل آخر. وتبدأ التلاوة الصوتية من النافذة.',
-      '<b>نسخ الآية</b> و<b>حفظ الآية</b>: تُنفَّذ وتُغلق النافذة مباشرة.',
-      '<b>تلاوة</b>: الاستماع لتلاوة الآية بصوت القارئ المختار. عند النقر عليها تُغلق النافذة ويظهر شريط التلاوة الأحمر فوق الشريط السفلي مباشرة، وتبقى الآية مظللة لتبدأ منها التلاوة، وفي الشريط زر التشغيل والإيقاف، وزر الإغلاق (✕) الذي يوقف التلاوة ويُغلق الشريط مباشرة، واختيارات قراءة الآية <b>مرة</b> واحدة أو <b>تكرارها</b> أو <b>الاستمرار</b>. وفي كل مرة يُفتح فيها شريط التلاوة يكون الاختيار على <b>استمرار</b>، ولمن أراد غيره أن يختار «مرة» أو «تكرار». ولا تعمل قراءة الكلمات مع التلاوة: تُلغى عند فتح الشريط، وتفعيلها يُغلقه.',
-      'شريط التلاوة (شريط الآية الأحمر الفاتح، وشريط السورة الأحمر الغامق) ثابت في مكانه فوق الشريط السفلي، ويمكن سحبه بالإصبع من الشريط نفسه إلى الأسفل ليكون فوق الشريط السفلي مغطياً له، وسحبه إلى الأعلى ليرجع إلى مكانه، ويعود إلى مكانه عند فتحه من جديد. وفي شريط تلاوة السورة تبقى الإشارة على آخر ما اخترته (السورة أو الجزء أو التوقيت). ويبقى الشريط ظاهراً فوق النوافذ والقوائم الأخرى، وتظهر نافذة الآية فوقه إذا فُتحت والشريط ظاهر. وعند الرجوع (بالإيماءة أو بسهم الرجوع) تُغلق أولاً النوافذ والوظائف التي فُتحت بعده، ثم يوقف الرجوع التلاوة إن كانت جارية، ثم يُخفي الشريط، ثم يعود إلى قائمة السور.',
-      'أثناء التلاوة تبقى الآية المظللة في أعلى النص (وفي العرض بحجم الصفحة تبقى الصفحة كاملة ظاهرة)، وتُظلَّل البسملة أيضاً أثناء تلاوتها.',
-      'إذا انتقلت أثناء التلاوة إلى سورة أخرى (بسهمي «ج» و«ح» في الإطار العائم أو من قائمة السور)، استمرت التلاوة في سورتها وبقي العرض على السورة الجديدة؛ فإذا أُوقفت التلاوة ثم شُغّلت، بدأت من بسملة السورة الجديدة الظاهرة ثم آياتها.',
-      'يظهر في الشريط <b>تكرار</b> ومعه عدد المرات (٢ في البداية). وعند اختياره تظهر قائمة لعدد مرات قراءة الآية (من مرتين إلى سبع)، فيتغير العدد بجانب كلمة «تكرار» إلى المختار، ويبقى محفوظاً حتى يُغيَّر.',
-      'عند اختيار <b>استمرار</b> تبدأ التلاوة من الآية المختارة وتستمر الآيات بعدها، ومن سورة إلى سورة، حتى تُوقَف.',
-      '<b>تلاوة السورة</b>: في شريط اسم كل سورة كلمة <b>تلاوة</b>؛ والنقر عليها يُظهر شريط تلاوة برتقالياً في مكان الشريط الأحمر، وفيه زر التشغيل والإيقاف، واختيارات <b>السورة</b> و<b>الجزء</b> و<b>توقيت</b>، وزر الإغلاق (✕). والتشغيل وحده يتلو تلك السورة من أولها إلى آخرها. وعند اختيار <b>السورة</b> يظهر صف بأسماء السور يُحرَّك يميناً ويساراً، في وسطه السورة نفسها، فإذا اختيرت سورة بدأت تلاوتها من أولها إلى آخرها. وعند اختيار <b>الجزء</b> يظهر صف بأرقام الأجزاء، فإذا اختير جزء بدأت تلاوته من أوله إلى آخره. وعند اختيار <b>توقيت</b> تظهر عشرة أوقات (من خمس دقائق إلى خمس ساعات)، فتبدأ التلاوة من أول السورة وتستمر حتى ينتهي الوقت. ولا يعمل الشريطان معاً: فتح أحدهما يُوقف الآخر.',
-      'وتبدأ تلاوة <b>الاستمرار</b> بالبسملة بصوت القارئ نفسه (من تلاوته للفاتحة، وللقارئ ماهر المعيقلي من تلاوته للآية ٣٠ من سورة النمل، وهي أيضاً بسملة الفاتحة عنده)، سواء بدأت من أول السورة أو من وسطها، وكذلك عند الانتقال إلى كل سورة جديدة، عدا سورة التوبة.',
-      '<b>تلاوة مخصصة</b> (في عنوان <b>التلاوة</b> من القائمة الجانبية، تحت أسماء القرّاء) ▸ <b>سور وآيات مختارة</b>: يُكتب اسم السورة؛ فإن وُضعت علامة في مربع <b>سورة</b> قُرئت السورة كاملة وتفعّل عدد مرات تكرارها، وتُكتب أرقام آيات منها (مثل: ٥ أو ١-٧ أو ٣، ٩) ويتفعّل عدد تكرارها بوضع علامة في مربع <b>الآية</b>. ويمكن الجمع بين المربعين، فتُقرأ السورة كاملة ثم الآيات المختارة منها. ويمكن إضافة سور أخرى. وزر <b>تشغيل</b> يتلوها على شريط تلاوة السورة البرتقالي، وزر <b>حفظ</b> يحفظها في المرجعيات تحت عنوان «تلاوة» بالاسم الذي يُكتب لها، وتُشغَّل من هناك مباشرة بالنقر عليها.',
-      '<b>نسخ الآية</b>: نسخ نص الآية.',
-      '<b>حفظ الآية</b>: وضع علامة مرجعية على آية بعينها.',
-      '<b>تفسير القرآن</b> و<b>اللغة</b> و<b>الإعراب</b>: تفتح كلٌّ منها صفحة خاصة على الآية نفسها (انظر الفقرة التالية).',
+    { title: '٤. شريط الأدوات السفلي', items: [
+      'تكبير الخط وتصغيره (' + roundBadge('A', 19) + ' / ' + roundBadge('A', 12) + ').',
+      '<b>التمرير التلقائي</b> (' + badge(PLAY_ARROW_SVG) + ' / ' + badge(PAUSE_SVG) + ') مع زري الإبطاء (' + roundBadge('−', 18) + ') والتسريع (' + roundBadge('+', 18) + '). النقر على النص يوقف الحركة، والنقر مرة أخرى يعيدها، والسحب بالإصبع يحرّك الصفحة يدوياً. ولا يُلغى التفعيل إلا بزره، أو بالرجوع مرتين (الأولى توقف الحركة، والثانية تلغي التفعيل).',
+      '<b>تبديل الاتجاه</b> (' + badge(document.getElementById('rotateBtn').innerHTML) + '): النقرة الأولى للاتجاه الأفقي، والثانية للعودة إلى العمودي. والتنقّل بين الجهتين الأفقيتين بتدوير الجهاز.',
+      '<b>الرجوع</b> (' + badge(document.getElementById('backBtn').innerHTML) + '): يعمل عمل إيماءة الرجوع، فيعود خطوة خطوة (يغلق النافذة أو القائمة المفتوحة، ويعيد من الاتجاه الأفقي إلى العمودي). وآخر خطوة تعيد إلى القائمة الجانبية. والخروج من التطبيق يكون بإيماءة الرجوع.',
     ]},
-    { title: '٥. التفسير واللغة والإعراب (من نافذة الآية)', items: [
-      'عند النقر على «تفسير القرآن» أو «اللغة» أو «الإعراب» تُغلق نافذة الآية وتظهر صفحة الشرح، والرجوع منها يعود إلى النص دون إعادة فتح النافذة.',
-      '<b>تفسير القرآن</b>: تفسير البرهان للسيد هاشم البحراني، مرتّباً حسب السور والآيات.',
-      'في أعلى صفحة التفسير واللغة والإعراب زرّان لحجم الخط: (A−) في أقصى اليمين للتصغير، و(A+) في أقصى اليسار للتكبير، ويبقى الحجم المختار محفوظاً.',
-      '<b>اللغة</b> و<b>الإعراب</b>: فقرتا «اللغة» و«الإعراب» من تفسير مجمع البيان للشيخ الطبرسي، مربوطتان بآيات كل مقطع.',
-      '<b>الشريط العلوي</b>: اسم الكتاب ومؤلفه، وتحته من اليمين إطار فيه اسم السورة، وفي الوسط الآية أو الآيات التي يشرحها النص المعروض («الآية ٥»، أو «الآيتان ١ - ٢»، أو «الآيات ١ - ٥»)، وعلى اليسار إطار «فضل السورة وخواصّها» (في التفسير وحده).',
-      '<b>التقليب</b>: سحب النص بالإصبع يميناً ينقل إلى الآية التالية، وسحبه يساراً إلى السابقة، والنص يتبع الإصبع أثناء السحب. والتمرير لأعلى وأسفل لقراءة النص الطويل.',
-      'إذا شرح الكتاب عدة آيات في مقطع واحد، ظهر المقطع نفسه كاملاً عند كل آية منها، ويبيّن الشريط العلوي أرقام آياته.',
-      '<b>فضل السورة وخواصّها</b>: النقر على إطاره يُظهر نصه مكان التفسير، ويمتلئ الإطار بالذهبي. ويعود التفسير بالنقر على الإطار نفسه مرة أخرى، أو بالرجوع، أو بالسحب إلى آية أخرى.',
-      'الآيات القرآنية داخل النص مكتوبة باللون القاني لتتميّز عن غيرها، والأرقام الصغيرة في الإطارات الرمادية أرقام الأحاديث في الكتاب.',
-      '<b>العمل بدون إنترنت</b>: تُحمَّل كل سورة عند فتحها أول مرة ثم تبقى محفوظة في الجهاز، ويُنزَّل التفسير واللغة والإعراب كاملاً في الخلفية تلقائياً عند توفر الاتصال، ويمكن تنزيلها يدوياً بزر في آخر الصفحة ما دام التنزيل لم يكتمل.',
-      'الرجوع بالإيماءة أو بالسهم يغلق الصفحة ويعيد إلى المصحف.',
+    { title: '٥. القائمة الجانبية', items: [
+      '<b>فضل القرآن وآداب التلاوة</b>: روايات عن النبي ﷺ وأهل البيت عليهم السلام من «الكافي» و«ثواب الأعمال».',
+      '<b>مختصر أحكام التجويد</b>: الأحكام الأساسية لرواية حفص، بأمثلة.',
+      '<b>التخطيط</b>: نوع النص (عثماني، أو إملائي مشكول، أو بلا تشكيل)، والعرض (قياسي بخمسة عشر سطراً مثل المصحف الورقي، أو حر يكبر ويصغر)، وتلوين معاني الكلمات، وإعدادات قراءة الكلمات والتوقف عند آخر السورة.',
+      '<b>خلفية النص</b>: عشرة ألوان فاتحة لخلفية الصفحات.',
+      '<b>الاستماع</b>: اختيار القارئ وتنزيل تلاوته، و«سور وآيات مختارة» للاستماع أو للقراءة (الفقرة ٧).',
+      '<b>الأدعية</b>: أدعية مأثورة خاصة بالتلاوة، منها ما يقال في سجود التلاوة.',
+      '<b>السور</b> و<b>الأجزاء</b> و<b>الصفحات</b>: للانتقال المباشر، وفي أعلى قائمة السور حقل للبحث باسم السورة أو ترتيبها.',
+      '<b>المرجعيات</b>: الصفحات والآيات المحفوظة، و«سور وآيات مختارة» المحفوظة (للاستماع ▶ أو للقراءة 📖)، وتُفتح بالنقر عليها.',
+      '<b>تعديل هجري</b>: تقديم التاريخ الهجري أو تأخيره يوماً أو يومين.',
+      '<b>إحصائيات قرآنية</b>: أعداد ولطائف وترتيب النزول وغيرها، والإشارات إلى الآيات فيها تنقل إليها بالنقر.',
     ]},
-    { title: '٦. صفحة النص القرآني', items: [
-      'ميزة النسخ الحر بالضغط المطوّل على أي موضع من الصفحة.',
-      'في الوضع الحر، يتوقف التمرير اليدوي والتلقائي عند آخر السورة وعند آخر الجزء، وكذلك عند بدايتهما في التمرير المعاكس. وعند الآخر تظهر فوق الشريط السفلي ثلاثة مستطيلات: في الوسط <b>آخر سورة ...</b> أو <b>آخر الجزء ...</b>، وعلى يمينه <b>السورة السابقة</b> أو <b>الجزء السابق</b>، وعلى يساره <b>السورة التالية</b> أو <b>الجزء التالي</b>، ويكون الانتقال بالنقر على أحدها. ويُفعَّل هذا التوقف أو يُلغى بزر (' + badge(document.getElementById('segStopBtn').innerHTML) + ') في الشريط السفلي (فتظهر عبارة «التوقف مفعّل» أو «عدم التوقف»)، أو من عنوان <b>التخطيط</b>. وبعد التوقف يبقى التمرير اليدوي سهلاً إلى أعلى وإلى أسفل، فبسحبة خفيفة إلى أعلى يستمر النص فيما بعد ذلك، ويعود التمرير التلقائي إلى الحركة إن كان مفعّلاً.',
-      'يفتح المصحف على القائمة الجانبية (عنوان السور)، وفي أعلاها إطار <b>العودة إلى آخر صفحة</b> للرجوع مباشرة إلى الصفحة التي كانت مفتوحة، وعند الرجوع بالإيماءة أو بسهم الرجوع يعود البرنامج خطوة خطوة، وآخر خطوة قبل الخروج تعيد إلى القائمة الجانبية.',
-      'خط أخضر داكن سميك على أحد جانبي الصفحة للدلالة على كونها صفحة يمنى أو يسرى، وزاويتا الصفحة من جهته قائمتان، ومن الجهة الأخرى مقوّستان وعليها شريط ذهبي خفيف.',
-      'علامة الربع ' + rubGridSvg(3) + ': تظهر داخل النص عند بداية كل ربع حزب، بدلاً من العلامة الدائرية التقليدية. وهي شبكة صغيرة من ٨ مربعات (عمودان × ٤ صفوف) تمثّل أثمان الجزء الحالي الثمانية - العمود الأيمن لحزبه الأول والأيسر لحزبه الثاني، كل عمود من الأعلى للأسفل. تُملأ المربعات تدريجياً (كما في المثال المجاور، وفيه ٣ من ٨) بعدد الأرباع التي وصلت إليها القراءة من الجزء، فتُعرف دفعة واحدة أي ربع أنت فيه من الجزء دون حساب.',
+    { title: '٦. نافذة الآية', items: [
+      'تُفتح بالنقر على أي كلمة من الآية أو على رقمها (عدا الكلمات الخضراء)، وتُغلق بالنقر على النص أو بالرجوع.',
+      '<b>استماع</b>: يُظهر شريط استماع الآية (الفقرة ٧) لتبدأ التلاوة من هذه الآية.',
+      '<b>نسخ الآية</b>: تُنسخ بصيغة [نص الآية رقمها] اسم السورة.',
+      '<b>حفظ الآية</b>: تُحفظ في المرجعيات.',
+      '<b>تفسير القرآن</b> و<b>اللغة</b> و<b>الإعراب</b>: تفتح صفحة الشرح على الآية نفسها (الفقرة ٨).',
     ]},
-    { title: '٧. شريط الأدوات السفلي', items: [
-      'زرا تكبير/تصغير حجم الخط (' + roundBadge('A', 12) + ' / ' + roundBadge('A', 19) + ').',
-      'زر تشغيل/إيقاف التمرير التلقائي (' + badge(PLAY_ARROW_SVG) + '/' + badge(PAUSE_SVG) + ')، ويُضغط عليه أو على الرقم الذي تحته أو بجانبيه، مع زري إبطاء (' + roundBadge('−', 18) + ') وتسريع (' + roundBadge('+', 18) + ') التمرير. ويبقى التمرير مفعّلاً حتى لو توقفت حركة النص مؤقتاً (بالنقر على النص، أو بالوصول إلى آخر سورة أو جزء، أو بالانتقال إلى عمل آخر)، ولا يُلغى تفعيله إلا بالضغط على زره.',
-      'أثناء التمرير التلقائي: النقر في أي موضع من النص يوقفه، والنقر بعدها على أي موضع من الصفحة عدا الكلمات الخضراء يعيده (والسحب بالإصبع يحرّك الصفحة يدوياً والتمرير متوقف). وزر الرجوع أو إيماءته: الأولى توقف التمرير إن كان متحركاً، والثانية تلغي تفعيله.',
-      'زر تبديل اتجاه العرض بين الوضعين الأفقي والعمودي (' + badge(document.getElementById('rotateBtn').innerHTML) + ')؛ بالنقرة الأولى يتحول المصحف إلى الاتجاه الأفقي، وبالنقرة الثانية يعود إلى الاتجاه العمودي مباشرة، أياً كانت الجهة الأفقية الحالية. أما التنقل بين الجهتين الأفقيتين فيكون بالتدوير التلقائي للجهاز فقط.',
-      'زر رجوع (' + badge(document.getElementById('backBtn').innerHTML) + ') يقوم بعمل إيماءة الرجوع نفسها (العودة خطوة للخلف في البرنامج، كإغلاق نافذة أو نتائج بحث)، تسهيلاً على من لا تتوفر لديه إيماءة الرجوع في نظام جهازه. وفي الاتجاه الأفقي يعيد هو (وكذلك إيماءة الرجوع) إلى الاتجاه العمودي مباشرة، أياً كانت الجهة الأفقية الحالية. وفي قائمة السور التي يفتح عليها المصحف يُغلق التطبيق إن ضُغط مباشرة بعد فتحه؛ أما بعد استعمال أي نافذة أو وظيفة فالجهاز لا يسمح له بذلك، فتظهر عبارة تنبّه إلى استعمال إيماءة الرجوع للخروج.',
+    { title: '٧. الاستماع إلى التلاوة', items: [
+      '<b>القارئ</b>: يُختار من عنوان <b>الاستماع</b> بالنقر على اسمه. ويُنزَّل صوته للعمل بدون إنترنت بزر «تحميل»، ويُضاف قارئ جديد من حقل البحث، والضغط المطوّل على اسم القارئ يُظهر حذفه أو حذف تلاوته المنزَّلة.',
+      '<b>شريط استماع الآية</b> (أحمر فاتح): يظهر من زر «استماع» في نافذة الآية. فيه التشغيل والإيقاف، وثلاثة اختيارات: <b>مرة</b> (الآية وحدها)، و<b>تكرار</b> (الآية عدداً من المرات يُختار من مرتين إلى سبع، ويبقى محفوظاً)، و<b>استمرار</b> (الآية وما بعدها ومن سورة إلى سورة حتى تُوقف، وهو الاختيار عند فتح الشريط).',
+      '<b>شريط استماع السورة</b> (أحمر غامق): يظهر من زر «استماع» في شريط اسم السورة. التشغيل وحده يتلو السورة كاملة، و<b>السورة</b> و<b>الجزء</b> يُظهران صفاً منزلقاً لاختيار سورة أو جزء، و<b>توقيت</b> يُظهر أوقاتاً (من خمس دقائق إلى خمس ساعات) تستمر التلاوة خلالها من أول السورة. وتبقى الإشارة على آخر اختيار.',
+      'وفي الشريطين زر الإغلاق (✕) الذي يوقف التلاوة ويُغلق الشريط. ولا يعمل الشريطان معاً، ولا تعمل معهما قراءة الكلمات.',
+      'الشريط ثابت فوق الشريط السفلي، ويمكن سحبه من الشريط نفسه إلى الأسفل ليغطي الشريط السفلي، وإلى الأعلى ليعود. ويظهر في مكانه عند فتحه من جديد.',
+      'أثناء التلاوة تبقى الآية المظللة في أعلى النص. وتبدأ تلاوة كل سورة بالبسملة بصوت القارئ نفسه (عدا التوبة). وإذا انتقلت إلى سورة أخرى أثناء التلاوة استمرت التلاوة، فإذا أوقفتها ثم شغّلتها بدأت من السورة الظاهرة.',
+      'الرجوع يُغلق أولاً ما فُتح بعد الشريط، ثم يوقف التلاوة، ثم يُخفي الشريط.',
+      '<b>سور وآيات مختارة</b> (في عنوان <b>الاستماع</b> تحت أسماء القرّاء)، وفيها قسمان يُملآن بالطريقة نفسها: اكتب اسم السورة، وضع علامة في مربع <b>سورة</b> لاختيارها كاملة، أو اكتب أرقام آيات منها (مثل: ٥ أو ١-٧ أو ٣، ٩)، أو الاثنين معاً. وبزر «+ إضافة سورة» تضيف سوراً أخرى.',
+      'ولكل سورة ولآياتها عدد مرات <b>تكرار</b> (يتفعّل بوضع العلامة في المربع).',
+      '١- <b>للاستماع</b>: زر <b>▶ تشغيل</b> يتلوها على شريط استماع السورة، وتُكرَّر بالعدد المختار.',
+      '٢- <b>للقراءة</b>: زر <b>قراءة</b> يعرض السور والآيات المختارة تباعاً بالترتيب نفسه، في صفحة مستقلة بتنسيق المصحف (الخط والألوان ومعاني الكلمات وأرقام الآيات) وبلا صوت، ويُكتب تحت اسم السورة عدد مرات قراءتها أو قراءة الآيات إن كان أكثر من مرة. وفي أعلاها زرا تكبير الخط وتصغيره وزر الإغلاق (✕).',
+      'وفي القسمين زر <b>حفظ</b> يحفظ الاختيار في المرجعيات بالاسم الذي تكتبه (أو بأسماء السور إن لم تكتب اسماً)، ويُفتح من هناك بالنقر عليه.',
     ]},
-    { title: '٨. تقسيم آيات المصحف إلى خمسينات ومئات', items: [
-      'مجموع آيات المصحف ٦٢٣٦ آية، مقسّمة حسب الترتيب المتسلسل من أول الفاتحة إلى آخر الناس.',
-      'كل آية تكون رقمها التسلسلي من أول المصحف مضاعفاً للخمسين (٥٠، ١٠٠، ١٥٠...) يوضع تحت رقمها خط أحمر.',
-      'وكل آية تكون رقمها التسلسلي مضاعفاً للمئة (١٠٠، ٢٠٠، ٣٠٠...) يوضع فوق رقمها خط أحمر إضافي، فيكون لها خطان.',
-      'تساعد هذه العلامات من يريد قراءة وردٍ يومي ثابت بمقدار خمسين آية أو مئة آية، بمتابعة الخط الأحمر أينما ظهر.',
-      'آخر ٣٦ آية في المصحف لا تكتمل بها خمسون آية جديدة، فلا تحمل علامة.',
+    { title: '٨. التفسير واللغة والإعراب', items: [
+      '<b>تفسير القرآن</b>: تفسير البرهان للسيد هاشم البحراني. و<b>اللغة</b> و<b>الإعراب</b>: من تفسير مجمع البيان للشيخ الطبرسي.',
+      'في أعلى الصفحة اسم الكتاب، وتحته اسم السورة، والآية أو الآيات التي يشرحها النص، وإطار «فضل السورة وخواصّها» (في التفسير) يُظهر نصه بالنقر عليه ويعود التفسير بالنقر مرة أخرى.',
+      'زرّا (A−) و(A+) لتصغير الخط وتكبيره. وسحب النص يميناً ينقل إلى الآية التالية، ويساراً إلى السابقة.',
+      'الآيات داخل النص باللون القاني، والأرقام الصغيرة في الإطارات الرمادية أرقام الأحاديث.',
+      'تُحفظ كل سورة في الجهاز عند فتحها أول مرة، ويُنزَّل الكتاب كاملاً في الخلفية عند توفر الاتصال، فيعمل بعد ذلك بدون إنترنت.',
     ]},
-    { title: '٩. معاني الألفاظ (الكلمات الخضراء)', items: [
-      'الألفاظ والعبارات القرآنية التي تحتاج إلى بيان ملوّنة في المصحف بـ<b style="color:#038D40;">اللون الأخضر</b>، ومعانيها مختصرة لمستوى الناشئين، تكاد تشمل النص القرآني كله (أكثر من أحد عشر ألف مدخل)، مأخوذة من تفسير الصافي، وتبيين القرآن، ومعانٍ لغوية مكمِّلة.',
-      'انقر أي لفظة ملوّنة يظهر معناها في مستطيل صغير قريب منها لا يغطيها. ويختفي بالنقر على اللفظة نفسها أو على أي موضع آخر من النص، أو بالرجوع، أو بالانتقال إلى أي عمل آخر. وإذا كان المعنى لعبارة من عدة كلمات تُظلَّل كلماتها كلها.',
-      'النقر على لفظة ملوّنة أخرى والمستطيل ظاهر يُخفيه ويُظهر معناها. والنقر على كلمة سوداء أو رقم آية والمستطيل ظاهر يُخفيه فقط دون فتح نافذة الآية. وإذا كانت نافذة الآية مفتوحة، فالنقر على لفظة ملوّنة يغلق النافذة فقط.',
-      'أثناء التمرير التلقائي: النقر على لفظة ملوّنة يوقف التمرير ويُظهر معناها، والنقر على لفظة ملوّنة أخرى يُظهر معناها بدلاً منه. والنقر على أي موضع آخر من الصفحة أو على اللفظة نفسها، أو الرجوع، يُخفي المستطيل ويعيد التمرير. والانتقال إلى نافذة أو قائمة أخرى يُخفيه، ويعود التمرير عند إغلاقها والرجوع إلى المصحف؛ أما أزرار السرعة وحجم الخط ونحوها فتُخفيه ويبقى التمرير متوقفاً.',
-      'يُظهَر التلوين أو يُخفى من عنوان <b>التخطيط</b> في القائمة الجانبية، في قسم «معاني الكلمات».',
+    { title: '٩. معاني الكلمات (الكلمات الخضراء)', items: [
+      'الكلمات والعبارات التي تحتاج إلى بيان ملوّنة <b style="color:#038D40;">بالأخضر</b>، ومعانيها مختصرة وسهلة، من تفسير الصافي وتبيين القرآن ومعانٍ لغوية مكمِّلة (أكثر من أحد عشر ألف معنى).',
+      'انقر الكلمة الخضراء يظهر معناها في مستطيل صغير قريب منها، ويختفي بالنقر على أي موضع أو بالرجوع. وإن كان المعنى لعبارة من عدة كلمات ظُلِّلت كلها.',
+      'أثناء التمرير التلقائي: النقر على كلمة خضراء يوقف التمرير ويُظهر معناها، وإخفاء المعنى يعيده.',
+      'يُظهَر التلوين أو يُخفى من عنوان <b>التخطيط</b> (معاني الكلمات).',
     ]},
-    { title: '١٠. سور العزائم', items: [
-      'وهي أربع سور تتضمن كل منها آية فيها سجدة تلاوة واجبة، وهي كما يلي:',
-      '<b>سورة السجدة، آية ١٥</b><br><span class="guide-ayah-text">إِنَّمَا يُؤْمِنُ بِـَٔايَـٰتِنَا ٱلَّذِينَ إِذَا ذُكِّرُوا بِهَا خَرُّوا سُجَّدًا وَسَبَّحُوا بِحَمْدِ رَبِّهِمْ وَهُمْ لَا يَسْتَكْبِرُونَ (١٥)</span>',
-      '<b>سورة فصلت، آية ٣٧</b><br><span class="guide-ayah-text">وَمِنْ ءَايَـٰتِهِ ٱلَّيْلُ وَٱلنَّهَارُ وَٱلشَّمْسُ وَٱلْقَمَرُ ۚ لَا تَسْجُدُوا لِلشَّمْسِ وَلَا لِلْقَمَرِ وَٱسْجُدُوا لِلَّهِ ٱلَّذِى خَلَقَهُنَّ إِن كُنتُمْ إِيَّاهُ تَعْبُدُونَ (٣٧)</span>',
-      '<b>سورة النجم، الآية الأخيرة، آية ٦٢</b><br><span class="guide-ayah-text">فَٱسْجُدُوا لِلَّهِ وَٱعْبُدُوا (٦٢)</span>',
-      '<b>سورة العلق، الآية الأخيرة، آية ١٩</b><br><span class="guide-ayah-text">كَلَّا لَا تُطِعْهُ وَٱسْجُدْ وَٱقْتَرِب (١٩)</span>',
-      'ويوجد في المصحف خط فوق ذكر السجود في هذه الآيات، وتوجد في نهاية الآية قبل رقم الآية علامة ' + SAJDAH_MARK_SVG + ' للتذكير بسجود التلاوة.',
-      'وعدا هذه السجدات الواجبة، يوجد في المصحف أحد عشر موضعاً لسجود التلاوة، ولكن ليس واجباً، ويُفهم من بعض الأخبار أنه ينبغي سجود التلاوة عند كل ذكر للسجود أثناء تلاوة أو سماع آية فيها ذكر السجود.',
-      'ومن المهم تعلّم أحكام سجود التلاوة، وتجد في عنوان <b>الأدعية</b> من هذه القائمة صيغتين لما يقال في سجود التلاوة.',
+    { title: '١٠. علامات في المصحف', items: [
+      '<b>الخمسينات والمئات</b>: تحت رقم كل آية يكون ترتيبها من أول المصحف من مضاعفات الخمسين خط أحمر، وفوق رقم ما كان من مضاعفات المئة خط ثانٍ؛ ليسهل على من يقرأ ورداً يومياً بمقدار خمسين آية أو مئة.',
+      '<b>سور العزائم</b>: في أربع آيات سجدة تلاوة واجبة، عليها خط فوق ذكر السجود وعلامة ' + SAJDAH_MARK_SVG + ' قبل رقم الآية:',
+      '<b>السجدة ١٥</b><br><span class="guide-ayah-text">إِنَّمَا يُؤْمِنُ بِـَٔايَـٰتِنَا ٱلَّذِينَ إِذَا ذُكِّرُوا بِهَا خَرُّوا سُجَّدًا وَسَبَّحُوا بِحَمْدِ رَبِّهِمْ وَهُمْ لَا يَسْتَكْبِرُونَ (١٥)</span>',
+      '<b>فصلت ٣٧</b><br><span class="guide-ayah-text">وَمِنْ ءَايَـٰتِهِ ٱلَّيْلُ وَٱلنَّهَارُ وَٱلشَّمْسُ وَٱلْقَمَرُ ۚ لَا تَسْجُدُوا لِلشَّمْسِ وَلَا لِلْقَمَرِ وَٱسْجُدُوا لِلَّهِ ٱلَّذِى خَلَقَهُنَّ إِن كُنتُمْ إِيَّاهُ تَعْبُدُونَ (٣٧)</span>',
+      '<b>النجم ٦٢</b> (آخر آية)<br><span class="guide-ayah-text">فَٱسْجُدُوا لِلَّهِ وَٱعْبُدُوا (٦٢)</span>',
+      '<b>العلق ١٩</b> (آخر آية)<br><span class="guide-ayah-text">كَلَّا لَا تُطِعْهُ وَٱسْجُدْ وَٱقْتَرِب (١٩)</span>',
+      'وفي المصحف أحد عشر موضعاً آخر للسجود مستحب غير واجب. وفي عنوان <b>الأدعية</b> صيغتان لما يقال في سجود التلاوة.',
     ]},
     { title: '١١. قراءة الكلمات كلمة كلمة (للتعلّم)', items: [
-      '<b>التفعيل والإيقاف</b>: بالنقر على اسم السورة في الإطار العائم أعلى الصفحة، فيتلوّن الاسم <b style="color:#2F7FD0;">بالأزرق</b> ما دامت الميزة مفعّلة، وتظهر عبارة «قراءة الكلمات مفعّلة» أو «قراءة الكلمات متوقفة». ويمكن أيضاً تفعيلها وإيقافها من عنوان <b>التخطيط</b> في القائمة الجانبية.',
-      'وهي مفعّلة: انقر أي كلمة من النص (أو من البسملة) نقرة خفيفة، فتتلوّن بالأزرق نفسه، وتُقرأ بصوت القارئ من تلاوته للآية نفسها.',
-      '<b>القارئ</b>: هو القارئ المختار في عنوان <b>التلاوة</b> إن كان من القرّاء الذين يتوفر لهم توقيت الكلمات (أكثر من أربعين قارئاً، منهم المنشاوي وعبد الباسط عبد الصمد وماهر المعيقلي والحصري)، وإلا فالشيخ محمود خليل الحصري. ويظهر اسم القارئ الحالي في بند «قراءة الكلمات» من عنوان <b>التخطيط</b>.',
-      '<b>عدة كلمات</b>: الكلمات التي تُنقر متتابعةً قبل انقضاء <b>مهلة جمع الكلمات</b> تُجمع وتُقرأ معاً بعد آخر نقرة، والمتجاورة منها تُقرأ قراءة متصلة كما في التلاوة. وما يُنقر بعد انقضاء المهلة يُقرأ وحده. وتُختار المهلة (٠٫٦ أو ١ أو ١٫٥ أو ٢ ثانية) من عنوان <b>التخطيط</b>.',
-      'وأثناء تفعيلها لا يفتح النقر على الكلمات نافذة الآية ولا معاني الكلمات الخضراء، أما النقر على <b>رقم الآية</b> فيفتح نافذتها كالمعتاد. وإذا كانت تلاوة الآيات جارية توقفت عند نقر كلمة.',
-      '<b>التشغيل</b> (من بند «قراءة الكلمات» في عنوان <b>التخطيط</b>): <b>مع الإنترنت دون تنزيل</b>، فلا يُحفظ شيء في الجهاز، وهو مناسب للأجهزة قليلة الذاكرة؛ أو <b>بدون إنترنت مع الحفظ في الجهاز</b>، فكل آية تُسمع كلماتها مرة مع الاتصال تُحفظ تلقائياً وتعمل بعد ذلك بدونه، ويظهر زرّان لتنزيل السورة الحالية أو التلاوة كاملة مسبقاً.',
-      'وفي الحالتين، إذا لم يتوفر الاتصال تعمل قراءة الكلمات بأي قارئ من هؤلاء القرّاء نُزّلت تلاوته للآية في الجهاز (من بند قراءة الكلمات أو من زر التنزيل في عنوان <b>التلاوة</b>)، فلو نُزّلت تلاوة المنشاوي مثلاً قُرئت الكلمات بصوته.',
-      'ومواضع الكلمات مأخوذة بالمحاذاة الآلية للتلاوة، فقد يُسمع في القليل منها طرف من الكلمة المجاورة.',
+      '<b>التفعيل والإيقاف</b>: بالنقر على اسم السورة في الإطار العائم (يتلوّن <b style="color:#2F7FD0;">بالأزرق</b> ما دامت مفعّلة)، أو من عنوان <b>التخطيط</b>.',
+      'وهي مفعّلة: انقر أي كلمة فتتلوّن وتُقرأ بصوت القارئ من تلاوته للآية نفسها. والكلمات المنقورة متتابعة خلال <b>مهلة جمع الكلمات</b> (تُختار من التخطيط) تُقرأ معاً، والمتجاورة منها قراءة متصلة.',
+      'أثناء تفعيلها لا يفتح النقر على الكلمات نافذة الآية ولا معاني الكلمات، أما النقر على رقم الآية فيفتح نافذتها.',
+      '<b>القارئ</b>: المختار في عنوان <b>الاستماع</b> إن كان ممن يتوفر لهم توقيت الكلمات (أكثر من أربعين قارئاً)، وإلا فالشيخ محمود خليل الحصري.',
+      '<b>بدون إنترنت</b>: اختر من التخطيط «بدون إنترنت مع الحفظ في الجهاز»، فتُحفظ كل آية تُسمع، ويمكن تنزيل السورة أو التلاوة كاملة مسبقاً. وتعمل أيضاً بأي قارئ نُزّلت تلاوته في الجهاز.',
+      'مواضع الكلمات مأخوذة بالمحاذاة الآلية، فقد يُسمع في القليل منها طرف من الكلمة المجاورة.',
     ]},
   ];
   SECTIONS.forEach((sec) => {
@@ -35643,13 +35818,13 @@ function renderBookmarksTab() {
   const recHeader = document.createElement('div');
   recHeader.className = 'bookmark-section-title';
   recHeader.style.cssText = 'font-family:sans-serif;font-weight:700;font-size:19px;padding:4px;margin:18px 0 6px;';
-  recHeader.textContent = 'تلاوة';
+  recHeader.textContent = 'سور وآيات مختارة';
   sidebarBody.appendChild(recHeader);
   if (!reciteBookmarks.length) {
     const empty3 = document.createElement('div');
     empty3.className = 'strong-note';
     empty3.style.cssText = 'font-family:sans-serif;font-weight:700;padding:8px 4px 4px;font-size:17px;';
-    empty3.textContent = 'لا توجد تلاوات محفوظة بعد.';
+    empty3.textContent = 'لا توجد سور وآيات محفوظة بعد (تُحفظ من عنوان «الاستماع»).';
     sidebarBody.appendChild(empty3);
   } else {
     reciteBookmarks.forEach((bm) => {
@@ -35658,9 +35833,10 @@ function renderBookmarksTab() {
       const btn = document.createElement('button');
       btn.className = 'surah-row';
       btn.style.cssText = 'flex:1;border-bottom:none;';
-      btn.innerHTML = '<span class="rowName" style="flex-direction:column;align-items:flex-start;"><span class="nm" style="font-family:sans-serif;font-size:18px;white-space:normal;">▶ ' + escapeHtml(bm.name || bm.label) + '</span>' +
+      const isRead = bm.kind === 'read';
+      btn.innerHTML = '<span class="rowName" style="flex-direction:column;align-items:flex-start;"><span class="nm" style="font-family:sans-serif;font-size:18px;white-space:normal;">' + (isRead ? '📖 ' : '▶ ') + escapeHtml(bm.name || bm.label) + ' <span style="font-size:13px;opacity:.7;">(' + (isRead ? 'للقراءة' : 'للاستماع') + ')</span></span>' +
         (bm.name && bm.name !== bm.label ? '<span style="font-family:sans-serif;font-size:14px;opacity:.75;white-space:normal;">' + escapeHtml(bm.label) + '</span>' : '') + '</span>';
-      btn.addEventListener('click', () => playReciteBookmark(bm));
+      btn.addEventListener('click', () => { if (isRead) openSelReader(JSON.parse(JSON.stringify(bm.items)), bm.name || bm.label); else playReciteBookmark(bm); });
       const del = document.createElement('button');
       del.textContent = '✕';
       del.style.cssText = 'background:transparent;border:none;color:#7B2E2E;font-size:15px;padding:8px;cursor:pointer;';
