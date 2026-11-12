@@ -497,10 +497,10 @@ body.dark-mode .fbFromTo{color:#EFE8D6;}
 #floatingFrameBar .fbNavArrow::after{content:'';position:absolute;top:0;bottom:0;width:0.42em;background:currentColor;}
 /* ج / ح with their arrows, the surah's numbers: gold boxes as tall as the
    page-number square (heights set in fitFloatingFrameBar) */
-#floatingFrameBar .fbJuz,#floatingFrameBar .fbHizb{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;border:1.5px solid #B98A2A;border-radius:7px;padding:0 .14em;box-sizing:border-box;line-height:1;}
+#floatingFrameBar .fbJuz,#floatingFrameBar .fbHizb{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;border:1.5px solid #B98A2A;border-radius:7px;padding:0 .08em;box-sizing:border-box;line-height:1;}
 #floatingFrameBar .fbNavRow{display:block;line-height:1;white-space:nowrap;}
 #floatingFrameBar .fbJuz::after,#floatingFrameBar .fbHizb::after{top:-2px !important;bottom:-2px !important;}
-#floatingFrameBar .fbNums{border:1.5px solid #B98A2A;border-radius:7px;padding:0 .18em;box-sizing:border-box;transition:background .15s;}
+#floatingFrameBar .fbNums{border:1.5px solid #B98A2A;border-radius:7px;padding:0 .1em;box-sizing:border-box;transition:background .15s;}
 body.surah-bar-on #floatingFrameBar .fbNums{background:rgba(200,40,40,.28);}
 body.dark-mode.surah-bar-on #floatingFrameBar .fbNums{background:rgba(230,80,80,.35);}
 #floatingFrameBar .fbNavArrow-r::before{left:0;right:0.25em;}
@@ -512,13 +512,16 @@ body.dark-mode.surah-bar-on #floatingFrameBar .fbNums{background:rgba(230,80,80,
 .fbNameGroup{display:flex;align-items:center;font-family:'QuranHafs',serif;font-size:26px;color:#0E4433;font-weight:700;white-space:nowrap;flex-shrink:0;}
 body.dark-mode .fbNameGroup{color:#EFE8D6;}
 .fbNameGroup .surah-bracket{font-family:'Amiri',serif;font-size:1.25em;line-height:1;vertical-align:middle;flex-shrink:0;}
+#floatingFrameBar .fbNameGroup .surah-bracket{font-size:0;width:6px;box-sizing:border-box;border:3px solid currentColor;}
+#floatingFrameBar .fbNameGroup .surah-bracket:first-child{border-left:none;border-radius:0 3px 3px 0;}
+#floatingFrameBar .fbNameGroup .surah-bracket:last-child{border-right:none;border-radius:3px 0 0 3px;}
 .fbNameGroup .frame-num{font-size:1em;font-family:sans-serif;display:inline-block;text-align:center;flex-shrink:0;}
 .fbNameZone{display:flex;justify-content:flex-start;flex-shrink:0;overflow:hidden;}
 .fbNums{display:inline-flex;align-items:center;flex-shrink:0;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .fbNums:active{opacity:.6;}
 .fbNums .fbNum-order{text-align:left;}
 .fbNums .fbNum-count{text-align:right;}
-.fbNumSep{font-family:sans-serif;margin:0 .12em;}
+.fbNumSep{font-family:sans-serif;margin:0 .05em;}
 .fbNameZone .fbNameText{white-space:nowrap;}
 .fbNameGroup .surah-place-icon{vertical-align:middle;line-height:1;display:inline-flex;flex-shrink:0;}
 .fbNameGroup .surah-place-icon img{height:0.95em;width:auto;vertical-align:middle;display:block;}
@@ -584,7 +587,7 @@ body.dark-mode{--hlSky:rgba(79,179,240,.42);--hlSkyEdge:rgba(79,179,240,.6);--hl
 .ayah-seg.reciting-highlight,.qbsm.reciting-highlight,.cbsm.reciting-highlight{background:var(--hlSky);box-shadow:inset 0 0 0 1px var(--hlSkyEdge);border-radius:3px;-webkit-box-decoration-break:clone;box-decoration-break:clone;}
 .ayah-seg.tap-highlight{background:var(--hlTap);box-shadow:inset 0 0 0 1px var(--hlTapEdge);border-radius:3px;-webkit-box-decoration-break:clone;box-decoration-break:clone;} /* light enough that the green words stay clear on it */
 ::highlight(wbw){background-color:var(--hlSky);}
-#floatingFrameBar .fbCircleSlot{cursor:pointer;-webkit-tap-highlight-color:transparent;padding:2px;border:1.5px solid #B98A2A;border-radius:7px;line-height:0;}
+#floatingFrameBar .fbCircleSlot{cursor:pointer;-webkit-tap-highlight-color:transparent;padding:1.5px;border:1.5px solid #B98A2A;border-radius:7px;line-height:0;}
 body.wbw-on #floatingFrameBar .fbCircleSlot{background:#2F7FD0;border-color:#2F7FD0;}
 #floatingFrameBar .fbNameGroup{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
 .search-match-highlight{background:#FFD54F99;border-radius:2px;transition:background 1s ease-out;}
@@ -1018,7 +1021,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
   </div>
   <div id="selReaderBody"></div>
 </div>
-<div id="floatingFrameBar" class="floating-frame-bar" style="display:none;position:fixed;left:0;right:0;z-index:29;padding:1px 8px 0;"></div>
+<div id="floatingFrameBar" class="floating-frame-bar" style="display:none;position:fixed;left:0;right:0;z-index:29;padding:1px 3px 0;"></div>
 
 <div id="ayahPopup" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:55;">
   <div id="ayahPopupCard" class="ayah-popup-card" style="max-width:420px;margin:0 auto 4px;border-radius:16px;box-sizing:border-box;box-shadow:0 -4px 20px rgba(0,0,0,.3);max-height:65vh;display:flex;flex-direction:column;overflow:hidden;">
@@ -28062,7 +28065,7 @@ function fitFloatingFrameBar(bar, scaleMul, depth) {
   // the ج / ح boxes and the surah numbers' box are exactly as tall as the
   // page-number square, so all four line up at top and bottom
   const boxH = localRect(circleSlot).height;
-  [juz, hizb, nameGroup.querySelector('.fbNums')].forEach((el) => { if (el && boxH) el.style.height = boxH + 'px'; });
+  [juz, hizb, nameGroup.querySelector('.fbNums')].concat([...nameGroup.querySelectorAll('.surah-bracket')]).forEach((el) => { if (el && boxH) el.style.height = boxH + 'px'; });
 
   const baseFontPx = {
     fromTo: parseFloat(getComputedStyle(fromTo).fontSize),
@@ -28124,16 +28127,17 @@ function fitFloatingFrameBar(bar, scaleMul, depth) {
   // width) and shrinks/grows in lockstep only on an unusually
   // narrow/wide screen, never independently.
   const GAP_MM = {
-    bmFromTo: 2,   // round-3 #: bookmark <-> from/to
-    fromToJuz: 3,  // round-3 #: from/to's widest number <-> ج
-    juzRB: 2,      // round-3 #: ج's widest number <-> right bracket
-    rbOrder: 1,    // round-3 #: right bracket (inner) <-> order number
-    iconCount: 5,  // icon <-> the numbers' box
-    nameIcon: 1,   // the widest name's end <-> icon
-    countLB: 1,    // round-3 #: ayah count <-> left bracket (inner)
-    lbHizb: 2,     // round-3 #: left bracket <-> ح
-    hizbRub: 2,    // round-3 #: ح's widest number <-> ر
-    rubCircle: 2,  // round-3 #: ر's widest number <-> page circle
+    // kept small so the text itself can be as large as possible
+    bmFromTo: 1,     // bookmark <-> from/to
+    fromToJuz: 1.2,  // from/to <-> the ج box
+    juzRB: 1,        // the ج box <-> right bracket
+    rbOrder: 0.6,    // right bracket <-> surah name
+    iconCount: 2.5,  // icon <-> the numbers' box
+    nameIcon: 0.6,   // the widest name's end <-> icon
+    countLB: 0.6,    // the numbers' box <-> left bracket
+    lbHizb: 1,       // left bracket <-> the ح box
+    hizbRub: 1.2,    // the ح box <-> ر
+    rubCircle: 1,    // ر <-> the page-number square
   };
   const OUTER_MM = GAP_MM.bmFromTo + GAP_MM.rubCircle;
   const BETWEEN_CHILDREN_MM = GAP_MM.fromToJuz + GAP_MM.juzRB + GAP_MM.lbHizb + GAP_MM.hizbRub;
