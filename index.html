@@ -493,11 +493,11 @@ body.dark-mode .fbFromTo{color:#EFE8D6;}
 /* Spans the whole width of the letter + its number (ج٣ / جزء٣ ...): a shaft
    (::before) plus a solid head (::after) at the pointing end. */
 #floatingFrameBar .fbNavArrow{display:block;position:relative;align-self:stretch;margin:0 .08em .06em;height:0.46em;pointer-events:none;flex-shrink:0;}
-#floatingFrameBar .fbNavArrow::before{content:'';position:absolute;top:50%;height:0.21em;margin-top:-0.105em;background:currentColor;border-radius:0.1em;}
+#floatingFrameBar .fbNavArrow::before{content:'';position:absolute;top:50%;height:var(--shaft,0.21em);transform:translateY(-50%);background:currentColor;border-radius:0;}
 #floatingFrameBar .fbNavArrow::after{content:'';position:absolute;top:0;bottom:0;width:0.42em;background:currentColor;}
 /* ج / ح with their arrows, the surah's numbers: gold boxes as tall as the
    page-number square (heights set in fitFloatingFrameBar) */
-#floatingFrameBar .fbJuz,#floatingFrameBar .fbHizb{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;border:1.5px solid #B98A2A;border-radius:7px;padding:0 .08em;box-sizing:border-box;line-height:1;}
+#floatingFrameBar .fbJuz,#floatingFrameBar .fbHizb{position:relative;overflow:visible;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;border:1.5px solid #B98A2A;border-radius:7px;padding:0 .08em;box-sizing:border-box;line-height:1;}
 #floatingFrameBar .fbNavRow{display:block;line-height:1;white-space:nowrap;}
 #floatingFrameBar .fbJuz::after,#floatingFrameBar .fbHizb::after{top:-2px !important;bottom:-2px !important;}
 #floatingFrameBar .fbNums{border:1.5px solid #B98A2A;border-radius:7px;padding:0 .1em;box-sizing:border-box;transition:background .15s;}
@@ -28071,7 +28071,7 @@ function fitFloatingFrameBar(bar, scaleMul, depth) {
   // the ج / ح boxes and the surah numbers' box are exactly as tall as the
   // page-number square, so all four line up at top and bottom
   const boxH = localRect(circleSlot).height;
-  [juz, hizb, nameGroup.querySelector('.fbNums')].concat([...nameGroup.querySelectorAll('.surah-bracket')]).forEach((el) => { if (el && boxH) el.style.height = boxH + 'px'; });
+  [nameGroup.querySelector('.fbNums')].forEach((el) => { if (el && boxH) el.style.height = boxH + 'px'; });
 
   const baseFontPx = {
     fromTo: parseFloat(getComputedStyle(fromTo).fontSize),
@@ -28305,6 +28305,43 @@ function fitFloatingFrameBar(bar, scaleMul, depth) {
     bookmarkSlot.style.right = (4 + common) + 'px';
     circleSlot.style.left = (4 + common) + 'px';
   }
+  placeNavArrows(bar);
+}
+// The arrows of ج / ح sit above their boxes, at the top line of the other
+// boxes, and run on to the near top corner of the bracket beside them. The
+// two boxes are shortened from the top to make room (their bottoms stay in
+// line with the others), and the brackets lose just enough at the top for
+// their top bar to meet the arrow's shaft.
+function placeNavArrows(bar) {
+  const juz = bar.querySelector('.fbJuz'), hizb = bar.querySelector('.fbHizb');
+  const brs = bar.querySelectorAll('.fbNameGroup .surah-bracket');
+  const circleSlot = bar.querySelector('.fbCircleSlot');
+  if (!juz || !hizb || brs.length < 2 || !circleSlot) return;
+  const boxH = localRect(circleSlot).height;
+  const fpx = parseFloat(getComputedStyle(juz).fontSize) || 16;
+  const head = Math.round(fpx * 0.5);          // arrow zone height (its head)
+  const gap = 2;                                // arrow <-> box top
+  const shaft = 3;                              // as thick as the brackets
+  [juz, hizb].forEach((el) => {
+    el.style.height = Math.max(10, boxH - head - gap) + 'px';
+    el.style.transform = 'translateY(' + ((head + gap) / 2) + 'px)';
+  });
+  const cut = Math.max(0, head / 2 - shaft / 2);
+  brs.forEach((b) => {
+    b.style.height = (boxH - cut) + 'px';
+    b.style.transform = 'translateY(' + (cut / 2) + 'px)';
+  });
+  const rJ = localRect(juz), rH = localRect(hizb);
+  const rRB = localRect(brs[0]), rLB = localRect(brs[1]);
+  const aJ = juz.querySelector('.fbNavArrow'), aH = hizb.querySelector('.fbNavArrow');
+  const set = (a, left, right) => {
+    if (!a) return;
+    a.style.cssText = 'position:absolute;margin:0;height:' + head + 'px;top:' + (-(head + gap) - 1.5) + 'px;left:' + left + 'px;right:' + right + 'px;--shaft:' + shaft + 'px;';
+  };
+  // ج (right of the right bracket): from the bracket's top corner rightwards
+  set(aJ, -Math.max(0, rJ.left - rRB.right) - 1.5, -1.5);
+  // ح (left of the left bracket): from the bracket's top corner leftwards
+  set(aH, -1.5, -Math.max(0, rLB.left - rH.right) - 1.5);
 }
 
 document.getElementById('floatingFrameBar').addEventListener('click', (e) => {
