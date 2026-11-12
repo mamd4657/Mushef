@@ -492,9 +492,17 @@ body.dark-mode .fbFromTo{color:#EFE8D6;}
 .fbNavArrow{display:none;}
 /* Spans the whole width of the letter + its number (ج٣ / جزء٣ ...): a shaft
    (::before) plus a solid head (::after) at the pointing end. */
-#floatingFrameBar .fbNavArrow{display:block;position:absolute;left:0;right:0;top:-0.3em;height:0.44em;pointer-events:none;}
-#floatingFrameBar .fbNavArrow::before{content:'';position:absolute;top:50%;height:0.15em;margin-top:-0.075em;background:currentColor;border-radius:0.08em;}
-#floatingFrameBar .fbNavArrow::after{content:'';position:absolute;top:0;bottom:0;width:0.4em;background:currentColor;}
+#floatingFrameBar .fbNavArrow{display:block;position:relative;align-self:stretch;margin:0 .08em .06em;height:0.46em;pointer-events:none;flex-shrink:0;}
+#floatingFrameBar .fbNavArrow::before{content:'';position:absolute;top:50%;height:0.21em;margin-top:-0.105em;background:currentColor;border-radius:0.1em;}
+#floatingFrameBar .fbNavArrow::after{content:'';position:absolute;top:0;bottom:0;width:0.42em;background:currentColor;}
+/* ج / ح with their arrows, the surah's numbers: gold boxes as tall as the
+   page-number square (heights set in fitFloatingFrameBar) */
+#floatingFrameBar .fbJuz,#floatingFrameBar .fbHizb{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;border:1.5px solid #B98A2A;border-radius:7px;padding:0 .14em;box-sizing:border-box;line-height:1;}
+#floatingFrameBar .fbNavRow{display:block;line-height:1;white-space:nowrap;}
+#floatingFrameBar .fbJuz::after,#floatingFrameBar .fbHizb::after{top:-2px !important;bottom:-2px !important;}
+#floatingFrameBar .fbNums{border:1.5px solid #B98A2A;border-radius:7px;padding:0 .18em;box-sizing:border-box;transition:background .15s;}
+body.surah-bar-on #floatingFrameBar .fbNums{background:rgba(200,40,40,.28);}
+body.dark-mode.surah-bar-on #floatingFrameBar .fbNums{background:rgba(230,80,80,.35);}
 #floatingFrameBar .fbNavArrow-r::before{left:0;right:0.25em;}
 #floatingFrameBar .fbNavArrow-r::after{right:0;clip-path:polygon(0 0,100% 50%,0 100%);}
 #floatingFrameBar .fbNavArrow-l::before{right:0;left:0.25em;}
@@ -505,7 +513,12 @@ body.dark-mode .fbFromTo{color:#EFE8D6;}
 body.dark-mode .fbNameGroup{color:#EFE8D6;}
 .fbNameGroup .surah-bracket{font-family:'Amiri',serif;font-size:1.25em;line-height:1;vertical-align:middle;flex-shrink:0;}
 .fbNameGroup .frame-num{font-size:1em;font-family:sans-serif;display:inline-block;text-align:center;flex-shrink:0;}
-.fbNameZone{display:flex;justify-content:center;flex-shrink:0;overflow:hidden;}
+.fbNameZone{display:flex;justify-content:flex-start;flex-shrink:0;overflow:hidden;}
+.fbNums{display:inline-flex;align-items:center;flex-shrink:0;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.fbNums:active{opacity:.6;}
+.fbNums .fbNum-order{text-align:left;}
+.fbNums .fbNum-count{text-align:right;}
+.fbNumSep{font-family:sans-serif;margin:0 .12em;}
 .fbNameZone .fbNameText{white-space:nowrap;}
 .fbNameGroup .surah-place-icon{vertical-align:middle;line-height:1;display:inline-flex;flex-shrink:0;}
 .fbNameGroup .surah-place-icon img{height:0.95em;width:auto;vertical-align:middle;display:block;}
@@ -571,8 +584,9 @@ body.dark-mode{--hlSky:rgba(79,179,240,.42);--hlSkyEdge:rgba(79,179,240,.6);--hl
 .ayah-seg.reciting-highlight,.qbsm.reciting-highlight,.cbsm.reciting-highlight{background:var(--hlSky);box-shadow:inset 0 0 0 1px var(--hlSkyEdge);border-radius:3px;-webkit-box-decoration-break:clone;box-decoration-break:clone;}
 .ayah-seg.tap-highlight{background:var(--hlTap);box-shadow:inset 0 0 0 1px var(--hlTapEdge);border-radius:3px;-webkit-box-decoration-break:clone;box-decoration-break:clone;} /* light enough that the green words stay clear on it */
 ::highlight(wbw){background-color:var(--hlSky);}
-body.wbw-on #floatingFrameBar .fbNameGroup{background:#2F7FD066;border-radius:8px;box-shadow:0 0 0 2px #2F7FD066;}
-#floatingFrameBar .fbNameGroup{cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+#floatingFrameBar .fbCircleSlot{cursor:pointer;-webkit-tap-highlight-color:transparent;padding:2px;border:1.5px solid #B98A2A;border-radius:7px;line-height:0;}
+body.wbw-on #floatingFrameBar .fbCircleSlot{background:#2F7FD0;border-color:#2F7FD0;}
+#floatingFrameBar .fbNameGroup{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
 .search-match-highlight{background:#FFD54F99;border-radius:2px;transition:background 1s ease-out;}
 .divine-name{color:#CC0000;}
 body.dark-mode .divine-name{color:#FF5252;}
@@ -799,7 +813,7 @@ body.dark-mode .sajdah-side-bar{fill:#EFE8D6;}
 .qheader::before,.qcombo .cname::before{content:'';position:absolute;inset:3px;border:1px solid #D1A740;border-radius:4px;pointer-events:none;}
 .qh-grid{display:grid;direction:rtl;align-self:stretch;align-items:center;min-height:0;height:100%;grid-template-rows:minmax(0,1fr);
   font-size:min(1em, calc((100cqi - 14px) / 19.3));
-  grid-template-columns:4.7em 1.5px 2.65em minmax(0,1fr) 1.5px 3.1em 1.5px 4.25em;}
+  grid-template-columns:minmax(4.7em,1fr) 1.5px var(--qhNameW,6.4em) 1.5px minmax(4.7em,1fr);}
 .qh-sep{display:block;align-self:stretch;width:1.5px;background:#D1A740;font-style:normal;}
 .qh-grid .qh-meta{min-width:0 !important;justify-self:stretch;justify-content:flex-start;padding:0;box-sizing:border-box;gap:.2em !important;}
 /* the same space from the frame's right edge to «ترتيبها» as from the
@@ -961,7 +975,7 @@ body.dark-mode .qbsm,body.dark-mode .qcombo .cbsm{color:#EFE8D6;}
 body.dark-mode .ayah-seg.reciting-highlight,body.dark-mode .qbsm.reciting-highlight,body.dark-mode .cbsm.reciting-highlight{background:var(--hlSky);}
 body.dark-mode .ayah-seg.tap-highlight{background:#66BB6A55;}
 body.dark-mode ::highlight(wbw){background-color:var(--hlSky);}
-body.dark-mode.wbw-on #floatingFrameBar .fbNameGroup{background:#5A9DF066;box-shadow:0 0 0 2px #5A9DF066;}
+body.dark-mode.wbw-on #floatingFrameBar .fbCircleSlot{background:#5A9DF0;border-color:#5A9DF0;}
 body.dark-mode .search-match-highlight{background:#FFCA2899;}
 </style>
 </head>
@@ -1025,7 +1039,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
 <div id="reciteModeBar" style="display:none;position:fixed;bottom:52px;left:0;right:0;z-index:49;background:#0E443300;pointer-events:none;">
   <div id="reciteModeBarInner" style="position:relative;pointer-events:auto;touch-action:none;width:max-content;max-width:calc(100% - 12px);margin:0 auto;background:#C0463E;border-radius:22px;box-shadow:0 -2px 10px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 8px;box-sizing:border-box;--rbGap:22px;">
     <button id="reciteModeBarPlayBtn" style="background:transparent;border:none;color:#F6EFDC;font-size:32px;cursor:pointer;line-height:1;padding:0 4px;min-width:36px;" aria-label="تشغيل/إيقاف التلاوة"><svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true" style="display:block;margin:auto"><path d="M6 3.5v17a1 1 0 0 0 1.5.87l14-8.5a1 1 0 0 0 0-1.74l-14-8.5A1 1 0 0 0 6 3.5z"/></svg></button>
-    <button id="rbRestartBtn" style="display:none;background:transparent;border:none;color:#F6EFDC;cursor:pointer;line-height:1;padding:0 2px;min-width:30px;" aria-label="من البداية"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true" style="display:block;margin:auto"><rect x="4" y="4" width="2.6" height="16" rx="1"/><path d="M20 4.6v14.8a.9.9 0 0 1-1.4.75L8.2 12.75a.9.9 0 0 1 0-1.5L18.6 3.85A.9.9 0 0 1 20 4.6z"/></svg></button>
+    <button id="rbRestartBtn" style="display:block;background:transparent;border:none;color:#F6EFDC;cursor:pointer;line-height:1;padding:0 2px;min-width:30px;margin:0 14px;" aria-label="من البداية"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true" style="display:block;margin:auto"><rect x="4" y="4" width="2.6" height="16" rx="1"/><path d="M20 4.6v14.8a.9.9 0 0 1-1.4.75L8.2 12.75a.9.9 0 0 1 0-1.5L18.6 3.85A.9.9 0 0 1 20 4.6z"/></svg></button>
     <div class="rb-frame" id="rbFrameAyah" style="flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:space-around;gap:var(--rbGap);border:1.5px solid #F6EFDC;border-radius:16px;padding:5px 10px;">
       <label class="rb-opt"><input type="radio" name="reciteModeRadio" id="reciteModeRadioOnce" value="single">مرة</label>
       <label class="rb-opt" id="reciteModeRepeatLabel"><input type="radio" name="reciteModeRadio" id="reciteModeRadioRepeat" value="repeat"><span id="reciteRepeatWord">تكرار</span></label>
@@ -1036,7 +1050,6 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
       <label class="rb-opt" data-pick="juz"><input type="radio" name="rbSurahKind" value="juz">الجزء</label>
       <label class="rb-opt" data-pick="time"><input type="radio" name="rbSurahKind" value="time">توقيت</label>
     </div>
-    <button id="reciteModeBarCloseBtn" class="rb-close" aria-label="إيقاف التلاوة وإغلاق الشريط">✕</button>
   </div>
 </div>
 
@@ -27687,16 +27700,20 @@ function buildFrameBarHTML(n, content, extraSurahClass) {
     '<div class="fbCircleSlot"><div class="side-slot">' + nAr + '</div></div>' +
     '<div class="fbMiddle">' +
       '<div class="fbFromTo">' + fromToHTML + '</div>' +
-      '<span class="fbJuz' + (sid > 1 ? '' : ' fb-no-nav') + '" data-nav-surah="' + (sid > 1 ? sid - 1 : '') + '" aria-label="بداية السورة السابقة"><span class="fbNavArrow fbNavArrow-r" aria-hidden="true"></span>' + juzLabel + '<span class="frame-num fbNum-juz">' + toArabicDigits(content.juz) + '</span></span>' +
+      '<span class="fbJuz' + (sid > 1 ? '' : ' fb-no-nav') + '" data-nav-surah="' + (sid > 1 ? sid - 1 : '') + '" aria-label="بداية السورة السابقة"><span class="fbNavArrow fbNavArrow-r" aria-hidden="true"></span><span class="fbNavRow">' + juzLabel + '<span class="frame-num fbNum-juz">' + toArabicDigits(content.juz) + '</span></span></span>' +
       '<span class="fbNameGroup ' + surahClass + '" data-surah="' + (sid || '') + '">' +
         '<span class="surah-bracket">[</span>' +
-        '<span class="frame-num fbNum-order">' + (sid ? toArabicDigits(sid) : '') + '</span>' +
         '<span class="fbNameZone"><span class="fbNameText">' + escapeHtml(name) + '</span></span>' +
         '<span class="' + iconClass + '"><img src="' + iconSrc + '" alt="' + iconAlt + '"></span>' +
-        '<span class="frame-num fbNum-count">' + (count ? toArabicDigits(count) : '') + '</span>' +
+        // order : count - a tap opens the surah's listening bar
+        '<span class="fbNums" role="button" aria-label="استماع السورة">' +
+          '<span class="frame-num fbNum-order">' + (sid ? toArabicDigits(sid) : '') + '</span>' +
+          '<span class="fbNumSep">:</span>' +
+          '<span class="frame-num fbNum-count">' + (count ? toArabicDigits(count) : '') + '</span>' +
+        '</span>' +
         '<span class="surah-bracket">]</span>' +
       '</span>' +
-      '<span class="fbHizb' + (sid && sid < 114 ? '' : ' fb-no-nav') + '" data-nav-surah="' + (sid && sid < 114 ? sid + 1 : '') + '" aria-label="بداية السورة التالية"><span class="fbNavArrow fbNavArrow-l" aria-hidden="true"></span>' + hizbLabel + '<span class="frame-num fbNum-hizb">' + toArabicDigits(content.hizb) + '</span></span>' +
+      '<span class="fbHizb' + (sid && sid < 114 ? '' : ' fb-no-nav') + '" data-nav-surah="' + (sid && sid < 114 ? sid + 1 : '') + '" aria-label="بداية السورة التالية"><span class="fbNavArrow fbNavArrow-l" aria-hidden="true"></span><span class="fbNavRow">' + hizbLabel + '<span class="frame-num fbNum-hizb">' + toArabicDigits(content.hizb) + '</span></span></span>' +
       '<span class="fbRub">' + rubLabel + '<span class="frame-num fbNum-rub">' + toArabicDigits(content.rub) + '</span></span>' +
     '</div>' +
   '</div>';
@@ -28042,6 +28059,10 @@ function fitFloatingFrameBar(bar, scaleMul, depth) {
   const slotZoom = Math.min(1, Math.max(0.72, barEl.clientWidth / 345));
   bookmarkSlot.style.zoom = slotZoom < 1 ? String(slotZoom) : '';
   circleSlot.style.zoom = slotZoom < 1 ? String(slotZoom) : '';
+  // the ج / ح boxes and the surah numbers' box are exactly as tall as the
+  // page-number square, so all four line up at top and bottom
+  const boxH = localRect(circleSlot).height;
+  [juz, hizb, nameGroup.querySelector('.fbNums')].forEach((el) => { if (el && boxH) el.style.height = boxH + 'px'; });
 
   const baseFontPx = {
     fromTo: parseFloat(getComputedStyle(fromTo).fontSize),
@@ -28107,7 +28128,8 @@ function fitFloatingFrameBar(bar, scaleMul, depth) {
     fromToJuz: 3,  // round-3 #: from/to's widest number <-> ج
     juzRB: 2,      // round-3 #: ج's widest number <-> right bracket
     rbOrder: 1,    // round-3 #: right bracket (inner) <-> order number
-    iconCount: 2,  // round-3 #: icon <-> widest ayah count
+    iconCount: 5,  // icon <-> the numbers' box
+    nameIcon: 1,   // the widest name's end <-> icon
     countLB: 1,    // round-3 #: ayah count <-> left bracket (inner)
     lbHizb: 2,     // round-3 #: left bracket <-> ح
     hizbRub: 2,    // round-3 #: ح's widest number <-> ر
@@ -28144,7 +28166,10 @@ function fitFloatingFrameBar(bar, scaleMul, depth) {
     juz.style.marginLeft = px(GAP_MM.juzRB) + 'px';
     if (rightBracket) rightBracket.style.marginLeft = px(GAP_MM.rbOrder) + 'px';
     if (icon) icon.style.marginLeft = px(GAP_MM.iconCount) + 'px';
-    if (countNum) countNum.style.marginLeft = px(GAP_MM.countLB) + 'px';
+    if (nameZone) nameZone.style.marginLeft = px(GAP_MM.nameIcon) + 'px';
+    const numsBox = nameGroup.querySelector('.fbNums');
+    if (numsBox) numsBox.style.marginLeft = px(GAP_MM.countLB) + 'px';
+    else if (countNum) countNum.style.marginLeft = px(GAP_MM.countLB) + 'px';
     nameGroup.style.marginLeft = px(GAP_MM.lbHizb) + 'px';
     hizb.style.marginLeft = px(GAP_MM.hizbRub) + 'px';
     const outerRight = baseOuterRight + px(GAP_MM.bmFromTo);
@@ -30021,40 +30046,27 @@ async function wbwDownload(rid, surahs, onUpdate) {
   else toast('✓ تم التنزيل، وتعمل قراءة الكلمات فيه بدون إنترنت');
 }
 
-// the surah name in the floating frame: a tap turns word reading on/off;
-// a long press opens the listening bar of that surah, to play it from its
-// start without going back to its name bar
-let fbNameLongPressed = false;
-(function () {
-  const bar = document.getElementById('floatingFrameBar');
-  let timer = null, sx = 0, sy = 0;
-  const cancel = () => { if (timer) { clearTimeout(timer); timer = null; } };
-  bar.addEventListener('pointerdown', (e) => {
-    const nm = e.target.closest ? e.target.closest('.fbNameGroup') : null;
-    if (!nm) return;
-    fbNameLongPressed = false;
-    sx = e.clientX; sy = e.clientY;
-    cancel();
-    timer = setTimeout(() => {
-      timer = null;
-      const sid = parseInt(nm.dataset.surah, 10);
-      if (!sid) return;
-      fbNameLongPressed = true;
-      if (navigator.vibrate) { try { navigator.vibrate(15); } catch (err) { /* ignore */ } }
-      openSurahReciteBar(sid);
-    }, 550);
-  });
-  bar.addEventListener('pointermove', (e) => { if (timer && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) cancel(); });
-  bar.addEventListener('pointerup', cancel);
-  bar.addEventListener('pointercancel', cancel);
-  bar.addEventListener('contextmenu', (e) => { if (e.target.closest && e.target.closest('.fbNameGroup')) e.preventDefault(); });
-})();
+// floating frame: the page-number circle turns word reading on/off (its
+// square turns blue while it is on); the surah's two numbers (order :
+// ayah count) open that surah's listening bar
 document.getElementById('floatingFrameBar').addEventListener('click', (e) => {
-  const nm = e.target.closest ? e.target.closest('.fbNameGroup') : null;
-  if (!nm) return;
-  e.stopPropagation();
-  if (fbNameLongPressed) { fbNameLongPressed = false; return; }
-  setWbwOn(!wbwOn, true);
+  if (!e.target.closest) return;
+  const circle = e.target.closest('.fbCircleSlot');
+  if (circle) { e.stopPropagation(); setWbwOn(!wbwOn, true); return; }
+  const nums = e.target.closest('.fbNums');
+  if (nums) {
+    e.stopPropagation();
+    const g = nums.closest('.fbNameGroup');
+    const sid = g ? parseInt(g.dataset.surah, 10) : 0;
+    if (!sid) return;
+    // a second tap (its bar already showing): stop and hide the bar
+    if (reciteBarShowing() && reciteBarVariant === 'surah' && orangeSurah === sid) {
+      if (reciting) { if (contStopAt) orangeTimeLeft = Math.max(0, contStopAt - Date.now()); stopRecitation(); }
+      closeReciteModeBar();
+      return;
+    }
+    openSurahReciteBar(sid);
+  }
 });
 
 // ---------------- recitation playback ----------------
@@ -30806,8 +30818,14 @@ function sizeReciteBar() {
   for (let fs = 17; fs >= 13 && over(); fs--) inner.querySelectorAll('.rb-opt').forEach((o) => { o.style.fontSize = fs + 'px'; });
 }
 
+// the gold box round the surah's numbers in the floating frame is shaded
+// red while the surah's listening bar is showing
+function syncSurahBarMark() {
+  document.body.classList.toggle('surah-bar-on', reciteModeBarEl.style.display !== 'none' && reciteBarVariant === 'surah');
+}
 function closeReciteModeBarLayer() {
   reciteModeBarEl.style.display = 'none';
+  syncSurahBarMark();
   reciteNavSurah = null; reciteViewDetached = false;
   if (typeof hideRepeatMenu === 'function') hideRepeatMenu();
 }
@@ -30826,6 +30844,7 @@ function openReciteModeBar() {
   positionReciteModeBar();
   placeReciteBarMenus();
   syncRecitePlayButtons();
+  syncSurahBarMark();
   // Its Back step sits where it was opened: windows opened later close
   // first; reaching it, Back stops a playing recitation, and the next Back
   // hides the bar (see the popstate handler).
@@ -30835,13 +30854,6 @@ function closeReciteModeBar() {
   closeSpecificLayer(closeReciteModeBarLayer);
 }
 
-// ✕: stops the recitation and closes the bar at once
-document.getElementById('reciteModeBarCloseBtn').addEventListener('click', (e) => {
-  if (reciteBarJustDragged) return;
-  e.stopPropagation();
-  if (reciting) stopRecitation();
-  closeReciteModeBar();
-});
 reciteModeBarPlayBtn.addEventListener('click', () => {
   if (reciteBarVariant === 'surah') { orangePlayToggle(); return; }
   if (reciting) stopRecitation();
@@ -31254,7 +31266,7 @@ function setReciteBarVariant(v) {
   inner.classList.toggle('rb-surah', v === 'surah');
   document.getElementById('rbFrameAyah').style.display = v === 'surah' ? 'none' : 'flex';
   document.getElementById('rbFrameSurah').style.display = v === 'surah' ? 'flex' : 'none';
-  document.getElementById('rbRestartBtn').style.display = v === 'surah' ? 'block' : 'none';
+  syncSurahBarMark();
   hideRbPicker(); hideRepeatMenu();
   if (v === 'ayah') {
     // the red bar's own choice (the orange one plays as «استمرار» internally)
@@ -31337,11 +31349,39 @@ function orangePlayToggle() {
   }
   startOrangePlan(orangePlan || orangeDefaultPlan());
 }
-// ⏮ on the surah bar: start what it plays (the surah, the juz or the timed
-// listening) again from its beginning
+// ⏮ : back to where the listening began. On the surah bar: the surah, the
+// juz or the timed listening again from its start. On the ayah bar: the ayah
+// it was started from (with «استمرار», on from there again).
+function redRestart() {
+  hideRepeatMenu();
+  let s = 0, a = 0;
+  if (reciteStartKey) { const p = reciteStartKey.split(':'); s = +p[0]; a = +p[1]; }
+  if (!s) {
+    const it = (reciteGlobalIndex !== null && searchIndex) ? searchIndex[reciteGlobalIndex] : null;
+    const sel = getTapSelectedAyah();
+    if (sel) { s = sel.surah; a = sel.ayah; } else if (it) { s = it.surah; a = it.ayah; }
+  }
+  if (!s) { startRecitationRespectingSelection(); return; }
+  reciteBasmalaThen = null;
+  reciteAudio.pause();
+  reciteNavSurah = null; reciteViewDetached = false; contForceFresh = false;
+  let start = { surah: s, ayah: a };
+  if (reciteMode === 'continuous') {
+    start = beginContPlan(start);
+    if (!start) return;
+    contStopAt = currentContKind() === 'time' ? Date.now() + contTimeMin * 60000 : null;
+  } else {
+    contQueue = null; contPlanBuiltFor = null; contStopAt = null;
+    reciteRepeatLeft = repeatCount - 1;
+  }
+  reciting = true;
+  syncRecitePlayButtons();
+  if (start.ayah === 1) playWithBasmala(start.surah, start.ayah); else playAyah(start.surah, start.ayah);
+}
 document.getElementById('rbRestartBtn').addEventListener('click', () => {
-  hideRbPicker();
-  startOrangePlan(orangePlan || orangeDefaultPlan());
+  if (reciteBarJustDragged) return;
+  if (reciteBarVariant === 'surah') { hideRbPicker(); startOrangePlan(orangePlan || orangeDefaultPlan()); }
+  else redRestart();
 });
 // «استماع» in any surah name bar
 document.addEventListener('click', (e) => {
@@ -32920,16 +32960,13 @@ setInterval(() => { if (segEngaged) positionSegPanel(); }, 250);
 // the middle of the bar (as far as the two sides allow), thin dividers in a
 // shade close to the bar's own green. «تلاوة» opens the surah recitation bar.
 function surahHeaderInnerHTML(sid) {
-  // fixed columns, right to left: ترتيبها N | سورة · NAME | تلاوة | آياتها N
-  // (the two sides are equally wide, so the name sits mid-bar; every word
-  // and divider is in the same place on every surah's bar)
+  // fixed columns, right to left: ترتيبها N | NAME | آياتها N
+  // (the two sides are equally wide, so the name sits mid-bar; the dividers
+  // are in the same place on every surah's bar)
   return '<span class="qh-grid">' +
     '<span class="qh-meta qh-c1"><span class="qh-label">ترتيبها</span><span class="qh-num">' + toArabicDigits(sid) + '</span></span>' +
     '<i class="qh-sep"></i>' +
-    '<span class="qh-word">سورة</span>' +
     '<span class="qh-name">' + (SURAH_NAMES[sid] || '') + '</span>' +
-    '<i class="qh-sep"></i>' +
-    '<span class="qh-recite" role="button" data-surah="' + sid + '">استماع</span>' +
     '<i class="qh-sep"></i>' +
     '<span class="qh-meta qh-c5"><span class="qh-num">' + toArabicDigits(SURAH_AYAH_COUNT[sid] || '') + '</span><span class="qh-label">آياتها</span></span>' +
   '</span>';
@@ -34082,8 +34119,10 @@ window.addEventListener('popstate', () => {
   if (backIgnorePops > 0) { backIgnorePops--; return; }
   const closeFn = backLayerStack.pop();
   if (closeFn === closeReciteModeBarLayer && reciting) {
-    // Back reaching the red bar while a recitation plays only stops it; the
-    // bar stays (its step is put back) and the next Back hides it.
+    // Back reaching the bar while a recitation plays only stops it (like
+    // the pause button); the bar stays (its step is put back) and the next
+    // Back hides it.
+    if (reciteBarVariant === 'surah' && contStopAt) orangeTimeLeft = Math.max(0, contStopAt - Date.now());
     stopRecitation();
     pushBackLayer(closeReciteModeBarLayer);
     if (typeof ghResumeCheck === 'function') ghResumeCheck();
@@ -34326,16 +34365,16 @@ function renderGuideTab() {
       'ويمكن البحث عن كلمتين من آية واحدة: بينهما مسافة واحدة إن كانتا متجاورتين، ومسافتان إن لم تكونا متجاورتين.',
     ]},
     { title: '٢. الإطار العائم (تحت شريط الرأس)', items: [
-      'بين القوسين: ترتيب السورة، واسمها، ورمز يبيّن أنها مكية أو مدنية، وعدد آياتها.',
+      'بين القوسين: اسم السورة، ثم رمز الكعبة المشرفة (مكية) أو القبة الخضراء (مدنية)، ثم ترتيبها وعدد آياتها بينهما شارحة (:).',
       'في أقصى اليمين علامة المرجعية ' + bookmarkIcon + ' لحفظ الصفحة، وبجانبها «من … إلى …»: صفحتا بداية السورة ونهايتها. وفي أقصى اليسار دائرة رقم الصفحة.',
       'وبين ذلك: الجزء (ج) والحزب (ح) والربع (ر). وفي الاتجاه الأفقي تُكتب الكلمات كاملة (جزء، حزب، ربع).',
-      '<b>السورة السابقة والتالية</b>: النقر على «ج» أو رقمه أو السهم فوقه <span style="white-space:nowrap">(' + navArrow(true) + ')</span> ينقل إلى بداية السورة السابقة، والنقر على «ح» أو رقمه أو السهم فوقه <span style="white-space:nowrap">(' + navArrow(false) + ')</span> ينقل إلى بداية السورة التالية. والتمرير التلقائي يبقى على حاله، لكنه يتوقف عند بداية السورة إن كان مفعّلاً.',
-      'النقر على اسم السورة يفعّل <b>قراءة الكلمات</b> أو يوقفها (الفقرة ١١)، والضغط المطوّل عليه يُظهر <b>شريط استماع السورة</b> (الفقرة ٧).',
+      '<b>السورة السابقة والتالية</b>: النقر على إطار «ج» (وفيه السهم فوقها ورقم الجزء) <span style="white-space:nowrap">(' + navArrow(true) + ')</span> ينقل إلى بداية السورة السابقة، والنقر على إطار «ح» <span style="white-space:nowrap">(' + navArrow(false) + ')</span> ينقل إلى بداية السورة التالية. والتمرير التلقائي يبقى على حاله، لكنه يتوقف عند بداية السورة إن كان مفعّلاً.',
+      'النقر على <b>رقمي السورة</b> (ترتيبها : عدد آياتها، في الإطار الذهبي) يُظهر <b>شريط استماع السورة</b> (الفقرة ٧) ويُظلَّل إطارهما بالأحمر ما دام الشريط ظاهراً، والنقر عليهما مرة أخرى يوقف التلاوة ويُخفي الشريط. ووالنقر على <b>دائرة رقم الصفحة</b> يفعّل <b>قراءة الكلمات</b> أو يوقفها، ويظهر حولها مربع أزرق ما دامت مفعّلة (الفقرة ١١).',
       'يتحدّث الإطار تلقائياً أثناء التمرير ليطابق ما تقرأه.',
     ]},
     { title: '٣. صفحة النص القرآني', items: [
       'يفتح المصحف على القائمة الجانبية (عنوان السور)، وفي أعلاها إطار <b>العودة إلى آخر صفحة</b> للرجوع إلى الصفحة التي كانت مفتوحة.',
-      '<b>شريط اسم السورة</b> في أول كل سورة: من اليمين ترتيبها، ثم كلمة «سورة» واسمها في الوسط، ثم زر <b>استماع</b> (الفقرة ٧)، ثم عدد آياتها.',
+      '<b>شريط اسم السورة</b> في أول كل سورة: من اليمين ترتيبها، ثم اسمها في الوسط، ثم عدد آياتها.',
       '<b>النسخ</b>: اضغط مطوّلاً على النص واسحب لتحديد ما تريد، ثم انسخه. وعند لصقه يكون المنسوخ بين قوسين [ ] ورقم كل آية بعد نصها داخل القوسين، واسم السورة بعد القوس الأخير، مثل: [ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِينَ ٢] الفاتحة. وإن امتد المنسوخ من آخر آية إلى أول التي بعدها، كُتب رقم كل منهما بعد الجزء الخاص بها.',
       'خط أخضر داكن على أحد جانبي الصفحة يبيّن أنها يمنى أو يسرى.',
       '<b>علامة الربع</b> ' + rubGridSvg(3) + ': تظهر عند بداية كل ربع حزب، وهي ثمانية مربعات تمثّل أرباع الجزء الحالي (العمود الأيمن لحزبه الأول، والأيسر للثاني، من الأعلى إلى الأسفل). ويُملأ منها بعدد الأرباع التي وصلت إليها من الجزء، ففي المثال المجاور أنت في الربع الثالث.',
@@ -34369,11 +34408,11 @@ function renderGuideTab() {
     { title: '٧. الاستماع إلى التلاوة', items: [
       '<b>القارئ</b>: يُختار من عنوان <b>الاستماع</b> بالنقر على اسمه. ويُنزَّل صوته للعمل بدون إنترنت بزر «تحميل»، ويُضاف قارئ جديد من حقل البحث، والضغط المطوّل على اسم القارئ يُظهر حذفه أو حذف تلاوته المنزَّلة.',
       '<b>شريط استماع الآية</b> (أحمر فاتح): يظهر من زر «استماع» في نافذة الآية. فيه التشغيل والإيقاف، وثلاثة اختيارات: <b>مرة</b> (الآية وحدها)، و<b>تكرار</b> (الآية عدداً من المرات يُختار من مرتين إلى سبع، ويبقى محفوظاً)، و<b>استمرار</b> (الآية وما بعدها ومن سورة إلى سورة حتى تُوقف، وهو الاختيار عند فتح الشريط).',
-      '<b>شريط استماع السورة</b> (أحمر غامق): يظهر من زر «استماع» في شريط اسم السورة. ويظهر أيضاً بالضغط المطوّل على اسم السورة في الإطار العائم، وأنت في أي موضع منها. التشغيل وحده يتلو السورة كاملة، وزر <b>⏮</b> بجانبه يعيد التلاوة من أول السورة (أو الجزء أو التوقيت)، و<b>السورة</b> و<b>الجزء</b> يُظهران صفاً منزلقاً لاختيار سورة أو جزء، و<b>توقيت</b> يُظهر أوقاتاً (من خمس دقائق إلى خمس ساعات) تستمر التلاوة خلالها من أول السورة. وتبقى الإشارة على آخر اختيار.',
-      'وفي الشريطين زر الإغلاق (✕) الذي يوقف التلاوة ويُغلق الشريط. ولا يعمل الشريطان معاً، ولا تعمل معهما قراءة الكلمات.',
+      '<b>شريط استماع السورة</b> (أحمر غامق): يظهر بالنقر على رقمي السورة في الإطار العائم (ترتيبها : عدد آياتها)، وأنت في أي موضع منها. التشغيل وحده يتلو السورة كاملة، وزر <b>⏮</b> بجانبه يعيد التلاوة من أول السورة (أو الجزء أو التوقيت)، و<b>السورة</b> و<b>الجزء</b> يُظهران صفاً منزلقاً لاختيار سورة أو جزء، و<b>توقيت</b> يُظهر أوقاتاً (من خمس دقائق إلى خمس ساعات) تستمر التلاوة خلالها من أول السورة. وتبقى الإشارة على آخر اختيار.',
+      'وفي الشريطين زر <b>⏮</b> للرجوع إلى بداية الاستماع: في شريط الآية إلى الآية التي بدأ منها، وفي شريط السورة إلى أول السورة أو الجزء أو التوقيت. ولا يعمل الشريطان معاً، ولا تعمل معهما قراءة الكلمات.',
       'الشريط ثابت فوق الشريط السفلي، ويمكن سحبه من الشريط نفسه إلى الأسفل ليغطي الشريط السفلي، وإلى الأعلى ليعود. ويظهر في مكانه عند فتحه من جديد.',
       'أثناء التلاوة تبقى الآية المظللة في أعلى النص. وتبدأ تلاوة كل سورة بالبسملة بصوت القارئ نفسه (عدا التوبة). وإذا انتقلت إلى سورة أخرى أثناء التلاوة استمرت التلاوة، فإذا أوقفتها ثم شغّلتها بدأت من السورة الظاهرة.',
-      'الرجوع يُغلق أولاً ما فُتح بعد الشريط، ثم يوقف التلاوة، ثم يُخفي الشريط.',
+      '<b>الرجوع</b> (بالإيماءة أو بسهم الرجوع) يُغلق أولاً ما فُتح بعد الشريط، ثم يوقف التلاوة كزر الإيقاف ويبقى الشريط ظاهراً، ثم يُخفي الشريط في المرة التالية، ثم يعيد إلى القائمة الجانبية، وبعدها تُخرج إيماءة الرجوع من التطبيق.',
       '<b>سور وآيات مختارة</b> (في عنوان <b>الاستماع</b> تحت أسماء القرّاء)، وفيها قسمان يُملآن بالطريقة نفسها: اكتب اسم السورة، وضع علامة في مربع <b>سورة</b> لاختيارها كاملة، أو اكتب أرقام آيات منها (مثل: ٥ أو ١-٧ أو ٣، ٩)، أو الاثنين معاً. وبزر «+ إضافة سورة» تضيف سوراً أخرى.',
       'ولكل سورة ولآياتها عدد مرات <b>تكرار</b> (يتفعّل بوضع العلامة في المربع).',
       '١- <b>للاستماع</b>: زر <b>▶ تشغيل</b> يتلوها على شريط استماع السورة، وتُكرَّر بالعدد المختار.',
@@ -34403,7 +34442,7 @@ function renderGuideTab() {
       'وفي المصحف أحد عشر موضعاً آخر للسجود مستحب غير واجب. وفي عنوان <b>الأدعية</b> صيغتان لما يقال في سجود التلاوة.',
     ]},
     { title: '١١. قراءة الكلمات كلمة كلمة (للتعلّم)', items: [
-      '<b>التفعيل والإيقاف</b>: بالنقر على اسم السورة في الإطار العائم (يتلوّن <b style="color:#2F7FD0;">بالأزرق</b> ما دامت مفعّلة)، أو من عنوان <b>التخطيط</b>.',
+      '<b>التفعيل والإيقاف</b>: بالنقر على دائرة رقم الصفحة في الإطار العائم (يظهر حولها مربع <b style="color:#2F7FD0;">أزرق</b> ما دامت مفعّلة)، أو من عنوان <b>التخطيط</b>.',
       'وهي مفعّلة: انقر أي كلمة فتتلوّن وتُقرأ بصوت القارئ من تلاوته للآية نفسها. والكلمات المنقورة متتابعة خلال <b>مهلة جمع الكلمات</b> (تُختار من التخطيط) تُقرأ معاً، والمتجاورة منها قراءة متصلة.',
       'أثناء تفعيلها لا يفتح النقر على الكلمات نافذة الآية ولا معاني الكلمات، أما النقر على رقم الآية فيفتح نافذتها.',
       '<b>القارئ</b>: المختار في عنوان <b>الاستماع</b> إن كان ممن يتوفر لهم توقيت الكلمات (أكثر من أربعين قارئاً)، وإلا فالشيخ محمود خليل الحصري.',
@@ -35165,7 +35204,7 @@ function renderFontTab() {
   const wwNote = document.createElement('div');
   wwNote.className = 'strong-note';
   wwNote.style.cssText = 'font-family:sans-serif;font-size:17px;font-weight:700;padding:8px 10px 10px;line-height:1.65;';
-  wwNote.textContent = 'للتفعيل السريع: انقر اسم السورة في الإطار العائم، فيتلوّن بالأزرق ما دامت القراءة مفعّلة، وللإيقاف السريع: انقر اسم السورة نفسه في الإطار العائم مرة أخرى. ثم انقر أي كلمة نقرة خفيفة فتُقرأ بصوت الشيخ الحصري، وتتلوّن بنفس اللون. الكلمات التي تنقرها متتابعةً قبل انقضاء المهلة تُقرأ معًا (والمتجاورة منها قراءةً متصلة)، وما تنقره بعد انقضائها يُقرأ وحده. رقم الآية يفتح نافذتها كالمعتاد.';
+  wwNote.textContent = 'للتفعيل السريع: انقر دائرة رقم الصفحة في الإطار العائم، فيظهر حولها مربع أزرق ما دامت القراءة مفعّلة، وللإيقاف السريع: انقرها مرة أخرى. ثم انقر أي كلمة نقرة خفيفة فتُقرأ بصوت الشيخ الحصري، وتتلوّن بنفس اللون. الكلمات التي تنقرها متتابعةً قبل انقضاء المهلة تُقرأ معًا (والمتجاورة منها قراءةً متصلة)، وما تنقره بعد انقضائها يُقرأ وحده. رقم الآية يفتح نافذتها كالمعتاد.';
   card.appendChild(wwNote);
   // reciter + offline
   const wRid = wbwPreferred();
