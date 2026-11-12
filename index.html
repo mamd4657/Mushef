@@ -28308,10 +28308,9 @@ function fitFloatingFrameBar(bar, scaleMul, depth) {
   placeNavArrows(bar);
 }
 // The arrows of ج / ح sit above their boxes, at the top line of the other
-// boxes, and run on to the near top corner of the bracket beside them. The
-// two boxes are shortened from the top to make room (their bottoms stay in
-// line with the others), and the brackets lose just enough at the top for
-// their top bar to meet the arrow's shaft.
+// boxes, starting just short of the near top corner of the bracket beside
+// them (a small visible gap, not joined). The two boxes are shortened from
+// the top to make room; their bottoms stay in line with the others.
 function placeNavArrows(bar) {
   const juz = bar.querySelector('.fbJuz'), hizb = bar.querySelector('.fbHizb');
   const brs = bar.querySelectorAll('.fbNameGroup .surah-bracket');
@@ -28326,11 +28325,9 @@ function placeNavArrows(bar) {
     el.style.height = Math.max(10, boxH - head - gap) + 'px';
     el.style.transform = 'translateY(' + ((head + gap) / 2) + 'px)';
   });
-  const cut = Math.max(0, head / 2 - shaft / 2);
-  brs.forEach((b) => {
-    b.style.height = (boxH - cut) + 'px';
-    b.style.transform = 'translateY(' + (cut / 2) + 'px)';
-  });
+  // the brackets keep the full height of the boxes
+  brs.forEach((b) => { b.style.height = boxH + 'px'; b.style.transform = ''; });
+  const sep = 4;   // a clear gap between each arrow and its bracket's corner
   const rJ = localRect(juz), rH = localRect(hizb);
   const rRB = localRect(brs[0]), rLB = localRect(brs[1]);
   const aJ = juz.querySelector('.fbNavArrow'), aH = hizb.querySelector('.fbNavArrow');
@@ -28339,9 +28336,9 @@ function placeNavArrows(bar) {
     a.style.cssText = 'position:absolute;margin:0;height:' + head + 'px;top:' + (-(head + gap) - 1.5) + 'px;left:' + left + 'px;right:' + right + 'px;--shaft:' + shaft + 'px;';
   };
   // ج (right of the right bracket): from the bracket's top corner rightwards
-  set(aJ, -Math.max(0, rJ.left - rRB.right) - 1.5, -1.5);
+  set(aJ, -Math.max(0, rJ.left - rRB.right) + sep, -1.5);
   // ح (left of the left bracket): from the bracket's top corner leftwards
-  set(aH, -1.5, -Math.max(0, rLB.left - rH.right) - 1.5);
+  set(aH, -1.5, -Math.max(0, rLB.left - rH.right) + sep);
 }
 
 document.getElementById('floatingFrameBar').addEventListener('click', (e) => {
