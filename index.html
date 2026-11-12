@@ -30698,6 +30698,27 @@ reciteAudio.addEventListener('timeupdate', () => {
 // play/pause control left - it reflects and drives all playback state.
 function syncRecitePlayButtons() {
   if (reciteModeBarPlayBtn) reciteModeBarPlayBtn.innerHTML = reciting ? RECITE_PAUSE_SVG : RECITE_PLAY_SVG;
+  syncReciteStopStep();
+}
+// While a recitation plays, Back's first step only stops it. That step is a
+// history entry of its own, added when the playing starts (always from a
+// tap, so the phone's back gesture honours it) and taken away when the
+// playing stops by any other way - so the steps after it (hide the bar, the
+// index, leave) stay in order whichever way the playing was stopped.
+function reciteStopLayer() {
+  if (reciting) {
+    if (reciteBarVariant === 'surah' && contStopAt) orangeTimeLeft = Math.max(0, contStopAt - Date.now());
+    stopRecitation();
+  }
+}
+function syncReciteStopStep() {
+  if (typeof backLayerStack === 'undefined') return;
+  const has = backLayerStack.lastIndexOf(reciteStopLayer);
+  if (reciting && reciteBarShowing()) {
+    if (has === -1) pushBackLayer(reciteStopLayer);
+  } else if (has !== -1) {
+    dropBackLayer(reciteStopLayer);
+  }
 }
 
 function startRecitation() {
@@ -34129,14 +34150,9 @@ window.addEventListener('popstate', () => {
   if (backIgnorePops > 0) { backIgnorePops--; return; }
   const closeFn = backLayerStack.pop();
   if (closeFn === closeReciteModeBarLayer && reciting) {
-    // Back reaching the bar while a recitation plays only stops it (like
-    // the pause button); the bar stays (its step is put back) and the next
-    // Back hides it.
+    // (normally the stop step above the bar catches this Back first)
     if (reciteBarVariant === 'surah' && contStopAt) orangeTimeLeft = Math.max(0, contStopAt - Date.now());
     stopRecitation();
-    pushBackLayer(closeReciteModeBarLayer);
-    if (typeof ghResumeCheck === 'function') ghResumeCheck();
-    return;
   }
   if (closeFn) closeFn();
   if (typeof ghResumeCheck === 'function') ghResumeCheck();
