@@ -417,6 +417,12 @@ body.dark-mode .pageSideLine.side-left::before{background:linear-gradient(to rig
    two unrelated ad hoc colors. Text/numbers inside keep the existing dark
    green (light) / cream (dark) colors, which already read clearly against
    this gold in both modes. */
+/* The four gold frames inside the floating bar (page number, ج, ح, and the
+   surah's numbers) and the line splitting the numbers' box: a deeper,
+   thicker gold than the bar's own light-gold background so they read
+   clearly; a bright gold on the dark-mode bar. */
+#floatingFrameBar{--fbFrameW:2.5px;--fbFrameC:#8C6414;}
+body.dark-mode #floatingFrameBar{--fbFrameC:#F2CC5C;}
 #floatingFrameBar .frame-bar{margin-top:2px;margin-bottom:2px;background:linear-gradient(180deg,#E7C766,#F6E7B4 50%,#E7C766);
   /* Pinned to the same height as the bottom toolbar (--floatBarH), instead
      of growing with its own content - the old min-height let the bar get
@@ -497,10 +503,17 @@ body.dark-mode .fbFromTo{color:#EFE8D6;}
 #floatingFrameBar .fbNavArrow::after{content:'';position:absolute;top:0;bottom:0;width:0.42em;background:currentColor;}
 /* ج / ح with their arrows, the surah's numbers: gold boxes as tall as the
    page-number square (heights set in fitFloatingFrameBar) */
-#floatingFrameBar .fbJuz,#floatingFrameBar .fbHizb{position:relative;overflow:visible;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;border:1.5px solid #B98A2A;border-radius:7px;padding:0 .08em;box-sizing:border-box;line-height:1;}
+#floatingFrameBar .fbJuz,#floatingFrameBar .fbHizb{position:relative;overflow:visible;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;border:var(--fbFrameW) solid var(--fbFrameC);border-radius:7px;padding:0 .08em;box-sizing:border-box;line-height:1;}
 #floatingFrameBar .fbNavRow{display:block;line-height:1;white-space:nowrap;}
 #floatingFrameBar .fbJuz::after,#floatingFrameBar .fbHizb::after{top:-2px !important;bottom:-2px !important;}
-#floatingFrameBar .fbNums{border:1.5px solid #B98A2A;border-radius:7px;padding:0 .1em;box-sizing:border-box;transition:background .15s;}
+#floatingFrameBar .fbNums{border:var(--fbFrameW) solid var(--fbFrameC);border-radius:7px;padding:0;box-sizing:border-box;transition:background .15s;align-items:stretch;}
+/* The surah's order (right) and ayah count (left) sit in two halves of the
+   box, split by a gold line running the box's full height so it meets the
+   top and bottom edges of the frame (replaces the old ':' separator). Each
+   number is centered in its own half, whose width is reserved for 3 digits
+   (114 / 286) by fitFloatingFrameBar(). */
+#floatingFrameBar .fbNums .frame-num{display:flex;align-items:center;justify-content:center;text-align:center;padding:0 .1em;}
+#floatingFrameBar .fbNumSep{display:block;align-self:stretch;flex-shrink:0;width:var(--fbFrameW);margin:0;font-size:0;line-height:0;background:var(--fbFrameC);}
 body.surah-bar-on #floatingFrameBar .fbNums{background:rgba(200,40,40,.28);}
 body.dark-mode.surah-bar-on #floatingFrameBar .fbNums{background:rgba(230,80,80,.35);}
 #floatingFrameBar .fbNavArrow-r::before{left:0;right:0.25em;}
@@ -587,7 +600,7 @@ body.dark-mode{--hlSky:rgba(79,179,240,.42);--hlSkyEdge:rgba(79,179,240,.6);--hl
 .ayah-seg.reciting-highlight,.qbsm.reciting-highlight,.cbsm.reciting-highlight{background:var(--hlSky);box-shadow:inset 0 0 0 1px var(--hlSkyEdge);border-radius:3px;-webkit-box-decoration-break:clone;box-decoration-break:clone;}
 .ayah-seg.tap-highlight{background:var(--hlTap);box-shadow:inset 0 0 0 1px var(--hlTapEdge);border-radius:3px;-webkit-box-decoration-break:clone;box-decoration-break:clone;} /* light enough that the green words stay clear on it */
 ::highlight(wbw){background-color:var(--hlSky);}
-#floatingFrameBar .fbCircleSlot{cursor:pointer;-webkit-tap-highlight-color:transparent;padding:1.5px;border:1.5px solid #B98A2A;border-radius:7px;line-height:0;}
+#floatingFrameBar .fbCircleSlot{cursor:pointer;-webkit-tap-highlight-color:transparent;padding:1.5px;border:var(--fbFrameW) solid var(--fbFrameC);border-radius:7px;line-height:0;}
 body.wbw-on #floatingFrameBar .fbCircleSlot{background:#2F7FD0;border-color:#2F7FD0;}
 #floatingFrameBar .fbNameGroup{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
 .search-match-highlight{background:#FFD54F99;border-radius:2px;transition:background 1s ease-out;}
@@ -27717,7 +27730,7 @@ function buildFrameBarHTML(n, content, extraSurahClass) {
         // order : count - a tap opens the surah's listening bar
         '<span class="fbNums" role="button" aria-label="استماع السورة">' +
           '<span class="frame-num fbNum-order">' + (sid ? toArabicDigits(sid) : '') + '</span>' +
-          '<span class="fbNumSep">:</span>' +
+          '<span class="fbNumSep" aria-hidden="true"></span>' +
           '<span class="frame-num fbNum-count">' + (count ? toArabicDigits(count) : '') + '</span>' +
         '</span>' +
         '<span class="surah-bracket">]</span>' +
