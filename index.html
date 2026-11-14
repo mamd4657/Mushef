@@ -421,8 +421,12 @@ body.dark-mode .pageSideLine.side-left::before{background:linear-gradient(to rig
    surah's numbers) and the line splitting the numbers' box: a deeper,
    thicker gold than the bar's own light-gold background so they read
    clearly; a bright gold on the dark-mode bar. */
-#floatingFrameBar{--fbFrameW:2.5px;--fbFrameC:#8C6414;}
-body.dark-mode #floatingFrameBar{--fbFrameC:#F2CC5C;}
+#floatingFrameBar{--fbFrameW:2.5px;--fbFrameC:#8C6414;
+  /* the four frames look like slightly raised buttons: a lighter shade of
+     the bar's own gold, with a small shadow attached on the right and bottom */
+  --fbFrameBg:linear-gradient(180deg,#FFF5D2,#F1DC98);--fbFrameShadow:1.5px 1.5px 1.5px rgba(70,45,5,.45);}
+body.dark-mode #floatingFrameBar{--fbFrameC:#F2CC5C;--fbFrameBg:linear-gradient(180deg,#977A3C,#7A6128);--fbFrameShadow:1.5px 1.5px 1.5px rgba(0,0,0,.6);}
+#floatingFrameBar .fbJuz,#floatingFrameBar .fbHizb,#floatingFrameBar .fbNums,#floatingFrameBar .fbCircleSlot{background:var(--fbFrameBg);box-shadow:var(--fbFrameShadow);}
 #floatingFrameBar .frame-bar{margin-top:2px;margin-bottom:2px;background:linear-gradient(180deg,#E7C766,#F6E7B4 50%,#E7C766);
   /* Pinned to the same height as the bottom toolbar (--floatBarH), instead
      of growing with its own content - the old min-height let the bar get
@@ -513,9 +517,9 @@ body.dark-mode .fbFromTo{color:#EFE8D6;}
    number is centered in its own half, whose width is reserved for 3 digits
    (114 / 286) by fitFloatingFrameBar(). */
 #floatingFrameBar .fbNums .frame-num{display:flex;align-items:center;justify-content:center;text-align:center;padding:0 .1em;}
-#floatingFrameBar .fbNumSep{display:block;align-self:stretch;flex-shrink:0;width:var(--fbFrameW);margin:0;font-size:0;line-height:0;background:var(--fbFrameC);}
-body.surah-bar-on #floatingFrameBar .fbNums{background:rgba(200,40,40,.28);}
-body.dark-mode.surah-bar-on #floatingFrameBar .fbNums{background:rgba(230,80,80,.35);}
+#floatingFrameBar .fbNumSep{display:block;align-self:stretch;flex-shrink:0;width:var(--fbFrameW);margin:1mm 0;font-size:0;line-height:0;background:var(--fbFrameC);}
+body.surah-bar-on #floatingFrameBar .fbNums{background:linear-gradient(rgba(200,40,40,.28),rgba(200,40,40,.28)),var(--fbFrameBg);}
+body.dark-mode.surah-bar-on #floatingFrameBar .fbNums{background:linear-gradient(rgba(230,80,80,.35),rgba(230,80,80,.35)),var(--fbFrameBg);}
 #floatingFrameBar .fbNavArrow-r::before{left:0;right:0.25em;}
 #floatingFrameBar .fbNavArrow-r::after{right:0;clip-path:polygon(0 0,100% 50%,0 100%);}
 #floatingFrameBar .fbNavArrow-l::before{right:0;left:0.25em;}
