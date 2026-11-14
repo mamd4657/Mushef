@@ -217,7 +217,7 @@ body.dark-mode .ayah-popup-title:active{background:#232922;}
 .sidebar-colheader{position:relative;display:flex;flex-shrink:0;border-bottom:2.5px solid #7B2E2E;min-height:34px;}
 #resumeBox{display:none;position:absolute;top:2px;bottom:2px;right:6px;z-index:2;align-items:center;justify-content:center;background:#7A5A00;color:#FFFFFF;border:2px solid #0E4433;border-radius:10px;font-family:sans-serif;font-size:18px;font-weight:800;letter-spacing:.2px;white-space:nowrap;overflow:hidden;padding:0 8px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25);}
 body.dark-mode #resumeBox{background:#7A5A00;color:#FFFFFF;border-color:#F6EFDC;}
-.sidebar-colheader-spacer{width:104px;flex-shrink:0;border-left:2.5px solid #7B2E2E;}
+.sidebar-colheader-spacer{width:112px;flex-shrink:0;border-left:2.5px solid #7B2E2E;}
 .sidebar-colheader-labels{flex:1;min-width:0;display:flex;justify-content:flex-start;align-items:center;gap:8px;padding:6px 12px;font-family:sans-serif;font-size:16px;font-weight:700;color:#3D2E1C;}
 .sidebar-colheader-labels .rowName{flex:1;min-width:0;}
 .sidebar-colheader-labels .pg,.sidebar-colheader-labels .ayahCount{flex:0 0 30px;text-align:center;}
@@ -226,9 +226,13 @@ body.dark-mode .sidebar-colheader{border-color:#E8B84B;}
 body.dark-mode .sidebar-colheader-spacer{border-color:#E8B84B;}
 body.dark-mode .sidebar-colheader-labels{color:#D8CBAE;}
 .sidebar-main{display:flex;flex:1;min-height:0;}
-.tabs{display:flex;flex-direction:column;width:104px;flex-shrink:0;border-left:2.5px solid #7B2E2E;overflow-y:auto;padding:12px 0 74px;}
+.tabs{display:flex;flex-direction:column;width:112px;flex-shrink:0;border-left:2.5px solid #7B2E2E;overflow-y:auto;padding:12px 0 74px;}
 body.dark-mode .tabs{border-color:#E8B84B;}
-.tab{padding:14px 6px;background:transparent;border:none;border-left:3px solid transparent;font-weight:700;cursor:pointer;font-family:sans-serif;color:#211C14;text-align:center;font-size:18px;line-height:1.3;}
+.tab{padding:14px 6px;background:transparent;border:none;border-left:3px solid transparent;font-weight:700;cursor:pointer;font-family:sans-serif;color:#211C14;text-align:center;font-size:18px;line-height:1.3;
+  /* every title is one line, or two split by an explicit <br> - never
+     wrapped further; fitSidebarTabs() shrinks a title's font slightly if a
+     line would not fit the column's width on this device's font */
+  white-space:nowrap;flex-shrink:0;}
 .tab.active{background:#F3E9D1;border-left-color:#7B2E2E;}
 .sidebar-body{flex:1;min-width:0;overflow-y:auto;padding:12px 12px 100px;}
 .surah-row{width:100%;display:flex;justify-content:flex-start;align-items:center;gap:8px;background:transparent;border:none;border-bottom:1px solid #EDE3C6;padding:9px 4px;cursor:pointer;text-align:right;color:#211C14;font-size:19px;}
@@ -1104,20 +1108,20 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
   </div>
   <div class="sidebar-main">
     <div class="tabs" id="indexTabs">
-      <button class="tab" data-tab="fadl">فضل القرآن وآداب التلاوة</button>
-      <button class="tab" data-tab="tajweed">مختصر أحكام التجويد</button>
-      <button class="tab" data-tab="font">التخطيط</button>
-      <button class="tab" data-tab="pagebg">خلفية النص</button>
       <button class="tab" data-tab="recitation">الاستماع</button>
       <button class="tab" data-tab="duas">الأدعية</button>
       <button class="tab" data-tab="surah">السور</button>
       <button class="tab" data-tab="juz">الأجزاء</button>
       <button class="tab" data-tab="page">الصفحات</button>
+      <button class="tab" data-tab="font">التخطيط</button>
+      <button class="tab" data-tab="pagebg">خلفية النص</button>
+      <button class="tab" data-tab="fadl">فضل القرآن<br>وآداب التلاوة</button>
+      <button class="tab" data-tab="tajweed">مختصر<br>أحكام التجويد</button>
       <button class="tab" data-tab="bookmarks">المرجعيات</button>
-      <button class="tab" data-tab="hijri">تعديل هجري</button>
-      <button class="tab" data-tab="stats">إحصائيات قرآنية</button>
+      <button class="tab" data-tab="hijri">تعديل<br>هجري</button>
+      <button class="tab" data-tab="stats">إحصائيات<br>قرآنية</button>
       <button class="tab" data-tab="guide">دليل القارئ</button>
-      <button class="tab" data-tab="share">مشاركة التطبيق</button>
+      <button class="tab" data-tab="share">مشاركة<br>التطبيق</button>
     </div>
     <div class="sidebar-body" id="sidebarBody"></div>
   </div>
@@ -34241,6 +34245,28 @@ function applySidebarTopOffset() {
   }
   document.documentElement.style.setProperty('--sidebarTop', Math.round(top) + 'px');
 }
+// Each sidebar title is at most two lines (its own <br>, no wrapping): if a
+// line is wider than the column on this device's font, that title alone is
+// shrunk just enough to fit (never below 13px).
+function fitSidebarTabs() {
+  const range = document.createRange();
+  document.querySelectorAll('#indexTabs .tab').forEach((t) => {
+    t.style.fontSize = '';
+    const cs = getComputedStyle(t);
+    const avail = t.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0);
+    if (avail <= 0) return;
+    // the text's real width (a centered RTL line overflows on both sides,
+    // which scrollWidth does not report)
+    range.selectNodeContents(t);
+    const textW = range.getBoundingClientRect().width;
+    if (textW <= avail) return;
+    const base = parseFloat(cs.fontSize) || 18;
+    t.style.fontSize = Math.max(13, Math.floor(base * (avail - 1) / textW * 10) / 10) + 'px';
+  });
+}
+window.addEventListener('resize', fitSidebarTabs);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitSidebarTabs);
+setTimeout(fitSidebarTabs, 0);
 function openSidebar(tab, asHome) {
   if (typeof hideGharib === 'function') hideGharib();
   if (typeof ayahPopupEl !== 'undefined' && ayahPopupEl.style.display !== 'none') {
@@ -34254,6 +34280,7 @@ function openSidebar(tab, asHome) {
   if (searchWasOpen) closeSearchPageLayer();
   sidebar.classList.add('open');
   overlay.classList.add('show');
+  fitSidebarTabs();
   setActiveTab(tab || 'surah');
   applySidebarBottomClearance();
   homeSidebarShowing = !!asHome;
