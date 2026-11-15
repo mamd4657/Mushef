@@ -781,10 +781,16 @@ body.dark-mode .ayahnum-badge.ayahnum-100{border-top-color:#FF6B5B;}
    "smaller" for its own sake. */
 .rubgrid8{position:relative;display:inline-block;width:0.6625em;height:1.325em;vertical-align:-0.275em;margin:0 2mm;}
 .rubgrid8 svg{display:block;width:100%;height:100%;}
-.rubgrid8-off{fill:#E8923A;stroke:#0E4433;stroke-width:0.5;}
-body.dark-mode .rubgrid8-off{fill:#F0A860;stroke:#5B8A72;}
-.rubgrid8-on{fill:#0E4433;stroke:#0E4433;stroke-width:0.5;}
-body.dark-mode .rubgrid8-on{fill:#5B8A72;stroke:#5B8A72;}
+/* One upright rectangle divided by thin black lines into 8 squares (2 x 4).
+   White = quarters of the juz already completed; gray = quarters not yet
+   reached; the square of the quarter that is just starting is white in its
+   lower quarter and gray in the rest. See rubGridSvg(). */
+.rubgrid8-done{fill:#FFFFFF;}
+.rubgrid8-todo{fill:#9A9A9A;}
+.rubgrid8-line{fill:none;stroke:#000;stroke-width:0.45;}
+.rubgrid8-frame{fill:none;stroke:#000;stroke-width:0.7;}
+body.dark-mode .rubgrid8-done{fill:#F4EEDD;}
+body.dark-mode .rubgrid8-todo{fill:#8C8C8C;}
 .rubgrid8.rubgrid8-abs{position:absolute;top:50%;right:-7px;transform:translateY(-50%);margin:0;vertical-align:baseline;}
 /* A mark landing on a bound-mode page's very first line never shrinks -
    see fixFirstLineRubClearance(), which instead pushes that one line down
@@ -26014,9 +26020,30 @@ function hafsDisplayForm(s) {
   return out;
 }
 
+// The last ayah of every quarter (rub'), as "surah:ayah" -> the quarter's
+// global index (1-240): the ayah just before each quarter start (a ۞ at the
+// head of an ayah, or ayah 1 of a RUB_START_AT_AYAH1_SURAHS surah), plus the
+// Qur'an's final ayah for quarter 240. wrapAyahNumbers puts an end mark
+// right before that ayah's number.
+let RUB_END_AYAH = {};
+function buildRubEndAyahs(ayahs) {
+  const map = {};
+  let rub = 0;
+  ayahs.forEach((ay, i) => {
+    const isStart = i === 0 || ay.words[0] === '۞' || (ay.a === 1 && RUB_START_AT_AYAH1_SURAHS.has(ay.s));
+    if (isStart) {
+      if (i > 0) map[ayahs[i - 1].s + ':' + ayahs[i - 1].a] = rub;
+      rub++;
+    }
+  });
+  const last = ayahs[ayahs.length - 1];
+  if (last) map[last.s + ':' + last.a] = rub;
+  RUB_END_AYAH = map;
+}
 function buildPagesForText(id) {
   const opt = QURAN_TEXT_OPTIONS.find((o) => o.id === id) || QURAN_TEXT_OPTIONS[0];
   const { ayahs, bsm } = readQuranTextFile(opt.id);
+  buildRubEndAyahs(ayahs);
   const counts = LINE_TOKENS[opt.fam];
   const AR = '٠١٢٣٤٥٦٧٨٩';
   const arNum = (n) => String(n).split('').map((d) => AR[+d]).join('');
@@ -26857,23 +26884,45 @@ const SAJDAH_MARK_SVG = '<span class="sajdah-mark" title="موضع سجدة"><sv
 // The right column is the juz's first hizb (top-to-bottom = rub' 1-4), the
 // left column its second (rub' 5-8), matching how the two hizb of a juz are
 // read in order right-to-left/top-to-bottom, same as the running text itself.
-function rubGridSvg(globalRub) {
-  const idxInJuz = ((globalRub - 1) % 8) + 1; // 1-8, how many squares are lit
-  const cells = []; // in reading order: right column top->bottom, then left column top->bottom
-  for (let col = 0; col < 2; col++) {
-    for (let row = 0; row < 4; row++) {
-      const order = col * 4 + row + 1; // 1-8 in reading order
-      const x = col === 0 ? 5 : 0; // col 0 = right column (x=5), col 1 = left column (x=0)
-      const y = row * 4.7;
-      const on = order <= idxInJuz;
-      cells.push('<rect class="' + (on ? 'rubgrid8-on' : 'rubgrid8-off') + '" x="' + x + '" y="' + y + '" width="4" height="4" rx="0.6"/>');
+function rubGridSvg(globalRub, isEnd) {
+  // Squares are numbered 1-8 in reading order: the RIGHT column is the juz's
+  // first hizb, filled from its BOTTOM square (quarter 1) up to its top
+  // (quarter 4); then the LEFT column, its second hizb, again bottom (5) to
+  // top (8).
+  //  - start mark (after the number of the ayah before the quarter): squares
+  //    of completed quarters white, this quarter's square white in its lower
+  //    quarter and gray above, the rest gray;
+  //  - end mark (isEnd: just before the number of the quarter's last ayah):
+  //    this quarter's square and all before it white, the rest gray - so the
+  //    end of a juz's first hizb is 4 white (right) + 4 gray (left), and the
+  //    end of a juz is all 8 white.
+  const k = ((globalRub - 1) % 8) + 1; // this quarter's position in its juz, 1-8
+  const fills = [];
+  for (let c = 1; c <= 8; c++) {
+    const x = c <= 4 ? 4.5 : 0;               // right column = quarters 1-4
+    const y = 18 - ((c - 1) % 4 + 1) * 4.5;   // bottom row first
+    if (c < k || (isEnd && c === k)) {
+      fills.push('<rect class="rubgrid8-done" x="' + x + '" y="' + y + '" width="4.5" height="4.5"/>');
+    } else if (c === k) {
+      // white = the lower quarter of the square's VISIBLE inside (between the
+      // black lines - the outer frame is thicker than the inner lines)
+      const top = y + (y === 0 ? 0.7 : 0.225);
+      const bottom = y + 4.5 - (y + 4.5 === 18 ? 0.7 : 0.225);
+      const wy = bottom - (bottom - top) / 4;
+      fills.push('<rect class="rubgrid8-todo" x="' + x + '" y="' + y + '" width="4.5" height="4.5"/>');
+      fills.push('<rect class="rubgrid8-done" x="' + x + '" y="' + wy + '" width="4.5" height="' + (y + 4.5 - wy) + '"/>');
+    } else {
+      fills.push('<rect class="rubgrid8-todo" x="' + x + '" y="' + y + '" width="4.5" height="4.5"/>');
     }
   }
-  // data-rub carries this mark's own true global quarter-hizb index (1-240)
-  // - it's what lets the floating bar's juz/hizb/rub display be driven by
-  // exactly where this mark sits on screen (see findCurrentRubIndex)
-  // instead of only by which page is "current".
-  return '<span class="rubgrid8" data-rub="' + globalRub + '" title="ربع ' + toArabicDigits(idxInJuz) + ' من ٨ في الجزء"><svg viewBox="0 0 9 18">' + cells.join('') + '</svg></span>';
+  const lines = '<path class="rubgrid8-line" d="M4.5 0V18M0 4.5H9M0 9H9M0 13.5H9"/>' +
+    '<rect class="rubgrid8-frame" x="0.35" y="0.35" width="8.3" height="17.3"/>';
+  const title = (isEnd ? 'نهاية' : 'بداية') + ' الربع ' + toArabicDigits(k) + ' من ٨ في الجزء';
+  // data-rub (start marks only) carries the quarter's true global index
+  // (1-240) - it's what lets the floating bar's juz/hizb/rub display be driven
+  // by exactly where the mark sits on screen (see findCurrentRubIndex).
+  return '<span class="rubgrid8' + (isEnd ? ' rubgrid8-end' : '') + '"' + (isEnd ? '' : ' data-rub="' + globalRub + '"') +
+    ' title="' + title + '"><svg viewBox="0 0 9 18">' + fills.join('') + lines + '</svg></span>';
 }
 function rubGridSvgAbs(globalRub) {
   // Same grid, absolutely positioned - used where the rub' start coincides
@@ -27189,6 +27238,14 @@ function setGharibSource(src) {
   else refreshTextLayout();
 }
 
+function arabicDigitsToInt(str) {
+  let n = 0;
+  for (const ch of str) {
+    const d = ch.charCodeAt(0) - 0x0660;
+    if (d >= 0 && d <= 9) n = n * 10 + d;
+  }
+  return n;
+}
 function wrapAyahNumbers(text, segSurah, segAyah, pageGlobalRub, badgeMode, wordOffset) {
   // wordOffset: position (within its ayah) of this text's first word - given
   // only by the page builders, so explained words can be marked (gharib)
@@ -27216,6 +27273,12 @@ function wrapAyahNumbers(text, segSurah, segAyah, pageGlobalRub, badgeMode, word
       const pre = (m[1] ? rubSpan : '') +
         (SAJDAH_MARK_AYAH[segSurah] !== undefined && toArabicDigits(SAJDAH_MARK_AYAH[segSurah]) === m[2] ? SAJDAH_MARK_SVG + ' ' : '');
       const post = m[3] ? rubSpan : '';
+      // end-of-quarter mark, right before the number of the quarter's last ayah
+      let endMark = '';
+      if (pageGlobalRub && segSurah) {
+        const endRub = RUB_END_AYAH[segSurah + ':' + arabicDigitsToInt(m[2])];
+        if (endRub) endMark = rubGridSvg(endRub, true);
+      }
       let numCls = badgeMode ? 'ayahnum-badge' : 'ayahnum';
       if (segSurah && segAyah) {
         const cum = SURAH_AYAH_CUM_OFFSET[segSurah] + segAyah;
@@ -27223,7 +27286,7 @@ function wrapAyahNumbers(text, segSurah, segAyah, pageGlobalRub, badgeMode, word
         else if (cum % 50 === 0) numCls += ' ayahnum-50';
       }
       const numHtml = badgeMode ? m[2] : ('(' + m[2] + ')');
-      out.push(pre + '<span class="' + numCls + '">' + numHtml + '</span>' + post);
+      out.push(endMark + pre + '<span class="' + numCls + '">' + numHtml + '</span>' + post);
       continue;
     }
     // A waqf sign is glued to the word before it (see .wqj/.wq) instead of
@@ -34481,7 +34544,7 @@ function renderGuideTab() {
       '<b>شريط اسم السورة</b> في أول كل سورة: من اليمين ترتيبها، ثم اسمها في الوسط، ثم عدد آياتها.',
       '<b>النسخ</b>: اضغط مطوّلاً على النص واسحب لتحديد ما تريد، ثم انسخه. وعند لصقه يكون المنسوخ بين قوسين [ ] ورقم كل آية بعد نصها داخل القوسين، واسم السورة بعد القوس الأخير، مثل: [ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِينَ ٢] الفاتحة. وإن امتد المنسوخ من آخر آية إلى أول التي بعدها، كُتب رقم كل منهما بعد الجزء الخاص بها.',
       'خط أخضر داكن على أحد جانبي الصفحة يبيّن أنها يمنى أو يسرى.',
-      '<b>علامة الربع</b> ' + rubGridSvg(3) + ': تظهر عند بداية كل ربع حزب، وهي ثمانية مربعات تمثّل أرباع الجزء الحالي (العمود الأيمن لحزبه الأول، والأيسر للثاني، من الأعلى إلى الأسفل). ويُملأ منها بعدد الأرباع التي وصلت إليها من الجزء، ففي المثال المجاور أنت في الربع الثالث.',
+      '<b>علامة الربع</b> ' + rubGridSvg(3) + ' ' + rubGridSvg(3, true) + ': مستطيل مقسّم إلى ثمانية مربعات تمثّل أرباع الجزء الحالي: العمود الأيمن لحزبه الأول، والأيسر لحزبه الثاني، ويُعدّ كل عمود من الأسفل إلى الأعلى. تظهر العلامة في بداية كل ربع بعد رقم الآية التي قبله، وفي نهايته قبل رقم آيته الأخيرة. الأبيض أرباع تمّت، والرمادي أرباع لم تأتِ بعد، ومربع الربع الذي يبدأ يكون ربعه السفلي أبيض. ففي المثالين المجاورين: بداية الربع الثالث، ثم نهايته.',
       '<b>التوقف عند آخر السورة والجزء</b> (في الوضع الحر): يتوقف التمرير عند آخر السورة أو الجزء، وتظهر فوق الشريط السفلي ثلاثة أزرار: آخر السورة أو الجزء في الوسط، والسابق على اليمين، والتالي على اليسار. وسحبة خفيفة إلى أعلى تُكمل القراءة. ويُفعَّل هذا أو يُلغى بزر (' + badge(document.getElementById('segStopBtn').innerHTML) + ') في الشريط السفلي، أو من عنوان <b>التخطيط</b>.',
     ]},
     { title: '٤. شريط الأدوات السفلي', items: [
