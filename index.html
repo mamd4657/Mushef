@@ -33565,6 +33565,8 @@ const VOICE_LANGS = ['ar-SA', 'ar'];
 let voiceLocal = { status: 'unknown', lang: 'ar-SA' }; // unsupported | unavailable | downloadable | downloading | available
 let voiceLocalBroken = false; // a local session failed: use the online service from then on
 function voiceSR() { return window.SpeechRecognition || window.webkitSpeechRecognition; }
+// iPhone / iPad (iPadOS reports itself as a Mac, but with a touch screen)
+const VOICE_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 async function voiceCheckLocal() {
   const SR = voiceSR();
   if (!SR || typeof SR.available !== 'function') { voiceLocal = { status: 'unsupported', lang: 'ar-SA' }; return voiceLocal; }
@@ -33604,7 +33606,10 @@ function startVoiceCommand() {
   voiceRec = rec;
   rec.lang = local ? voiceLocal.lang : 'ar-SA';
   if (local) { try { rec.processLocally = true; } catch (e) { /* ignore */ } }
-  rec.continuous = true;
+  // Safari on iPhone/iPad often never delivers the text in continuous mode,
+  // so there the recognizer listens for one utterance and ends by itself
+  // (the silence timer below still ends it if it doesn't)
+  rec.continuous = !VOICE_IOS;
   rec.interimResults = true;
   rec.maxAlternatives = 3;
   let finals = [[]];   // alternatives of the final text so far
@@ -33669,7 +33674,7 @@ function startVoiceCommand() {
     if (local && ev.error !== 'not-allowed') voiceLocalBroken = true;
     clearTimeout(silenceT); clearTimeout(maxT);
     const msg = ev.error === 'not-allowed' || ev.error === 'service-not-allowed'
-      ? 'اسمح للتطبيق باستعمال الميكروفون' : ev.error === 'network'
+      ? (VOICE_IOS && navigator.standalone ? 'لم تعمل الأوامر الصوتية هنا؛ افتح المصحف في Safari' : 'اسمح للتطبيق باستعمال الميكروفون') : ev.error === 'network'
       ? 'لا يوجد اتصال بالإنترنت، وهاتفك لا يحوّل الكلام إلى نص دون إنترنت' : (local ? 'تعذّر الاستماع دون إنترنت؛ أعد المحاولة' : 'تعذّر الاستماع (' + ev.error + ')');
     voiceShow(msg, { err: true }); voiceHide(4000);
   };
@@ -33735,6 +33740,7 @@ function renderVoiceTab() {
     else if (st === 'downloadable') html = 'يمكن أن تعمل الأوامر دون إنترنت بعد تنزيل حزمة العربية مرة واحدة (والهاتف متصل):' +
       '<button id="voiceDlBtn" class="voice-start-btn" style="margin:8px 0 0;font-size:16px;padding:8px;">تنزيل حزمة العربية</button>';
     else if (st === 'unknown') html = 'جارٍ الفحص…';
+    else if (VOICE_IOS) html = 'على iPhone وiPad تحتاج الأوامر الصوتية إلى اتصال بالإنترنت، وتعمل في متصفح Safari. وقد لا تعمل إذا فُتح المصحف من أيقونته على الشاشة الرئيسية أو من متصفح آخر، فافتحه حينئذ في Safari.';
     else html = 'هاتفك (أو متصفحه) لا يحوّل الكلام العربي إلى نص دون إنترنت، فالأوامر الصوتية تحتاج إلى اتصال بالإنترنت. وقد تعمل دون إنترنت إذا نُزّلت العربية في إعدادات «التعرف على الكلام دون اتصال» من Google في الهاتف.';
     off.innerHTML = html;
     const dl = off.querySelector('#voiceDlBtn');
