@@ -33558,16 +33558,52 @@ function voiceCancel() {
   const el = document.getElementById('voiceOverlay');
   if (el) el.classList.remove('show');
 }
+// ---- working without the internet: speech turned into text on the phone
+// itself (Chrome's on-device recognition: processLocally + an Arabic
+// language pack installed once). Where the phone can't, it stays online.
+const VOICE_LANGS = ['ar-SA', 'ar'];
+let voiceLocal = { status: 'unknown', lang: 'ar-SA' }; // unsupported | unavailable | downloadable | downloading | available
+let voiceLocalBroken = false; // a local session failed: use the online service from then on
+function voiceSR() { return window.SpeechRecognition || window.webkitSpeechRecognition; }
+async function voiceCheckLocal() {
+  const SR = voiceSR();
+  if (!SR || typeof SR.available !== 'function') { voiceLocal = { status: 'unsupported', lang: 'ar-SA' }; return voiceLocal; }
+  let best = null;
+  for (const lang of VOICE_LANGS) {
+    let st = 'unavailable';
+    try { st = await SR.available({ langs: [lang], processLocally: true }); } catch (e) { st = 'unavailable'; }
+    if (st === 'available') { best = { status: st, lang }; break; }
+    if (!best || (best.status === 'unavailable' && st !== 'unavailable')) best = { status: st, lang };
+  }
+  voiceLocal = best || { status: 'unavailable', lang: 'ar-SA' };
+  return voiceLocal;
+}
+async function voiceInstallLocal() {
+  const SR = voiceSR();
+  if (!SR || typeof SR.install !== 'function') return false;
+  if (voiceLocal.status !== 'downloadable' && voiceLocal.status !== 'downloading') return voiceLocal.status === 'available';
+  voiceLocal.status = 'downloading';
+  let ok = false;
+  try { ok = await SR.install({ langs: [voiceLocal.lang], processLocally: true }); } catch (e) { ok = false; }
+  await voiceCheckLocal();
+  return ok || voiceLocal.status === 'available';
+}
+setTimeout(() => { voiceCheckLocal().catch(() => {}); }, 3000);
+
 function startVoiceCommand() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const SR = voiceSR();
   if (voiceRec) { voiceCancel(); return; }
   const sess = ++voiceSession;
   if (!SR) { voiceShow('الأوامر الصوتية غير متاحة في هذا المتصفح', { err: true }); voiceHide(3500); return; }
-  if (navigator.onLine === false) { voiceShow('الأوامر الصوتية تحتاج إلى اتصال بالإنترنت', { err: true }); voiceHide(3500); return; }
   try { if (navigator.vibrate) navigator.vibrate(35); } catch (e) { /* ignore */ }
+  // first use while online: fetch the Arabic pack in the background, so
+  // later commands work without the internet
+  if (voiceLocal.status === 'downloadable' && navigator.onLine !== false) voiceInstallLocal().catch(() => {});
+  const local = voiceLocal.status === 'available' && !voiceLocalBroken;
   const rec = new SR();
   voiceRec = rec;
-  rec.lang = 'ar-SA';
+  rec.lang = local ? voiceLocal.lang : 'ar-SA';
+  if (local) { try { rec.processLocally = true; } catch (e) { /* ignore */ } }
   rec.continuous = true;
   rec.interimResults = true;
   rec.maxAlternatives = 3;
@@ -33629,10 +33665,12 @@ function startVoiceCommand() {
     if (sess !== voiceSession || done) return;
     if (ev.error === 'no-speech' || ev.error === 'aborted') return; // onend follows
     done = true; voiceRec = null;
+    // the on-device service refused: the online one from now on
+    if (local && ev.error !== 'not-allowed') voiceLocalBroken = true;
     clearTimeout(silenceT); clearTimeout(maxT);
     const msg = ev.error === 'not-allowed' || ev.error === 'service-not-allowed'
       ? 'اسمح للتطبيق باستعمال الميكروفون' : ev.error === 'network'
-      ? 'الأوامر الصوتية تحتاج إلى اتصال بالإنترنت' : 'تعذّر الاستماع (' + ev.error + ')';
+      ? 'لا يوجد اتصال بالإنترنت، وهاتفك لا يحوّل الكلام إلى نص دون إنترنت' : (local ? 'تعذّر الاستماع دون إنترنت؛ أعد المحاولة' : 'تعذّر الاستماع (' + ev.error + ')');
     voiceShow(msg, { err: true }); voiceHide(4000);
   };
   rec.onend = () => { if (sess === voiceSession && !done) finish(); };
@@ -33671,7 +33709,7 @@ function renderVoiceTab() {
   const intro = document.createElement('div');
   intro.className = 'strong-note';
   intro.style.cssText = 'font-family:sans-serif;font-size:16.5px;font-weight:700;padding:2px 4px 10px;line-height:1.7;';
-  intro.textContent = 'اضغط مطوّلاً على الزر الذي في وسط الشريط السفلي (زر التوقف، أو سهم التمرير في عرض الصفحات)، فيظهر الميكروفون فوقه. قل الأمر، ثم اسكت قليلاً، فيُنفَّذ. يحتاج إلى اتصال بالإنترنت، ويطلب الهاتف إذن الميكروفون أول مرة.';
+  intro.textContent = 'اضغط مطوّلاً على الزر الذي في وسط الشريط السفلي (زر التوقف، أو سهم التمرير في عرض الصفحات)، فيظهر الميكروفون فوقه. قل الأمر، ثم اسكت قليلاً، فيُنفَّذ. ويطلب الهاتف إذن الميكروفون أول مرة.';
   sidebarBody.appendChild(intro);
 
   // the preset surah for «استماع» (the reciter is the one chosen in «استماع»)
@@ -33684,6 +33722,31 @@ function renderVoiceTab() {
     '<select id="voiceSurahSel" style="width:100%;box-sizing:border-box;font-family:sans-serif;font-size:16px;font-weight:700;padding:7px;border:1.5px solid #C9B98A;border-radius:10px;direction:rtl;margin:4px 0 8px;">' + opts + '</select>' +
     '<div>القارئ المحدد مسبقاً: <span style="color:#7B2E2E;">' + (rName || '-') + '</span><br><span style="font-size:14.5px;">(يُغيَّر من عنوان «استماع»)</span></div>';
   sidebarBody.appendChild(pre);
+
+  // does it work without the internet on this phone?
+  const off = document.createElement('div');
+  off.style.cssText = 'font-family:sans-serif;font-size:16px;font-weight:700;padding:8px 10px;margin:0 0 12px;line-height:1.7;border:1.5px solid #C9B98A;border-radius:12px;';
+  sidebarBody.appendChild(off);
+  const paintOff = () => {
+    const st = voiceLocal.status;
+    let html = '';
+    if (st === 'available') html = '<span style="color:#2E7D32;">✓ الأوامر الصوتية تعمل على هذا الهاتف دون إنترنت.</span>';
+    else if (st === 'downloading') html = 'جارٍ تنزيل حزمة العربية ليعمل دون إنترنت…';
+    else if (st === 'downloadable') html = 'يمكن أن تعمل الأوامر دون إنترنت بعد تنزيل حزمة العربية مرة واحدة (والهاتف متصل):' +
+      '<button id="voiceDlBtn" class="voice-start-btn" style="margin:8px 0 0;font-size:16px;padding:8px;">تنزيل حزمة العربية</button>';
+    else if (st === 'unknown') html = 'جارٍ الفحص…';
+    else html = 'هاتفك (أو متصفحه) لا يحوّل الكلام العربي إلى نص دون إنترنت، فالأوامر الصوتية تحتاج إلى اتصال بالإنترنت. وقد تعمل دون إنترنت إذا نُزّلت العربية في إعدادات «التعرف على الكلام دون اتصال» من Google في الهاتف.';
+    off.innerHTML = html;
+    const dl = off.querySelector('#voiceDlBtn');
+    if (dl) dl.addEventListener('click', () => {
+      if (navigator.onLine === false) { toast('التنزيل يحتاج إلى اتصال بالإنترنت'); return; }
+      const p = voiceInstallLocal();
+      paintOff();
+      p.then((ok) => { paintOff(); toast(ok ? '✓ نُزّلت حزمة العربية' : 'تعذّر تنزيل حزمة العربية'); }).catch(() => paintOff());
+    });
+  };
+  paintOff();
+  voiceCheckLocal().then(() => { if (off.isConnected) paintOff(); }).catch(() => {});
   pre.querySelector('#voiceSurahSel').addEventListener('change', (e) => {
     voiceDefaultSurah = parseInt(e.target.value, 10) || 0;
     store.set('voice-surah', String(voiceDefaultSurah));
