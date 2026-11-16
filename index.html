@@ -31340,6 +31340,7 @@ function closeSelReaderLayer() {
   document.getElementById('selReaderBody').innerHTML = '';
 }
 function openSelReader(items, title) {
+  try { actLastSelReader = { items: JSON.parse(JSON.stringify(items)), title }; } catch (e) { /* ignore */ }
   const runs = [];
   for (const it of items) {
     const s = resolveSurah(it.surah), plan = contItemPlan(it);
@@ -33408,22 +33409,24 @@ function voiceParse(raw) {
   }
   return { error: 'لم أفهم الأمر: ' + raw };
 }
-// ---- «رجوع»: back to what was open or playing before the last voice command ----
-// Windows, the search page and the index are steps on the app's Back stack
-// (each a history entry): they are closed one at a time, waiting for each
-// to settle, exactly as the Back gesture would - never several at once.
-const voiceUndo = [];
-function voiceSnapshot() {
-  const sp = document.getElementById('searchPage');
-  const searchOpen = !!(sp && sp.style.display && sp.style.display !== 'none');
-  return {
-    p: (sidebarCurrent && sidebarCurrent.p) || pageNum,
-    tab: sidebar.classList.contains('open') ? currentTab : null,
-    search: searchOpen ? document.getElementById('headerSearch').value : null,
-    reciting: !!reciting,
-    layers: backLayerStack.length,
-  };
-}
+// ---- «رجوع» / «عودة»: back to the last thing that was open or working ----
+// Whatever opened it - a voice command, a tap, a gesture - and even after the
+// app was closed. The app keeps a short history of what was on screen: the
+// place in the text, the auto-scroll, the listening bar, landscape, and the
+// window, page or sidebar title that was open. Each different state is one
+// step; the place in the text is kept up to date inside a step while reading.
+// «رجوع» brings back the step before the present one, and everything comes
+// back stopped: auto-scroll switched on but still, the listening bar showing
+// with its play button stopped at the ayah it had reached.
+const ACT_KEY = 'act-hist', ACT_MAX = 15, ACT_DWELL = 1500;
+let actHist = [];
+try { actHist = JSON.parse(store.get(ACT_KEY) || '[]') || []; } catch (e) { actHist = []; }
+if (!Array.isArray(actHist)) actHist = [];
+let actTopLive = false;   // the newest step is what is on screen right now
+let actPending = null;    // a new state waiting to stay put long enough to count
+let actSplitNext = false; // the next state starts a step of its own (a voice command ran)
+let actRestoring = false;
+let actLastSelReader = null; // what the reading page («للقراءة») was opened with
 function voiceWaitLayers(n) {
   return new Promise((res) => {
     const t0 = Date.now();
@@ -33433,27 +33436,198 @@ function voiceWaitLayers(n) {
     })();
   });
 }
-async function voiceRunBack() {
-  const snap = voiceUndo.pop();
-  if (!snap) { closeTopBackLayer(); return; }
-  if (reciting && !snap.reciting) stopRecitation();
-  // close what the command opened, one step at a time
-  let guard = 6;
-  while (backLayerStack.length > snap.layers && guard-- > 0) {
-    const n = backLayerStack.length;
-    closeTopBackLayer();
-    await voiceWaitLayers(n - 1);
+const actWait = (ms) => new Promise((r) => setTimeout(r, ms));
+function actSegWrapAndBox() {
+  return layoutMode === 'free'
+    ? [document.getElementById('freeScrollWrap'), document.getElementById('freePagesContainer')]
+    : [document.getElementById('vScrollWrap'), document.getElementById('boundPagesContainer')];
+}
+function actRecitePos() {
+  const it = (reciteGlobalIndex !== null && searchIndex) ? searchIndex[reciteGlobalIndex] : null;
+  return it ? [it.surah, it.ayah] : null;
+}
+function actSnapshot() {
+  const vis = (el) => !!(el && el.style.display && el.style.display !== 'none');
+  const sbOpen = sidebar.classList.contains('open');
+  const s = { t: Date.now(), p: pageNum, lay: layoutMode, home: sbOpen && homeSidebarShowing };
+  try { const [w, c] = actSegWrapAndBox(); const a = captureCenterAnchor(w, c, pageNum); if (a) s.anc = a; } catch (e) { /* ignore */ }
+  if (scrollEnabled()) s.sc = 1;
+  if (landscapeMode) s.land = 1;
+  if (reciteBarShowing()) {
+    if (reciteBarVariant === 'surah') {
+      const tl = (reciting && contStopAt) ? Math.max(0, contStopAt - Date.now()) : orangeTimeLeft;
+      s.rc = { v: 's', s: orangeSurah, plan: orangeSession ? orangePlan : null, at: actRecitePos(), tl: tl == null ? null : tl };
+    } else {
+      s.rc = { v: 'a', mode: reciteMode, at: actRecitePos(), start: reciteStartKey };
+    }
   }
-  const now = voiceSnapshot();
-  if (snap.search != null && now.search == null) { await voiceRunSearch(snap.search); }
-  else if (snap.tab && !sidebar.classList.contains('open')) openSidebar(snap.tab);
-  else if (snap.tab && currentTab !== snap.tab) setActiveTab(snap.tab);
-  if (snap.p && snap.p !== ((sidebarCurrent && sidebarCurrent.p) || pageNum)) centerOn(snap.p);
-  if (snap.reciting && !reciting && reciteBarShowing()) {
-    const pb = document.getElementById('reciteModeBarPlayBtn');
-    if (pb) pb.click();
+  if (sbOpen && !homeSidebarShowing) {
+    s.tab = currentTab;
+    if (currentTab === 'duas' && openDuaIndex !== null) s.dua = openDuaIndex;
+    s.sbTop = sidebarBody.scrollTop;
+  }
+  const sp = document.getElementById('searchPage');
+  if (vis(sp)) s.q = document.getElementById('headerSearch').value;
+  if (vis(ayahPopupEl) && ayahPopupSurah) s.pop = [ayahPopupSurah, ayahPopupAyah];
+  if (bookReaderEl.style.display !== 'none' && bookReaderKind) s.book = [bookReaderKind, bookReaderSurah, bookReaderAyah, bookIntroShown ? 1 : 0];
+  if (vis(document.getElementById('selReader')) && actLastSelReader) s.sel = actLastSelReader;
+  return s;
+}
+// what makes two states different steps (not the place in the text, which
+// moves while reading, nor playing vs stopped - both come back stopped)
+function actSig(s) {
+  return [s.sc ? 1 : 0, s.rc ? s.rc.v : '', s.land ? 1 : 0, s.tab || '', s.dua == null ? '' : s.dua,
+    s.q == null ? '' : 'q', s.pop ? 'w' : '', s.book ? s.book[0] : '', s.sel ? 'r' : ''].join('|');
+}
+function actSave() {
+  try { store.set(ACT_KEY, JSON.stringify(actHist)); } catch (e) { /* full: keep going without saving */ }
+}
+function actCapture(force) {
+  if (actRestoring || !initSucceeded) return;
+  const s = actSnapshot();
+  if (s.home) { actTopLive = false; actPending = null; return; } // the index the app opens on isn't a step
+  const sig = actSig(s);
+  const top = actHist[actHist.length - 1];
+  // a jump to another place is a step of its own (right after a voice
+  // command, any change of page is)
+  const same = top && top.sig === sig &&
+    !(Math.abs((top.p || 0) - s.p) >= (actSplitNext ? 1 : 3) && !scrollMoving());
+  s.sig = sig;
+  if (same && (actTopLive || force)) {
+    actHist[actHist.length - 1] = s; actTopLive = true; actPending = null; actSave(); return;
+  }
+  if (same && !actTopLive) {
+    // back on the newest step after a passing state that never counted
+    actHist[actHist.length - 1] = s; actTopLive = true; actPending = null; actSave(); return;
+  }
+  const now = Date.now();
+  if (!force) {
+    if (!actPending || actPending.sig !== sig) { actPending = { sig, since: now }; actTopLive = false; return; }
+    if (now - actPending.since < ACT_DWELL) { actTopLive = false; return; }
+  }
+  actPending = null;
+  actHist.push(s);
+  while (actHist.length > ACT_MAX) actHist.shift();
+  actTopLive = true;
+  actSave();
+}
+// a voice command is about to change things: what is open now is kept as a
+// step, and whatever the command brings is the next one
+function actBeforeCommand() {
+  actCapture(true);
+  actSplitNext = true;
+  setTimeout(() => { actSplitNext = false; }, 6000);
+}
+// switched on but standing still
+function actArmScrollPaused() {
+  if (layoutMode === 'free') {
+    ensureScrollLayer();
+    freeTapPaused = true;
+    const btn = document.getElementById('freePlayPauseBtn');
+    if (btn) btn.innerHTML = PAUSE_SVG;
+  } else {
+    startAutoScroll();
+    pauseAutoScroll();
   }
 }
+// the listening bar showing, stopped at the ayah it had reached; its play
+// button carries on from there
+function actArmRecitePaused(rc) {
+  if (!searchIndex) searchIndex = buildSearchIndex();
+  const idxOf = (at) => at ? searchIndex.findIndex((it) => it.surah === at[0] && it.ayah === at[1]) : -1;
+  if (rc.v === 's') {
+    openSurahReciteBar(rc.s);
+    if (rc.plan) {
+      // the same plan as before, rebuilt without playing (see startOrangePlan)
+      const plan = rc.plan;
+      reciteMode = 'continuous';
+      contQueue = null; contQueuePos = 0; contStopAt = null; orangeTimeLeft = null;
+      if (plan.kind === 'surah') { contQueue = []; for (let a = 1; a <= (SURAH_AYAH_COUNT[plan.s] || 0); a++) contQueue.push([plan.s, a]); }
+      else if (plan.kind === 'juz') contQueue = juzAyahQueue(plan.j);
+      else if (plan.kind === 'list') { const q = buildContListQueue(plan.items); contQueue = typeof q === 'string' ? null : q; }
+      else contStopAt = Date.now() + plan.min * 60000;
+      contPlanBuiltFor = 'orange';
+      orangePlan = plan; orangeSession = true;
+      if (rc.at) syncContQueueTo(rc.at[0], rc.at[1]);
+      const i = idxOf(rc.at);
+      reciteGlobalIndex = i >= 0 ? i : null;
+      if (plan.kind === 'time') orangeTimeLeft = rc.tl != null ? rc.tl : plan.min * 60000;
+      if (reciteGlobalIndex === null) { orangeSession = false; contPlanBuiltFor = null; }
+      syncOrangeRadios();
+    }
+  } else {
+    setReciteBarVariant('ayah');
+    openReciteModeBar();
+    const mode = rc.mode || 'continuous';
+    reciteMode = mode;
+    const radio = document.querySelector('input[name="reciteModeRadio"][value="' + mode + '"]');
+    if (radio) radio.checked = true;
+    const i = idxOf(rc.at);
+    reciteGlobalIndex = i >= 0 ? i : null;
+    reciteStartKey = rc.start || null;
+    contForceFresh = false; contPlanBuiltFor = null; contQueue = null;
+  }
+  syncRecitePlayButtons();
+}
+async function actRestore(s) {
+  actRestoring = true;
+  try {
+    if (reciting) stopRecitation();
+    if (scrollEnabled()) scrollDisable();
+    if (typeof hideGharib === 'function') hideGharib();
+    // close what is open, one step at a time, as the Back gesture would
+    let guard = 12;
+    while (backLayerStack.length && guard-- > 0) {
+      const top = backLayerStack[backLayerStack.length - 1];
+      if (top === homeBackLayer) break;
+      if (top === exitLandscapeLayer && s.land) break;
+      const n = backLayerStack.length;
+      closeTopBackLayer();
+      await voiceWaitLayers(n - 1);
+    }
+    if (sidebar.classList.contains('open')) { closeSidebar(); await actWait(80); }
+    if (s.land && !landscapeMode) { enterLandscape(); await actWait(250); }
+    // the place in the text
+    const anc = s.anc && s.lay === layoutMode ? s.anc : null;
+    centerOn(anc ? anc.page : (s.p || pageNum));
+    await actWait(180);
+    if (anc) { try { const [w, c] = actSegWrapAndBox(); restoreCenterAnchor(w, c, anc); } catch (e) { /* ignore */ } }
+    await actWait(60);
+    if (s.sc) actArmScrollPaused();
+    if (s.rc) actArmRecitePaused(s.rc);
+    if (s.pop) { setAyahTapSelection(s.pop[0], s.pop[1]); showAyahPopup(s.pop[0], s.pop[1]); }
+    if (s.book && BOOKS[s.book[0]]) {
+      openBookReader(s.book[0], s.book[1], s.book[2]);
+      if (s.book[3]) { await actWait(120); const ib = document.getElementById('bookIntroToggle'); if (ib && !ib.classList.contains('off')) ib.click(); }
+    }
+    if (s.sel) { try { openSelReader(JSON.parse(JSON.stringify(s.sel.items)), s.sel.title); } catch (e) { /* ignore */ } }
+    if (s.tab) {
+      openSidebar(s.tab);
+      if (s.dua != null && typeof toggleDua === 'function') toggleDua(s.dua);
+      if (s.sbTop) { await actWait(60); sidebarBody.scrollTop = s.sbTop; }
+    }
+    if (s.q != null) await voiceRunSearch(s.q);
+  } finally {
+    setTimeout(() => {
+      actRestoring = false;
+      actPending = null;
+      actCapture(true); // what was brought back is the newest step again
+    }, 500);
+  }
+}
+async function voiceRunBack() {
+  actCapture(true);
+  // the newest step is what is on screen now: go to the one before it
+  if (actTopLive && actHist.length) actHist.pop();
+  const target = actHist[actHist.length - 1];
+  if (!target) { actSave(); closeTopBackLayer(); return; }
+  actTopLive = false;
+  actSave();
+  await actRestore(target);
+}
+setInterval(() => { if (!document.hidden) actCapture(false); }, 1000);
+document.addEventListener('visibilitychange', () => { if (document.hidden) actCapture(true); });
+window.addEventListener('pagehide', () => actCapture(true));
 // ---- «إغلاق»: closes the app where the phone allows a page to close itself ----
 function voiceRunClose() {
   if (reciting) stopRecitation();
@@ -33647,7 +33821,7 @@ function startVoiceCommand() {
     if (!act) { voiceShow(firstErr, { err: true }); voiceHide(4000); return; }
     voiceShow('✓ ' + act.label);
     voiceHide(1800);
-    if (!act.noSnap) { voiceUndo.push(voiceSnapshot()); if (voiceUndo.length > 20) voiceUndo.shift(); }
+    if (!act.noSnap) actBeforeCommand();
     try { act.run(); } catch (e) { voiceShow('تعذّر تنفيذ الأمر', { err: true }); voiceHide(3000); }
   }
   rec.onresult = (ev) => {
@@ -33773,7 +33947,7 @@ function renderVoiceTab() {
   });
 
   const L = [
-    ['عودة / رجوع', 'العودة إلى ما كان مفتوحاً أو يعمل قبل آخر أمر صوتي (الصفحة، أو القائمة، أو البحث، أو التلاوة).', 'رجوع، ارجع، عودة'],
+    ['عودة / رجوع', 'العودة إلى آخر ما كان مفتوحاً أو يعمل، بأمر صوتي كان أو بغيره، ولو بعد إغلاق التطبيق: الصفحة وموضع القراءة، والتمرير، وشريط الاستماع، والعرض الأفقي، ونافذة الآية، والتفسير، وصفحة القراءة، والبحث، وعناوين القائمة. ويعود كل شيء متوقفاً: التمرير مفعّلاً بلا حركة، وشريط الاستماع ظاهراً وزر التشغيل متوقفاً عند الآية التي بلغها. وتكراره يعود خطوة بعد خطوة.', 'رجوع، ارجع، عودة'],
     ['استماع', 'تلاوة السورة المحددة مسبقاً بالقارئ المحدد مسبقاً.', 'استماع، اسمع، سمّعني، شغّل'],
     ['استماع + سورة', 'تلاوة السورة التي تذكرها بالقارئ المحدد مسبقاً.', 'استماع سورة الملك، استماع الكهف'],
     ['استماع + قارئ', 'تلاوة السورة المحددة مسبقاً بالقارئ الذي تذكره، باسمه الكامل أو المشهور.', 'استماع المنشاوي، استماع عبد الباسط'],
