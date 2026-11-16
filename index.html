@@ -1203,7 +1203,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
       <button class="fab-btn" id="backBtnFree" aria-label="رجوع" title="رجوع"><svg class="fab-icon" viewBox="0 0 24 24" width="1.2em" height="1.2em" aria-hidden="true"><path d="M19 12H5.8M10.6 6.6 5 12l5.6 5.4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
   </div>
-  <div style="text-align:center;color:#7A7360;font-size:12px;margin-top:10px;">مرّر بإصبعك لأعلى للصفحة التالية، ولأسفل للصفحة السابقة</div>
+  <div style="text-align:center;color:#7A7360;font-size:12px;margin-top:10px;">مرّر بإصبعك لأعلى للصفحة اللاحقة، ولأسفل للصفحة السابقة</div>
 </main>
 
 <div id="searchPage" style="display:none;max-width:760px;margin:0 auto;padding:0 10px;height:100vh;height:100dvh;box-sizing:border-box;overflow-y:auto;">
@@ -27858,7 +27858,7 @@ function buildFrameBarHTML(n, content, extraSurahClass) {
         '</span>' +
         '<span class="surah-bracket">]</span>' +
       '</span>' +
-      '<span class="fbHizb' + (sid && sid < 114 ? '' : ' fb-no-nav') + '" data-nav-surah="' + (sid && sid < 114 ? sid + 1 : '') + '" aria-label="بداية السورة التالية"><span class="fbNavArrow fbNavArrow-l" aria-hidden="true"></span><span class="fbNavRow">' + hizbLabel + '<span class="frame-num fbNum-hizb">' + toArabicDigits(content.hizb) + '</span></span></span>' +
+      '<span class="fbHizb' + (sid && sid < 114 ? '' : ' fb-no-nav') + '" data-nav-surah="' + (sid && sid < 114 ? sid + 1 : '') + '" aria-label="بداية السورة اللاحقة"><span class="fbNavArrow fbNavArrow-l" aria-hidden="true"></span><span class="fbNavRow">' + hizbLabel + '<span class="frame-num fbNum-hizb">' + toArabicDigits(content.hizb) + '</span></span></span>' +
       '<span class="fbRub">' + rubLabel + '<span class="frame-num fbNum-rub">' + toArabicDigits(content.rub) + '</span></span>' +
     '</div>' +
   '</div>';
@@ -33045,8 +33045,18 @@ const VOICE_NUM_WORDS = (() => {
   add(70, 'سبعون سبعين');
   add(80, 'ثمانون ثمانين');
   add(90, 'تسعون تسعين');
-  add(100, 'مائه مئه');
-  add(200, 'مئتان مئتين مائتان مائتين');
+  add(100, 'مائه مئه ميه ميت');
+  add(200, 'مئتان مئتين مائتان مائتين ميتين متين');
+  // common spoken forms
+  add(2, 'اتنين اتنان تنين تاني تانيه');
+  add(3, 'تلات تلاته تالت تالته');
+  add(8, 'تمن تمان تماني تمانيه تامن تامنه');
+  add(30, 'تلاتين تلاتون');
+  add(80, 'تمانين تمنين');
+  add(300, 'تلتميه تلاتميه');
+  add(400, 'ربعميه');
+  add(500, 'خمسميه خومسميه');
+  add(600, 'ستميه');
   [3, 4, 5, 6, 7, 8, 9].forEach((u) => {
     const stems = { 3: 'ثلاث', 4: 'اربع', 5: 'خمس', 6: 'ست', 7: 'سبع', 8: 'ثمان', 9: 'تسع' };
     m[voiceNorm(stems[u] + 'مائه')] = u * 100; m[voiceNorm(stems[u] + 'مئه')] = u * 100;
@@ -33188,36 +33198,84 @@ function voiceFindReciter(toks) {
   });
   return best;
 }
-const VOICE_FILLER = new Set(['الشيخ', 'للشيخ', 'القارئ', 'للقارئ', 'بصوت', 'صوت', 'مع', 'من', 'الى', 'في', 'على', 'يا', 'لو', 'سمحت']);
-const VOICE_KW = {
-  listen: ['استماع', 'الاستماع', 'استمع', 'اسمع', 'اسمعني', 'تلاوه', 'شغل', 'اقرا'],
-  surah: ['سوره', 'السوره', 'سورت'],
-  ayah: ['ايه', 'الايه', 'ايات', 'ايت'],
-  juz: ['جزء', 'الجزء', 'جز', 'جزو', 'الجزو'],
-  page: ['صفحه', 'الصفحه', 'صفحات'],
-  search: ['بحث', 'ابحث', 'البحث', 'ابحثي'],
-  stop: ['ايقاف', 'توقف', 'اوقف', 'قف', 'اسكت', 'وقف'],
-  duas: ['دعاء', 'ادعيه', 'الادعيه', 'الدعاء'],
-  saved: ['محفوظات', 'المحفوظات', 'المحفوظه'],
-  space: ['مسافه', 'فراغ'],
-};
-const VOICE_LEAD = new Set(['افتح', 'اعرض', 'اذهب', 'انتقل', 'روح', 'اظهر', 'الى', 'ل']);
-function voiceKw(t, kind) { return VOICE_KW[kind].indexOf(t) !== -1; }
+// ---- the command words: any common form, with or without «ال», with a
+// leading و / ف / ل / ب, in Standard Arabic or the common dialects ----
+function voiceBase(t) {
+  let b = t;
+  if ((b.startsWith('و') || b.startsWith('ف')) && b.length > 3 && !VOICE_KIND_RES.some((x) => x.re.test(b))) b = b.slice(1);
+  if (b.startsWith('لل') && b.length > 4) b = 'ال' + b.slice(2);
+  if ((b.startsWith('بال') || b.startsWith('كال')) && b.length > 5) b = b.slice(1);
+  if (b.startsWith('ال') && b.length > 4) b = b.slice(2);
+  return b;
+}
+const VOICE_KIND_RES = [
+  { k: 'back', re: /^(ا?رجع(ي|وا|و|ني|نا|ه)?|رجوع|رجعه|ترجع|نرجع|يرجع|تراجع|ارجعني|رجعني|عوده|عود(ي|وا|و|ني|نا)?|عد|نعود|تعود|ورا|لورا|للخلف)$/ },
+  { k: 'close', re: /^(اغلاق|اغلق(ي|وا|و|ه)?|غلق|سكر(ي|وا|و|ه)?|تسكير|اقفل(ي|وا|و|ه)?|قفل(ي|وا|و|ه)?|صك|خروج|اخرج(ي|وا|و)?|اطلع(ي|وا|و)?|انهاء|اطفي|طفي|اطفاء)$/ },
+  { k: 'stop', re: /^(ايقاف|اوقف(ي|وا|و|ه)?|وقف(ي|وا|و|ه)?|توقف(ي|وا|و)?|قف|اسكت(ي|وا|و)?|بس|خلاص|كفايه|كفي|ستوب)$/ },
+  { k: 'search', re: /^(بحث|ا?بحث(ي|وا|و|لي)?|دور(ي|وا|و|لي|يلي)?|فتش(ي|وا|و|لي)?|تفتيش|دورلي)$/ },
+  { k: 'listen', re: /^(ا?ستماع|سماع|ا?ستمع(ي|وا|و)?|ا?سمع(ي|وا|و|ني|نا|يني|ونا|لي)?|نسمع|تسمع|يسمع|سمعيني|تلاوه|اتل|اتلو|اتلي|تلو|شغل(ي|وا|و|لي|ها|يلي)?|تشغيل|اقرا(ي|وا|و|لي)?|قراءه|قرايه)$/ },
+  { k: 'surah', re: /^(سوره|سورت|سور)$/ },
+  { k: 'ayah', re: /^(ايه|ايات|ايت|اي)$/ },
+  { k: 'juz', re: /^(جزء|جز|جزو|جزي|اجزاء)$/ },
+  { k: 'page', re: /^(صفحه|صفحات|صفح|ورقه)$/ },
+  { k: 'duas', re: /^(دعاء|دعا|ادعيه|دعوات)$/ },
+  { k: 'saved', re: /^(محفوظات|محفوظه|محفوظاتي)$/ },
+  { k: 'prev', re: /^(سابق|سابقه|قبل|قبلها|قبله|ماضي|ماضيه|الماضيه)$/ },
+  { k: 'next', re: /^(لاحق|لاحقه|تالي|تاليه|بعد|بعدها|بعده|جاي|جايه|جايه|قادم|قادمه)$/ },
+  { k: 'space', re: /^(مسافه|فراغ)$/ },
+];
+function voiceKind(t) {
+  const b = voiceBase(t);
+  for (const x of VOICE_KIND_RES) if (x.re.test(b) || x.re.test(t)) return x.k;
+  return null;
+}
+function voiceKw(t, kind) { return voiceKind(t) === kind; }
+// words that only ask politely or lead into the command («ابي اسمع»,
+// «افتحلي سورة…», «لو سمحت»): dropped
+const VOICE_POLITE = new Set(('اريد نريد ابي ابغي ابغا بدي بدنا عايز عاوز عايزه حابب حابه ممكن لو سمحت سمحتي من فضلك فضلكم ' +
+  'خليني خلني خلينا رجاء يا هات هاتلي جيب جيبلي وديني ودني روح روحي افتح افتحي افتحلي اعرض اعرضي اعرضلي طلع طلعلي ' +
+  'وريني ورني اذهب انتقل الي علي لي اللي الي اعطني اعطيني الشيخ للشيخ القارئ للقارئ بصوت صوت مع من في يعطيك العافيه شكرا').split(' ').map(voiceNorm));
 const VOICE_JUZ_NAMES = { 'عم': 30, 'تبارك': 29, 'قد سمع': 28, 'قدسمع': 28 };
+// light prefix-stripping for names: «للكهف» / «بالكهف» -> «الكهف»
+function voiceNameTok(t) {
+  if (t.startsWith('لل') && t.length > 4) return 'ال' + t.slice(2);
+  if ((t.startsWith('بال') || t.startsWith('وال') || t.startsWith('فال')) && t.length > 5) return t.slice(1);
+  return t;
+}
+function voiceWhichDir(toks) {
+  for (const t of toks) { const k = voiceKind(t); if (k === 'prev' || k === 'next') return k; }
+  return null;
+}
 
 // Turns the spoken text into an action: {run(), label} or {error}
 function voiceParse(raw) {
-  let toks = voiceNorm(raw).split(' ').filter(Boolean);
-  while (toks.length && VOICE_LEAD.has(toks[0])) toks.shift();
+  const all = voiceNorm(raw).split(' ').filter(Boolean);
+  // the command word: the first word that isn't a polite lead-in
+  let at = 0;
+  while (at < all.length && VOICE_POLITE.has(all[at]) && !voiceKind(all[at]) && !(all[at] === 'يا' && all[at + 1] === 'سين')) at++;
+  let toks = all.slice(at);
   while (toks.length > 1 && toks[1] === toks[0]) toks.shift(); // «صفحة صفحة ٣٠٠»
   if (!toks.length) return { error: 'لم أسمع أمراً' };
-  const head = toks[0];
+  const kind = voiceKind(toks[0]);
   const rest = toks.slice(1);
+  const notPolite = (t) => t === 'يا' || !VOICE_POLITE.has(t) || voiceKind(t);
+  const curS = () => (sidebarCurrent && sidebarCurrent.s) || surahAtPage(pageNum) || 1;
+  const curJ = () => (sidebarCurrent && sidebarCurrent.j) || 1;
+
+  if (kind === 'back') return { label: 'رجوع', run: voiceRunBack, noSnap: true };
+  if (kind === 'close') return { label: 'إغلاق التطبيق', run: voiceRunClose, noSnap: true };
 
   // بحث [مسافة] … [مسافة]
-  if (voiceKw(head, 'search')) {
+  if (kind === 'search') {
     const original = String(raw).trim().split(/\s+/);
-    let words = original.slice(1);
+    let words = original.slice(at + 1);
+    // «دوّر على …», «ابحث عن …», and a polite ending, aren't part of what's searched
+    while (words.length && ['علي', 'عن', 'في', 'لي'].indexOf(voiceNorm(words[0])) !== -1) words = words.slice(1);
+    const tailPolite = [['لو', 'سمحت'], ['لو', 'سمحتي'], ['من', 'فضلك'], ['رجاء'], ['شكرا']];
+    for (const tp of tailPolite) {
+      const n = tp.length;
+      if (words.length > n && words.slice(-n).map(voiceNorm).join(' ') === tp.join(' ')) { words = words.slice(0, -n); break; }
+    }
     const lead = words.length && voiceKw(voiceNorm(words[0]), 'space');
     if (lead) words = words.slice(1);
     const trail = words.length && voiceKw(voiceNorm(words[words.length - 1]), 'space');
@@ -33228,81 +33286,163 @@ function voiceParse(raw) {
     return { label: 'بحث: ' + q, run: () => voiceRunSearch(query) };
   }
   // استماع [سورة …] [قارئ]
-  if (voiceKw(head, 'listen')) {
-    let r = rest.filter((t) => !VOICE_FILLER.has(t));
-    const rec = voiceFindReciter(r.filter((t) => !voiceKw(t, 'surah')));
-    if (rec) {
-      const rr = r.filter((t) => !voiceKw(t, 'surah'));
-      const removed = rr.slice(rec.i, rec.i + rec.used);
-      r = r.filter((t) => removed.indexOf(t) === -1);
-    }
+  if (kind === 'listen') {
+    let r = rest.filter((t) => voiceKind(t) !== 'surah' && notPolite(t));
+    const rec = voiceFindReciter(r);
+    if (rec) r = r.slice(0, rec.i).concat(r.slice(rec.i + rec.used));
     let sid = 0;
-    const sToks = r.filter((t) => !voiceKw(t, 'surah'));
-    if (sToks.length) {
-      const sf = voiceFindSurah(sToks);
+    const dir = voiceWhichDir(r);
+    if (dir) sid = Math.max(1, Math.min(114, curS() + (dir === 'next' ? 1 : -1)));
+    else if (r.length) {
+      const sf = voiceFindSurah(r.map(voiceNameTok));
       if (sf) sid = sf.s;
       else {
-        const num = voiceParseNumber(sToks);
-        if (num && num.v >= 1 && num.v <= 114 && num.used === sToks.length) sid = num.v;
-        else return { error: 'لم أعرف السورة أو القارئ: ' + sToks.join(' ') };
+        const num = voiceParseNumber(r);
+        if (num && num.v >= 1 && num.v <= 114 && num.used === r.length) sid = num.v;
+        else return { error: 'لم أعرف السورة أو القارئ: ' + r.join(' ') };
       }
     }
-    if (!sid) sid = voiceDefaultSurah || (sidebarCurrent && sidebarCurrent.s) || surahAtPage(pageNum) || 1;
+    if (!sid) sid = voiceDefaultSurah || curS();
     const rid = rec ? rec.id : currentReciter;
     const rName = RECITERS[rid] ? RECITERS[rid].name : '';
     return { label: 'استماع: سورة ' + SURAH_NAMES[sid] + (rName ? ' - ' + rName : ''), run: () => voiceRunListen(sid, rec ? rec.id : null) };
   }
-  // سورة … [آية …]
-  if (voiceKw(head, 'surah')) {
-    const ai = rest.findIndex((t) => voiceKw(t, 'ayah'));
-    const sToks = ai === -1 ? rest : rest.slice(0, ai);
+  // سورة … [آية …] / سورة سابقة / سورة لاحقة - and a surah's name alone
+  const surahCmd = (sToks, ayToks) => {
     let sid = 0;
-    const sf = sToks.length ? voiceFindSurah(sToks) : null;
-    if (sf) sid = sf.s;
-    else {
-      const num = voiceParseNumber(sToks);
-      if (num && num.v >= 1 && num.v <= 114) sid = num.v;
+    const dir = voiceWhichDir(sToks);
+    if (dir) {
+      const c = curS();
+      sid = c + (dir === 'next' ? 1 : -1);
+      if (sid < 1) return { error: 'هذه أول سورة' };
+      if (sid > 114) return { error: 'هذه آخر سورة' };
+    } else {
+      const sf = sToks.length ? voiceFindSurah(sToks.map(voiceNameTok)) : null;
+      if (sf) sid = sf.s;
+      else {
+        const num = voiceParseNumber(sToks);
+        if (num && num.v >= 1 && num.v <= 114) sid = num.v;
+      }
     }
-    if (!sid) return { error: 'لم أعرف السورة: ' + (sToks.join(' ') || '-') };
-    if (ai !== -1) {
-      const num = voiceParseNumber(rest.slice(ai + 1));
+    if (!sid) return null;
+    if (ayToks) {
+      const num = voiceParseNumber(ayToks);
       const max = SURAH_AYAH_COUNT[sid] || 0;
       if (!num || num.v < 1) return { error: 'قل رقم الآية بعد كلمة «آية»' };
       if (num.v > max) return { error: 'سورة ' + SURAH_NAMES[sid] + ' آياتها ' + toArabicDigits(max) + ' فقط' };
       return { label: 'سورة ' + SURAH_NAMES[sid] + '، آية ' + toArabicDigits(num.v), run: () => goToAyahRef(sid, num.v) };
     }
     return { label: 'سورة ' + SURAH_NAMES[sid], run: () => { closeSidebar(); goToSurahStart(sid); } };
+  };
+  const splitAyah = (tk) => {
+    const ai = tk.findIndex((t) => voiceKind(t) === 'ayah');
+    return ai === -1 ? [tk, null] : [tk.slice(0, ai), tk.slice(ai + 1)];
+  };
+  if (kind === 'surah') {
+    const [sT, aT] = splitAyah(rest);
+    return surahCmd(sT, aT) || { error: 'لم أعرف السورة: ' + (sT.join(' ') || '-') };
   }
   // آية … (in the surah on screen)
-  if (voiceKw(head, 'ayah')) {
-    const sid = (sidebarCurrent && sidebarCurrent.s) || surahAtPage(pageNum);
+  if (kind === 'ayah') {
+    const sid = curS();
     const num = voiceParseNumber(rest);
-    if (!sid || !num) return { error: 'قل: سورة … آية …' };
+    if (!num) return { error: 'قل: سورة … آية …' };
     if (num.v < 1 || num.v > (SURAH_AYAH_COUNT[sid] || 0)) return { error: 'لا توجد آية ' + toArabicDigits(num.v) + ' في سورة ' + SURAH_NAMES[sid] };
     return { label: 'سورة ' + SURAH_NAMES[sid] + '، آية ' + toArabicDigits(num.v), run: () => goToAyahRef(sid, num.v) };
   }
-  // جزء …
-  if (voiceKw(head, 'juz')) {
+  // جزء … / جزء سابق / جزء لاحق
+  if (kind === 'juz') {
     let j = 0;
-    const named = VOICE_JUZ_NAMES[rest.slice(0, 2).join(' ')] || VOICE_JUZ_NAMES[rest[0]];
-    if (named) j = named;
-    else { const num = voiceParseNumber(rest); if (num) j = num.v; }
+    const dir = voiceWhichDir(rest);
+    if (dir) {
+      j = curJ() + (dir === 'next' ? 1 : -1);
+      if (j < 1) return { error: 'هذا أول جزء' };
+      if (j > 30) return { error: 'هذا آخر جزء' };
+    } else {
+      const named = VOICE_JUZ_NAMES[rest.slice(0, 2).join(' ')] || VOICE_JUZ_NAMES[rest[0]];
+      if (named) j = named;
+      else { const num = voiceParseNumber(rest); if (num) j = num.v; }
+    }
     if (!j || j < 1 || j > 30) return { error: 'قل رقم الجزء من ١ إلى ٣٠' };
     return { label: 'الجزء ' + toArabicDigits(j), run: () => voiceRunJuz(j) };
   }
-  // صفحة …
-  if (voiceKw(head, 'page')) {
-    const num = voiceParseNumber(rest);
-    if (!num || num.v < 1 || num.v > 604) return { error: 'قل رقم الصفحة من ١ إلى ٦٠٤' };
-    return { label: 'صفحة ' + toArabicDigits(num.v), run: () => { closeSidebar(); centerOn(num.v); } };
+  // صفحة … / صفحة سابقة / صفحة لاحقة
+  if (kind === 'page') {
+    let pg = 0;
+    const dir = voiceWhichDir(rest);
+    if (dir) pg = ((sidebarCurrent && sidebarCurrent.p) || pageNum) + (dir === 'next' ? 1 : -1);
+    else { const num = voiceParseNumber(rest); if (num) pg = num.v; }
+    if (!pg || pg < 1 || pg > 604) return { error: 'قل رقم الصفحة من ١ إلى ٦٠٤' };
+    return { label: 'صفحة ' + toArabicDigits(pg), run: () => { closeSidebar(); centerOn(pg); } };
   }
-  if (voiceKw(head, 'stop')) return { label: 'إيقاف', run: voiceRunStop };
-  if (voiceKw(head, 'duas')) return { label: 'دعاء', run: () => openSidebar('duas') };
-  if (voiceKw(head, 'saved')) return { label: 'محفوظات', run: () => openSidebar('bookmarks') };
-  // a surah name on its own («الكهف») shows that surah
-  const lone = voiceFindSurah(toks);
-  if (lone && lone.used === toks.length) return { label: 'سورة ' + SURAH_NAMES[lone.s], run: () => { closeSidebar(); goToSurahStart(lone.s); } };
+  if (kind === 'stop') return { label: 'إيقاف', run: voiceRunStop };
+  if (kind === 'duas') return { label: 'دعاء', run: () => openSidebar('duas') };
+  if (kind === 'saved') return { label: 'محفوظات', run: () => openSidebar('bookmarks') };
+  // a surah's name alone («الكهف», «كهف»), optionally with «آية …»
+  {
+    const [sT0, aT] = splitAyah(toks);
+    const sT = sT0.filter(notPolite);
+    const sf = sT.length ? voiceFindSurah(sT.map(voiceNameTok)) : null;
+    if (sf && sf.i === 0 && sf.used === sT.length) return surahCmd(sT, aT);
+  }
   return { error: 'لم أفهم الأمر: ' + raw };
+}
+// ---- «رجوع»: back to what was open or playing before the last voice command ----
+// Windows, the search page and the index are steps on the app's Back stack
+// (each a history entry): they are closed one at a time, waiting for each
+// to settle, exactly as the Back gesture would - never several at once.
+const voiceUndo = [];
+function voiceSnapshot() {
+  const sp = document.getElementById('searchPage');
+  const searchOpen = !!(sp && sp.style.display && sp.style.display !== 'none');
+  return {
+    p: (sidebarCurrent && sidebarCurrent.p) || pageNum,
+    tab: sidebar.classList.contains('open') ? currentTab : null,
+    search: searchOpen ? document.getElementById('headerSearch').value : null,
+    reciting: !!reciting,
+    layers: backLayerStack.length,
+  };
+}
+function voiceWaitLayers(n) {
+  return new Promise((res) => {
+    const t0 = Date.now();
+    (function tick() {
+      if (backLayerStack.length <= n || Date.now() - t0 > 900) setTimeout(res, 60);
+      else setTimeout(tick, 40);
+    })();
+  });
+}
+async function voiceRunBack() {
+  const snap = voiceUndo.pop();
+  if (!snap) { closeTopBackLayer(); return; }
+  if (reciting && !snap.reciting) stopRecitation();
+  // close what the command opened, one step at a time
+  let guard = 6;
+  while (backLayerStack.length > snap.layers && guard-- > 0) {
+    const n = backLayerStack.length;
+    closeTopBackLayer();
+    await voiceWaitLayers(n - 1);
+  }
+  const now = voiceSnapshot();
+  if (snap.search != null && now.search == null) { await voiceRunSearch(snap.search); }
+  else if (snap.tab && !sidebar.classList.contains('open')) openSidebar(snap.tab);
+  else if (snap.tab && currentTab !== snap.tab) setActiveTab(snap.tab);
+  if (snap.p && snap.p !== ((sidebarCurrent && sidebarCurrent.p) || pageNum)) centerOn(snap.p);
+  if (snap.reciting && !reciting && reciteBarShowing()) {
+    const pb = document.getElementById('reciteModeBarPlayBtn');
+    if (pb) pb.click();
+  }
+}
+// ---- «إغلاق»: closes the app where the phone allows a page to close itself ----
+function voiceRunClose() {
+  if (reciting) stopRecitation();
+  try { window.close(); } catch (e) { /* ignore */ }
+  setTimeout(() => {
+    if (document.hidden) return;
+    voiceSession++;
+    voiceShow('لم يسمح الهاتف بإغلاق التطبيق من داخله', { err: true, hint: 'أغلقه بإيماءة الرجوع أو من قائمة التطبيقات' });
+    voiceHide(5000);
+  }, 700);
 }
 function voiceRunListen(sid, reciterId) {
   if (reciterId && RECITERS[reciterId]) {
@@ -33320,8 +33460,12 @@ function voiceRunJuz(j) {
   setTimeout(() => { segHint = { j }; segStartId = null; segGuard(); }, 120);
   closeSidebar();
 }
-function voiceRunSearch(query) {
-  closeSidebar();
+async function voiceRunSearch(query) {
+  if (sidebar.classList.contains('open')) {
+    const n = backLayerStack.length;
+    closeSidebar();
+    await voiceWaitLayers(n - 1);
+  }
   const input = document.getElementById('headerSearch');
   input.value = query;
   input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -33407,6 +33551,7 @@ function startVoiceCommand() {
     if (!act) { voiceShow(firstErr, { err: true }); voiceHide(4000); return; }
     voiceShow('✓ ' + act.label);
     voiceHide(1800);
+    if (!act.noSnap) { voiceUndo.push(voiceSnapshot()); if (voiceUndo.length > 20) voiceUndo.shift(); }
     try { act.run(); } catch (e) { voiceShow('تعذّر تنفيذ الأمر', { err: true }); voiceHide(3000); }
   }
   rec.onresult = (ev) => {
@@ -33500,26 +33645,30 @@ function renderVoiceTab() {
   });
 
   const L = [
-    ['استماع', 'تلاوة السورة المحددة مسبقاً بالقارئ المحدد مسبقاً.', 'استماع'],
+    ['عودة / رجوع', 'العودة إلى ما كان مفتوحاً أو يعمل قبل آخر أمر صوتي (الصفحة، أو القائمة، أو البحث، أو التلاوة).', 'رجوع، ارجع، عودة'],
+    ['استماع', 'تلاوة السورة المحددة مسبقاً بالقارئ المحدد مسبقاً.', 'استماع، اسمع، سمّعني، شغّل'],
     ['استماع + سورة', 'تلاوة السورة التي تذكرها بالقارئ المحدد مسبقاً.', 'استماع سورة الملك، استماع الكهف'],
     ['استماع + قارئ', 'تلاوة السورة المحددة مسبقاً بالقارئ الذي تذكره، باسمه الكامل أو المشهور.', 'استماع المنشاوي، استماع عبد الباسط'],
     ['استماع + سورة + قارئ', 'تلاوة السورة والقارئ اللذين تذكرهما.', 'استماع سورة يس الحصري'],
-    ['سورة …', 'بداية السورة.', 'سورة البقرة'],
+    ['سورة …، أو اسم السورة وحده', 'بداية السورة.', 'سورة البقرة، البقرة، بقرة'],
+    ['سورة سابقة / سورة لاحقة', 'بداية السورة التي قبل المعروضة أو بعدها.', 'سورة لاحقة، السورة السابقة'],
     ['سورة … آية …', 'الآية من السورة.', 'سورة البقرة آية مئتين وخمسة وخمسين'],
     ['آية …', 'الآية من السورة المعروضة.', 'آية عشرين'],
     ['جزء …', 'بداية الجزء.', 'جزء عشرة، الجزء الثلاثون، جزء عم'],
-    ['صفحة …', 'الصفحة.', 'صفحة ثلاثمئة'],
+    ['جزء سابق / جزء لاحق', 'بداية الجزء الذي قبل المعروض أو بعده.', 'جزء لاحق'],
+    ['صفحة …', 'الصفحة. ويصح «صفحة سابقة» و«صفحة لاحقة».', 'صفحة ثلاثمئة'],
     ['بحث + كلمة أو عبارة', 'قائمة نتائج البحث في نص القرآن.', 'بحث الصابرين'],
     ['بحث + مسافة + كلمة', 'البحث عن الكلمة غير متصلة بما قبلها (كأنك كتبت مسافة قبلها). وقل «مسافة» بعد الكلمة لتكون غير متصلة بما بعدها.', 'بحث مسافة رب'],
     ['إيقاف', 'إيقاف التلاوة، أو التمرير.', 'إيقاف'],
     ['دعاء', 'قائمة الأدعية.', 'دعاء'],
     ['محفوظات', 'قائمة المحفوظات.', 'محفوظات'],
+    ['إغلاق', 'إغلاق التطبيق (إن سمح الهاتف بذلك).', 'إغلاق، سكّر، اقفل'],
   ];
   const list = document.createElement('div');
   list.className = 'voice-cmd-list';
   list.innerHTML = '<div class="strong-note" style="font-weight:700;font-size:17px;padding:4px 0;">الأوامر:</div>' +
     L.map((x) => '<div class="vc"><b>' + x[0] + '</b>: ' + x[1] + '<span class="ex">مثال: «' + x[2] + '»</span></div>').join('') +
-    '<div class="vc" style="border:none;font-size:15px;">الأرقام تُقال كلمات أو أرقاماً. وتكفي أسماء السور المشهورة (يس، طه، تبارك، عم…). والضغط على الميكروفون يلغي الأمر.</div>';
+    '<div class="vc" style="border:none;font-size:15px;">تصح الأوامر بـ«ال» وبدونها، وبالفصحى واللهجات المشهورة، مثل: «ابي اسمع الملك»، «افتحلي سورة يس»، «دوّر على الصابرين». والأرقام تُقال كلمات أو أرقاماً. وتكفي أسماء السور المشهورة (يس، طه، تبارك، عم…). والضغط على الميكروفون يلغي الأمر.</div>';
   sidebarBody.appendChild(list);
 }
 setTimeout(() => setSegStop(segStopOn, true), 0);
@@ -33634,8 +33783,8 @@ function showSegPanel(where, b, startB, wrap, lim) {
   let right = '', left = '';
   if (S && S > 1) right += btn('s', S - 1, 'السورة السابقة');
   if (J && J > 1) right += btn('j', J - 1, 'الجزء السابق');
-  if (S && S < 114) left += btn('s', S + 1, 'السورة التالية');
-  if (J && J < 30) left += btn('j', J + 1, 'الجزء التالي');
+  if (S && S < 114) left += btn('s', S + 1, 'السورة اللاحقة');
+  if (J && J < 30) left += btn('j', J + 1, 'الجزء اللاحق');
   segPanelEl.innerHTML = '<div class="seg-side">' + right + '</div><div class="seg-mid">' + mid.join('') + '</div><div class="seg-side">' + left + '</div>';
   segPanelEl.querySelectorAll('.seg-btn').forEach((x) => x.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -35109,7 +35258,7 @@ function renderGuideTab() {
       'بين القوسين: اسم السورة، ثم رمز الكعبة المشرفة (مكية) أو القبة الخضراء (مدنية)، ثم ترتيبها وعدد آياتها بينهما شارحة (:).',
       'في أقصى اليمين علامة المرجعية ' + bookmarkIcon + ' لحفظ الصفحة، وبجانبها «من … إلى …»: صفحتا بداية السورة ونهايتها. وفي أقصى اليسار دائرة رقم الصفحة.',
       'وبين ذلك: الجزء (ج) والحزب (ح) والربع (ر). وفي الاتجاه الأفقي تُكتب الكلمات كاملة (جزء، حزب، ربع).',
-      '<b>السورة السابقة والتالية</b>: النقر على إطار «ج» (وفيه السهم فوقها ورقم الجزء) <span style="white-space:nowrap">(' + navArrow(true) + ')</span> ينقل إلى بداية السورة السابقة، والنقر على إطار «ح» <span style="white-space:nowrap">(' + navArrow(false) + ')</span> ينقل إلى بداية السورة التالية. والتمرير التلقائي يبقى على حاله، لكنه يتوقف عند بداية السورة إن كان مفعّلاً.',
+      '<b>السورة السابقة واللاحقة</b>: النقر على إطار «ج» (وفيه السهم فوقها ورقم الجزء) <span style="white-space:nowrap">(' + navArrow(true) + ')</span> ينقل إلى بداية السورة السابقة، والنقر على إطار «ح» <span style="white-space:nowrap">(' + navArrow(false) + ')</span> ينقل إلى بداية السورة اللاحقة. والتمرير التلقائي يبقى على حاله، لكنه يتوقف عند بداية السورة إن كان مفعّلاً.',
       'النقر على <b>رقمي السورة</b> (ترتيبها : عدد آياتها، في الإطار الذهبي) يُظهر <b>شريط استماع السورة</b> (الفقرة ٧) ويُظلَّل إطارهما بالأحمر ما دام الشريط ظاهراً، والنقر عليهما مرة أخرى يوقف التلاوة ويُخفي الشريط. ووالنقر على <b>دائرة رقم الصفحة</b> يفعّل <b>قراءة الكلمات</b> أو يوقفها، ويظهر حولها مربع أزرق ما دامت مفعّلة (الفقرة ١١).',
       'يتحدّث الإطار تلقائياً أثناء التمرير ليطابق ما تقرأه.',
     ]},
@@ -35119,7 +35268,7 @@ function renderGuideTab() {
       '<b>النسخ</b>: اضغط مطوّلاً على النص واسحب لتحديد ما تريد، ثم انسخه. وعند لصقه يكون المنسوخ بين قوسين [ ] ورقم كل آية بعد نصها داخل القوسين، واسم السورة بعد القوس الأخير، مثل: [ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِينَ ٢] الفاتحة. وإن امتد المنسوخ من آخر آية إلى أول التي بعدها، كُتب رقم كل منهما بعد الجزء الخاص بها.',
       'خط أخضر داكن على أحد جانبي الصفحة يبيّن أنها يمنى أو يسرى.',
       '<b>علامة الربع</b> ' + rubGridSvg(3) + ' ' + rubGridSvg(3, true) + ': مستطيل مقسّم إلى ثمانية مربعات تمثّل أرباع الجزء الحالي: العمود الأيمن لحزبه الأول، والأيسر لحزبه الثاني، ويُعدّ كل عمود من الأسفل إلى الأعلى، فمربعاته الأربعة هي أرباع حزبه من الأول إلى الرابع (فالأرباع تُعدّ من ١ إلى ٤ في كل حزب، ولا تُعدّ إلى ٨). تظهر العلامة في بداية كل ربع بعد رقم الآية التي قبله، وفي نهايته قبل رقم آيته الأخيرة. الأبيض أرباع تمّت، والرمادي أرباع لم تأتِ بعد، ومربع الربع الذي يبدأ يكون ربعه السفلي أبيض. ففي المثالين المجاورين: بداية الربع الثالث من الحزب الأول، ثم نهايته.',
-      '<b>التوقف عند آخر السورة والجزء</b> (في الوضع الحر): يتوقف التمرير عند آخر السورة أو الجزء، وتظهر فوق الشريط السفلي ثلاثة أزرار: آخر السورة أو الجزء في الوسط، والسابق على اليمين، والتالي على اليسار. وسحبة خفيفة إلى أعلى تُكمل القراءة. ويُفعَّل هذا أو يُلغى بزر (' + badge(document.getElementById('segStopBtn').innerHTML) + ') في الشريط السفلي، أو من عنوان <b>التخطيط</b>.',
+      '<b>التوقف عند آخر السورة والجزء</b> (في الوضع الحر): يتوقف التمرير عند آخر السورة أو الجزء، وتظهر فوق الشريط السفلي ثلاثة أزرار: آخر السورة أو الجزء في الوسط، والسابق على اليمين، واللاحق على اليسار. وسحبة خفيفة إلى أعلى تُكمل القراءة. ويُفعَّل هذا أو يُلغى بزر (' + badge(document.getElementById('segStopBtn').innerHTML) + ') في الشريط السفلي، أو من عنوان <b>التخطيط</b>.',
     ]},
     { title: '٤. شريط الأدوات السفلي', items: [
       '<b>الأوامر الصوتية</b>: اضغط مطوّلاً على الزر الذي في وسط الشريط (زر التوقف، أو سهم التمرير في عرض الصفحات)، فيظهر الميكروفون، ثم قل الأمر واسكت قليلاً. والأوامر وشرحها في عنوان «أوامر صوتية».',
@@ -35164,7 +35313,7 @@ function renderGuideTab() {
     { title: '٨. التفسير واللغة والإعراب', items: [
       '<b>تفسير القرآن</b>: تفسير البرهان للسيد هاشم البحراني. و<b>اللغة</b> و<b>الإعراب</b>: من تفسير مجمع البيان للشيخ الطبرسي.',
       'في أعلى الصفحة اسم الكتاب، وتحته اسم السورة، والآية أو الآيات التي يشرحها النص، وإطار «فضل السورة وخواصّها» (في التفسير) يُظهر نصه بالنقر عليه ويعود التفسير بالنقر مرة أخرى.',
-      'زرّا (A−) و(A+) لتصغير الخط وتكبيره. وسحب النص يميناً ينقل إلى الآية التالية، ويساراً إلى السابقة.',
+      'زرّا (A−) و(A+) لتصغير الخط وتكبيره. وسحب النص يميناً ينقل إلى الآية اللاحقة، ويساراً إلى السابقة.',
       'الآيات داخل النص باللون القاني، والأرقام الصغيرة في الإطارات الرمادية أرقام الأحاديث.',
       'تُحفظ كل سورة في الجهاز عند فتحها أول مرة، ويُنزَّل الكتاب كاملاً في الخلفية عند توفر الاتصال، فيعمل بعد ذلك بدون إنترنت.',
     ]},
