@@ -33337,7 +33337,7 @@ function voiceParse(raw) {
       const max = SURAH_AYAH_COUNT[sid] || 0;
       if (!num || num.v < 1) return { error: 'قل رقم الآية بعد كلمة «آية»' };
       if (num.v > max) return { error: 'سورة ' + SURAH_NAMES[sid] + ' آياتها ' + toArabicDigits(max) + ' فقط' };
-      return { label: 'سورة ' + SURAH_NAMES[sid] + '، آية ' + toArabicDigits(num.v), run: () => goToAyahRef(sid, num.v) };
+      return { label: 'سورة ' + SURAH_NAMES[sid] + '، آية ' + toArabicDigits(num.v), run: () => voiceGoToAyah(sid, num.v) };
     }
     return { label: 'سورة ' + SURAH_NAMES[sid], run: () => { closeSidebar(); goToSurahStart(sid); } };
   };
@@ -33355,7 +33355,7 @@ function voiceParse(raw) {
     const num = voiceParseNumber(rest);
     if (!num) return { error: 'قل: سورة … آية …' };
     if (num.v < 1 || num.v > (SURAH_AYAH_COUNT[sid] || 0)) return { error: 'لا توجد آية ' + toArabicDigits(num.v) + ' في سورة ' + SURAH_NAMES[sid] };
-    return { label: 'سورة ' + SURAH_NAMES[sid] + '، آية ' + toArabicDigits(num.v), run: () => goToAyahRef(sid, num.v) };
+    return { label: 'سورة ' + SURAH_NAMES[sid] + '، آية ' + toArabicDigits(num.v), run: () => voiceGoToAyah(sid, num.v) };
   }
   // جزء … / جزء سابق / جزء لاحق
   if (kind === 'juz') {
@@ -33454,6 +33454,40 @@ function voiceRunClose() {
     voiceShow('لم يسمح الهاتف بإغلاق التطبيق من داخله', { err: true, hint: 'أغلقه بإيماءة الرجوع أو من قائمة التطبيقات' });
     voiceHide(5000);
   }, 700);
+}
+// A voice-chosen ayah is marked by its first word and its own number (at
+// its end) - not the whole ayah. Same highlight, page tracking and Back
+// step as a search result.
+function voiceGoToAyah(s, a) {
+  if (!searchIndex) searchIndex = buildSearchIndex();
+  const it = searchIndex.find((x) => x.surah === s && x.ayah === a);
+  closeSidebar();
+  if (!it) return;
+  const change = it.page !== pageNum;
+  centerOn(it.page);
+  const mark = () => {
+    const first = String(it.text || '').trim().split(/\s+/).filter((w) => w && w !== '۞')[0] || '';
+    let ok = first && highlightSearchMatchInAyah(s, a, ' ' + first + ' ');
+    if (!ok && first) ok = highlightSearchMatchInAyah(s, a, first);
+    const segs = document.querySelectorAll('.ayah-seg[data-surah="' + s + '"][data-ayah="' + a + '"]');
+    const last = segs.length ? segs[segs.length - 1] : null;
+    const nums = last ? last.querySelectorAll('.ayahnum, .ayahnum-badge') : [];
+    const num = nums.length ? nums[nums.length - 1] : null;
+    if (num && !(num.parentNode && num.parentNode.classList && num.parentNode.classList.contains('search-match-highlight'))) {
+      const w = document.createElement('span');
+      w.className = 'search-match-highlight';
+      num.parentNode.insertBefore(w, num);
+      w.appendChild(num);
+      if (!ok) {
+        w.scrollIntoView({ block: 'center', behavior: 'instant' });
+        const pgEl = w.closest('[data-page]');
+        const pn = pgEl ? parseInt(pgEl.dataset.page, 10) : pageNum;
+        searchMatchHighlightPages = { min: pn, max: pn };
+        pushBackLayer(closeSearchHighlightLayer);
+      }
+    }
+  };
+  if (change) setTimeout(mark, 250); else mark();
 }
 function voiceRunListen(sid, reciterId) {
   if (reciterId && RECITERS[reciterId]) {
