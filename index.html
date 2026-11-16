@@ -26898,8 +26898,9 @@ function rubGridSvg(globalRub, isEnd) {
   //    end of a juz's first hizb is 4 white (right) + 4 gray (left), and the
   //    end of a juz is all 8 white.
   const k = ((globalRub - 1) % 8) + 1; // this quarter's position in its juz, 1-8
-  // Two separate columns with a small gap between them (left open, so the
-  // page shows through), each framed in a thicker black line, with thin black
+  // Two columns with a small gap between them (left open, so the page shows
+  // through), joined by one thicker black frame across the top and bottom
+  // (see below), with thin black
   // lines splitting it into its 4 squares. A column is CW wide - a square's
   // inside stays about as wide as it is tall - and the whole mark is
   // VB_W x 18 (see the .rubgrid8 width).
@@ -26926,8 +26927,11 @@ function rubGridSvg(globalRub, isEnd) {
   const R = CW + GAP; // the right column's left edge
   const lines = '<path class="rubgrid8-line" d="M0 4.5H' + CW + 'M0 9H' + CW + 'M0 13.5H' + CW +
     'M' + R + ' 4.5H' + VB_W + 'M' + R + ' 9H' + VB_W + 'M' + R + ' 13.5H' + VB_W + '"/>' +
-    '<rect class="rubgrid8-frame" x="' + FR / 2 + '" y="' + FR / 2 + '" width="' + (CW - FR) + '" height="' + (18 - FR) + '"/>' +
-    '<rect class="rubgrid8-frame" x="' + (R + FR / 2) + '" y="' + FR / 2 + '" width="' + (CW - FR) + '" height="' + (18 - FR) + '"/>';
+    // one frame around the whole mark (the juz), its top and bottom running
+    // across the gap; the gap itself stays open between the two columns'
+    // inner sides (the two hizb)
+    '<rect class="rubgrid8-frame" x="' + FR / 2 + '" y="' + FR / 2 + '" width="' + (VB_W - FR) + '" height="' + (18 - FR) + '"/>' +
+    '<path class="rubgrid8-frame" d="M' + (CW - FR / 2) + ' 0V18M' + (R + FR / 2) + ' 0V18"/>';
   const title = (isEnd ? 'نهاية' : 'بداية') + ' الربع ' + toArabicDigits(k <= 4 ? k : k - 4) +
     ' من الحزب ' + (k <= 4 ? 'الأول' : 'الثاني') + ' في الجزء';
   // data-rub (start marks only) carries the quarter's true global index
