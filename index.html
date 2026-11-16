@@ -779,7 +779,7 @@ body.dark-mode .ayahnum-badge.ayahnum-100{border-top-color:#FF6B5B;}
    exactly to the 1.05em-above-baseline top - this is also why this is
    noticeably smaller than the old size (~71% of its old height), not just
    "smaller" for its own sake. */
-.rubgrid8{position:relative;display:inline-block;width:0.6625em;height:1.325em;vertical-align:-0.275em;margin:0 2mm;}
+.rubgrid8{position:relative;display:inline-block;width:0.8539em;height:1.325em;vertical-align:-0.275em;margin:0 2mm;}
 .rubgrid8 svg{display:block;width:100%;height:100%;}
 /* One upright rectangle divided by thin black lines into 8 squares (2 x 4).
    White = quarters of the juz already completed; gray = quarters not yet
@@ -788,7 +788,8 @@ body.dark-mode .ayahnum-badge.ayahnum-100{border-top-color:#FF6B5B;}
 .rubgrid8-done{fill:#FFFFFF;}
 .rubgrid8-todo{fill:#9A9A9A;}
 .rubgrid8-line{fill:none;stroke:#000;stroke-width:0.45;}
-.rubgrid8-frame{fill:none;stroke:#000;stroke-width:0.7;}
+.rubgrid8-frame{fill:none;stroke:#000;stroke-width:0.9;}
+body.dark-mode .rubgrid8-frame{stroke:#D8CBAE;} /* black would vanish on the dark page */
 body.dark-mode .rubgrid8-done{fill:#F4EEDD;}
 body.dark-mode .rubgrid8-todo{fill:#8C8C8C;}
 .rubgrid8.rubgrid8-abs{position:absolute;top:50%;right:-7px;transform:translateY(-50%);margin:0;vertical-align:baseline;}
@@ -26897,35 +26898,43 @@ function rubGridSvg(globalRub, isEnd) {
   //    end of a juz's first hizb is 4 white (right) + 4 gray (left), and the
   //    end of a juz is all 8 white.
   const k = ((globalRub - 1) % 8) + 1; // this quarter's position in its juz, 1-8
+  // Two separate columns with a small gap between them (left open, so the
+  // page shows through), each framed in a thicker black line, with thin black
+  // lines splitting it into its 4 squares. A column is CW wide - a square's
+  // inside stays about as wide as it is tall - and the whole mark is
+  // VB_W x 18 (see the .rubgrid8 width).
+  const FR = 0.9, LN = 0.45; // frame / inner-line thickness (viewBox units)
+  const CW = 5.2, GAP = 1.2, VB_W = CW * 2 + GAP;
   const fills = [];
   for (let c = 1; c <= 8; c++) {
-    const x = c <= 4 ? 4.5 : 0;               // right column = quarters 1-4
+    const x = c <= 4 ? CW + GAP : 0;          // right column = quarters 1-4
     const y = 18 - ((c - 1) % 4 + 1) * 4.5;   // bottom row first
     if (c < k || (isEnd && c === k)) {
-      fills.push('<rect class="rubgrid8-done" x="' + x + '" y="' + y + '" width="4.5" height="4.5"/>');
+      fills.push('<rect class="rubgrid8-done" x="' + x + '" y="' + y + '" width="' + CW + '" height="4.5"/>');
     } else if (c === k) {
       // white = the lower quarter of the square's VISIBLE inside (between the
       // black lines - the outer frame is thicker than the inner lines)
-      const top = y + (y === 0 ? 0.7 : 0.225);
-      const bottom = y + 4.5 - (y + 4.5 === 18 ? 0.7 : 0.225);
+      const top = y + (y === 0 ? FR : LN / 2);
+      const bottom = y + 4.5 - (y + 4.5 === 18 ? FR : LN / 2);
       const wy = bottom - (bottom - top) / 4;
-      fills.push('<rect class="rubgrid8-todo" x="' + x + '" y="' + y + '" width="4.5" height="4.5"/>');
-      fills.push('<rect class="rubgrid8-done" x="' + x + '" y="' + wy + '" width="4.5" height="' + (y + 4.5 - wy) + '"/>');
+      fills.push('<rect class="rubgrid8-todo" x="' + x + '" y="' + y + '" width="' + CW + '" height="4.5"/>');
+      fills.push('<rect class="rubgrid8-done" x="' + x + '" y="' + wy + '" width="' + CW + '" height="' + (y + 4.5 - wy) + '"/>');
     } else {
-      fills.push('<rect class="rubgrid8-todo" x="' + x + '" y="' + y + '" width="4.5" height="4.5"/>');
+      fills.push('<rect class="rubgrid8-todo" x="' + x + '" y="' + y + '" width="' + CW + '" height="4.5"/>');
     }
   }
-  const lines = '<path class="rubgrid8-line" d="M4.5 0V18M0 4.5H9M0 9H9M0 13.5H9"/>' +
-    '<rect class="rubgrid8-frame" x="0.35" y="0.35" width="8.3" height="17.3"/>';
-  // quarters are counted 1-4 within each hizb (never 5-8): the left column
-  // is quarters 1-4 of the juz's SECOND hizb
+  const R = CW + GAP; // the right column's left edge
+  const lines = '<path class="rubgrid8-line" d="M0 4.5H' + CW + 'M0 9H' + CW + 'M0 13.5H' + CW +
+    'M' + R + ' 4.5H' + VB_W + 'M' + R + ' 9H' + VB_W + 'M' + R + ' 13.5H' + VB_W + '"/>' +
+    '<rect class="rubgrid8-frame" x="' + FR / 2 + '" y="' + FR / 2 + '" width="' + (CW - FR) + '" height="' + (18 - FR) + '"/>' +
+    '<rect class="rubgrid8-frame" x="' + (R + FR / 2) + '" y="' + FR / 2 + '" width="' + (CW - FR) + '" height="' + (18 - FR) + '"/>';
   const title = (isEnd ? 'نهاية' : 'بداية') + ' الربع ' + toArabicDigits(k <= 4 ? k : k - 4) +
     ' من الحزب ' + (k <= 4 ? 'الأول' : 'الثاني') + ' في الجزء';
   // data-rub (start marks only) carries the quarter's true global index
   // (1-240) - it's what lets the floating bar's juz/hizb/rub display be driven
   // by exactly where the mark sits on screen (see findCurrentRubIndex).
   return '<span class="rubgrid8' + (isEnd ? ' rubgrid8-end' : '') + '"' + (isEnd ? '' : ' data-rub="' + globalRub + '"') +
-    ' title="' + title + '"><svg viewBox="0 0 9 18">' + fills.join('') + lines + '</svg></span>';
+    ' title="' + title + '"><svg viewBox="0 0 ' + VB_W + ' 18">' + fills.join('') + lines + '</svg></span>';
 }
 function rubGridSvgAbs(globalRub) {
   // Same grid, absolutely positioned - used where the rub' start coincides
