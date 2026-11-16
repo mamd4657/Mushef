@@ -33318,8 +33318,15 @@ function voiceParse(raw) {
       if (sid > 114) return { error: 'هذه آخر سورة' };
     } else {
       const sf = sToks.length ? voiceFindSurah(sToks.map(voiceNameTok)) : null;
-      if (sf) sid = sf.s;
-      else {
+      if (sf) {
+        sid = sf.s;
+        // «البقرة ٤٠»: a number right after the name is the ayah
+        if (!ayToks) {
+          const tail = sToks.slice(sf.i + sf.used).filter(notPolite);
+          const n = tail.length ? voiceParseNumber(tail) : null;
+          if (n && n.used === tail.length) ayToks = tail;
+        }
+      } else {
         const num = voiceParseNumber(sToks);
         if (num && num.v >= 1 && num.v <= 114) sid = num.v;
       }
@@ -33383,7 +33390,11 @@ function voiceParse(raw) {
     const [sT0, aT] = splitAyah(toks);
     const sT = sT0.filter(notPolite);
     const sf = sT.length ? voiceFindSurah(sT.map(voiceNameTok)) : null;
-    if (sf && sf.i === 0 && sf.used === sT.length) return surahCmd(sT, aT);
+    if (sf && sf.i === 0) {
+      const tail = sT.slice(sf.used);
+      const n = tail.length ? voiceParseNumber(tail) : null;
+      if (!tail.length || (n && n.used === tail.length)) return surahCmd(sT, aT);
+    }
   }
   return { error: 'لم أفهم الأمر: ' + raw };
 }
