@@ -139,6 +139,41 @@ body.landscape-lock .rotateFabBtn{right:auto;left:8px;}
 /* the middle frames grow (or shrink) to fill the bar, contents spread evenly */
 #autoFab .fab-frame-scroll,#freeAutoFab .fab-frame-scroll,#freeAutoFab .fab-frame-size,#segStopFrame{flex:1 1 auto;justify-content:space-evenly;}
 #segStopFrame{padding:0 4px !important;}
+/* free mode: the التوقف frame sits exactly in the middle of the bar - the
+   frames either side of it share the remaining width equally (the outer
+   ones are already equal) */
+#freeAutoFab .fab-frame-scroll,#freeAutoFab .fab-frame-size{flex:1 1 0 !important;}
+#segStopFrame{flex:0 0 auto !important;width:calc(var(--hdrDarkW) + 8px);justify-content:center !important;}
+/* on the narrowest phones the two frames beside it would squeeze their round
+   buttons out of shape - make those buttons a little smaller there */
+@media (max-width:350px){
+  #freeAutoFab .fab-btn-round{width:23px !important;height:23px !important;font-size:17px;flex-shrink:0;}
+  #freeAutoFab .fab-arrow-col{padding:0 5px;}
+  #segStopFrame{width:calc(var(--hdrDarkW) + 4px);}
+}
+/* long-press targets for the voice command: no text-selection / callout */
+#segStopBtn,#autoFab .fab-arrow-col{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;}
+/* the voice command's microphone, shown above the middle of the bottom bar */
+#voiceOverlay{position:absolute;left:50%;transform:translateX(-50%);bottom:100%;margin-bottom:10px;display:none;flex-direction:column;align-items:center;gap:8px;z-index:5;pointer-events:auto;width:max-content;max-width:92vw;}
+#voiceOverlay.show{display:flex;}
+#voiceBubble{background:#FFFDF6;color:#0E4433;border:2px solid #0E4433;border-radius:14px;padding:7px 14px;font-family:sans-serif;font-weight:700;font-size:17px;line-height:1.5;text-align:center;max-width:88vw;box-shadow:0 3px 10px rgba(0,0,0,.25);direction:rtl;white-space:normal;}
+#voiceBubble .vb-hint{display:block;font-size:13.5px;font-weight:700;color:#7A6A3A;}
+#voiceBubble.err{border-color:#9B2C2C;color:#9B2C2C;}
+#voiceMic{width:58px;height:58px;border-radius:50%;background:#0E4433;border:3px solid #E8B84B;color:#E8B84B;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,.35);cursor:pointer;position:relative;}
+#voiceMic svg{width:30px;height:30px;}
+#voiceMic.listening::after{content:'';position:absolute;inset:-9px;border-radius:50%;border:3px solid #E8B84B;opacity:.8;animation:voicePulse 1.1s ease-out infinite;}
+@keyframes voicePulse{0%{transform:scale(.85);opacity:.9;}100%{transform:scale(1.25);opacity:0;}}
+body.dark-mode #voiceBubble{background:#1E2A22;color:#F6EFDC;border-color:#E8B84B;}
+body.dark-mode #voiceBubble .vb-hint{color:#CDBB8A;}
+.voice-cmd-list{font-family:sans-serif;font-size:16.5px;line-height:1.8;padding:0 4px;}
+.voice-cmd-list .vc{border-bottom:1px solid #EDE3C6;padding:8px 2px;}
+.voice-cmd-list .vc b{color:#7B2E2E;}
+body.dark-mode .voice-cmd-list .vc b{color:#E8B84B;}
+.voice-cmd-list .vc .ex{display:block;font-size:15px;color:#3E6B4F;}
+body.dark-mode .voice-cmd-list .vc .ex{color:#8FCB9E;}
+.voice-start-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;margin:4px 0 12px;padding:10px;border-radius:14px;border:2px solid #0E4433;background:#0E4433;color:#E8B84B;font-family:sans-serif;font-weight:700;font-size:18px;cursor:pointer;}
+.voice-start-btn svg{width:24px;height:24px;}
+
 #autoFab .fab-frame-scroll,#freeAutoFab .fab-frame-scroll,#freeAutoFab .fab-frame-size{padding-left:5px;padding-right:5px;}
 #autoFab .fab-btn-round,#freeAutoFab .fab-btn-round{width:clamp(27px, 8.4vw, 36px);height:clamp(27px, 8.4vw, 36px);}
 #freeAutoFab .fab-frame-size{gap:clamp(5px, 2.4vw, 12px);}
@@ -1115,16 +1150,17 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
   </div>
   <div class="sidebar-main">
     <div class="tabs" id="indexTabs">
-      <button class="tab" data-tab="recitation">الاستماع</button>
-      <button class="tab" data-tab="duas">الأدعية</button>
-      <button class="tab" data-tab="surah">السور</button>
-      <button class="tab" data-tab="juz">الأجزاء</button>
-      <button class="tab" data-tab="page">الصفحات</button>
+      <button class="tab" data-tab="voice">أوامر صوتية</button>
+      <button class="tab" data-tab="recitation">استماع</button>
+      <button class="tab" data-tab="duas">دعاء</button>
+      <button class="tab" data-tab="surah">سورة</button>
+      <button class="tab" data-tab="juz">جزء</button>
+      <button class="tab" data-tab="page">صفحة</button>
       <button class="tab" data-tab="font">التخطيط</button>
       <button class="tab" data-tab="pagebg">خلفية النص</button>
       <button class="tab" data-tab="fadl">فضل القرآن<br>وآداب التلاوة</button>
       <button class="tab" data-tab="tajweed">مختصر<br>أحكام التجويد</button>
-      <button class="tab" data-tab="bookmarks">المرجعيات</button>
+      <button class="tab" data-tab="bookmarks">محفوظات</button>
       <button class="tab" data-tab="hijri">تعديل<br>هجري</button>
       <button class="tab" data-tab="stats">إحصائيات<br>قرآنية</button>
       <button class="tab" data-tab="guide">دليل القارئ</button>
@@ -31274,7 +31310,7 @@ function renderSelPart(host, mode) {
     saveReciteBookmarks();
     selListNames[mode] = '';
     renderSelPart(host, mode);
-    toast('✓ حُفظت في المرجعيات باسم «' + name + '»');
+    toast('✓ حُفظت في المحفوظات باسم «' + name + '»');
   });
   host.querySelector('[data-act="play"]').addEventListener('click', () => {
     const q = buildContListQueue(list);
@@ -32965,6 +33001,527 @@ function setSegStop(on, quiet) {
   if (!quiet) toast(segStopOn ? 'التوقف مفعّل' : 'عدم التوقف', true);
 }
 document.getElementById('segStopBtn').addEventListener('click', () => setSegStop(!segStopOn));
+
+// ---------------- أوامر صوتية (voice commands) ----------------
+// A long press on the middle button of the bottom bar (التوقف in the free
+// layout, the auto-scroll arrow in the page layout) - or the button in the
+// «أوامر صوتية» tab - listens for one short spoken command and carries it
+// out: استماع [سورة] [قارئ] / سورة … [آية …] / جزء … / صفحة … / بحث … /
+// إيقاف / دعاء / محفوظات. The phone's own speech service (Chrome's Web
+// Speech API) turns the speech into text, so it needs the internet.
+const MIC_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.5" width="6" height="12" rx="3" fill="currentColor"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21.5M8.5 21.5h7"/></svg>';
+const VOICE_SILENCE_MS = 1800;   // this long without new words = the command is complete
+const VOICE_MAX_WAIT_MS = 9000;  // nothing heard at all by then: give up
+let voiceDefaultSurah = parseInt(store.get('voice-surah') || '0', 10) || 0; // 0 = the surah on screen
+
+function voiceNorm(t) {
+  return String(t || '')
+    .replace(/[ً-ٰٟۖ-ۭـ]/g, '')
+    .replace(/[أإآٱ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/ؤ/g, 'و').replace(/ئ/g, 'ي')
+    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06F0))
+    .replace(/[.,،؟?!:;«»"'()\-]/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+}
+// ---- numbers spoken as words (or digits): «خمسة وعشرين», «الثلاثون», «مئتين وخمسين», «٢٥٠» ----
+const VOICE_NUM_WORDS = (() => {
+  const m = {};
+  const add = (v, list) => list.split(' ').forEach((w) => { m[voiceNorm(w)] = v; });
+  add(1, 'واحد واحده احد احدي اول اولي حادي');
+  add(2, 'اثنان اثنين اثنتين اثنتان اثنا اثني اثنتا ثاني ثانيه');
+  add(3, 'ثلاث ثلاثه ثالث ثالثه');
+  add(4, 'اربع اربعه رابع رابعه');
+  add(5, 'خمس خمسه خامس خامسه');
+  add(6, 'ست سته سادس سادسه');
+  add(7, 'سبع سبعه سابع سابعه');
+  add(8, 'ثمان ثماني ثمانيه ثامن ثامنه');
+  add(9, 'تسع تسعه تاسع تاسعه');
+  add(10, 'عشر عشره عاشر عاشره');
+  add(20, 'عشرون عشرين');
+  add(30, 'ثلاثون ثلاثين');
+  add(40, 'اربعون اربعين');
+  add(50, 'خمسون خمسين');
+  add(60, 'ستون ستين');
+  add(70, 'سبعون سبعين');
+  add(80, 'ثمانون ثمانين');
+  add(90, 'تسعون تسعين');
+  add(100, 'مائه مئه');
+  add(200, 'مئتان مئتين مائتان مائتين');
+  [3, 4, 5, 6, 7, 8, 9].forEach((u) => {
+    const stems = { 3: 'ثلاث', 4: 'اربع', 5: 'خمس', 6: 'ست', 7: 'سبع', 8: 'ثمان', 9: 'تسع' };
+    m[voiceNorm(stems[u] + 'مائه')] = u * 100; m[voiceNorm(stems[u] + 'مئه')] = u * 100;
+  });
+  return m;
+})();
+function voiceNumWord(tok) {
+  if (/^\d+$/.test(tok)) return { v: parseInt(tok, 10), digits: true };
+  let t = tok;
+  if (VOICE_NUM_WORDS[t] != null) return { v: VOICE_NUM_WORDS[t] };
+  if (t.startsWith('و') && VOICE_NUM_WORDS[t.slice(1)] != null) t = t.slice(1);
+  if (t.startsWith('ال') && VOICE_NUM_WORDS[t.slice(2)] != null) t = t.slice(2);
+  if (t.startsWith('وال') && VOICE_NUM_WORDS[t.slice(3)] != null) t = t.slice(3);
+  return VOICE_NUM_WORDS[t] != null ? { v: VOICE_NUM_WORDS[t] } : null;
+}
+// reads a number from the start of toks; returns {v, used} or null
+function voiceParseNumber(toks) {
+  let total = 0, used = 0, lastUnit = 0;
+  for (let i = 0; i < toks.length; i++) {
+    const t = toks[i];
+    if (t === 'و' && used) { used++; continue; }
+    const w = voiceNumWord(t);
+    if (!w) break;
+    if (w.digits) { if (used) break; return { v: w.v, used: 1 }; }
+    if (w.v === 100 && lastUnit && lastUnit < 10) { total += lastUnit * 99; lastUnit = 0; }
+    else { total += w.v; lastUnit = w.v < 10 ? w.v : 0; }
+    used = i + 1;
+  }
+  return used ? { v: total, used } : null;
+}
+function voiceLev(a, b) {
+  if (Math.abs(a.length - b.length) > 2) return 9;
+  const d = [];
+  for (let i = 0; i <= a.length; i++) d[i] = [i];
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) {
+    d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  }
+  return d[a.length][b.length];
+}
+// ---- surah names (and the names they are also known by) ----
+const VOICE_SURAH_ALIASES = {
+  1: ['الحمد', 'ام الكتاب'], 9: ['براءه', 'برائه'], 17: ['بني اسرائيل'], 20: ['طاها', 'طا ها'],
+  36: ['ياسين', 'يا سين', 'يسن'], 38: ['صاد'], 40: ['المومن'], 41: ['حم السجده'], 50: ['قاف'],
+  67: ['تبارك'], 68: ['نون', 'ن والقلم'], 76: ['الدهر', 'هل اتي'], 78: ['عم', 'عم يتساءلون', 'عم يتسالون'],
+  111: ['تبت', 'اللهب'], 112: ['التوحيد', 'قل هو الله احد'],
+};
+let VOICE_SURAH_FORMS = null; // [{s, f}] normalized forms
+function voiceSurahForms() {
+  if (VOICE_SURAH_FORMS) return VOICE_SURAH_FORMS;
+  const out = [];
+  for (let s = 1; s <= 114; s++) {
+    const n = voiceNorm(SURAH_NAMES[s]);
+    out.push({ s, f: n });
+    if (n.startsWith('ال')) out.push({ s, f: n.slice(2) });
+    (VOICE_SURAH_ALIASES[s] || []).forEach((a) => out.push({ s, f: voiceNorm(a) }));
+  }
+  VOICE_SURAH_FORMS = out;
+  return out;
+}
+// finds a surah name inside toks; returns {s, i, used} (exact first, then near spellings)
+function voiceFindSurah(toks) {
+  const forms = voiceSurahForms();
+  for (let k = 3; k >= 1; k--) {
+    for (let i = 0; i + k <= toks.length; i++) {
+      const ph = toks.slice(i, i + k).join(' ');
+      const hit = forms.find((x) => x.f === ph);
+      if (hit) return { s: hit.s, i, used: k };
+    }
+  }
+  let best = null;
+  for (let k = 2; k >= 1; k--) {
+    for (let i = 0; i + k <= toks.length; i++) {
+      const ph = toks.slice(i, i + k).join(' ');
+      if (ph.length < 4) continue;
+      forms.forEach((x) => {
+        if (x.f.length < 4) return;
+        const d = voiceLev(ph, x.f);
+        const lim = x.f.length >= 7 ? 2 : 1;
+        if (d <= lim && (!best || d < best.d)) best = { s: x.s, i, used: k, d };
+      });
+    }
+    if (best) return best;
+  }
+  return null;
+}
+// ---- reciters: full name, family name or best-known name ----
+const VOICE_RECITER_STOP = new Set(['محمد', 'عبد', 'بن', 'ابن', 'علي', 'احمد', 'الرحمن', 'الله', 'الشيخ', 'سعود']);
+function voiceReciterKeys() {
+  const keys = [];
+  Object.keys(RECITERS).forEach((id) => {
+    const r = RECITERS[id];
+    if (!r || !r.name) return;
+    const n = voiceNorm(r.name);
+    const w = n.split(' ');
+    keys.push({ id, k: n });
+    for (let i = 0; i + 1 < w.length; i++) keys.push({ id, k: w[i] + ' ' + w[i + 1] });
+    w.forEach((t) => {
+      if (t.length < 3 || VOICE_RECITER_STOP.has(t)) return;
+      keys.push({ id, k: t });
+      if (t.startsWith('ال') && t.length > 4) keys.push({ id, k: t.slice(2) });
+    });
+  });
+  // a few names they are known by
+  const alias = { alafasy: ['مشاري', 'العفاسي'], husary: ['الحصري'], minshawi: ['المنشاوي'], abdulbasit: ['عبد الباسط', 'عبدالباسط'], shuraym: ['الشريم', 'سعود الشريم'], sudais: ['السديس'] };
+  Object.keys(alias).forEach((id) => { if (RECITERS[id]) alias[id].forEach((k) => keys.push({ id, k: voiceNorm(k) })); });
+  return keys;
+}
+function voiceTokVariants(t) {
+  const v = [t];
+  if (t.startsWith('لل') && t.length > 4) v.push('ال' + t.slice(2));
+  if (t.startsWith('ل') && t.length > 4) v.push(t.slice(1));
+  if (t.startsWith('ب') && t.length > 4) v.push(t.slice(1));
+  return v;
+}
+function voiceFindReciter(toks) {
+  const keys = voiceReciterKeys();
+  for (let k = 3; k >= 1; k--) {
+    for (let i = 0; i + k <= toks.length; i++) {
+      const first = voiceTokVariants(toks[i]);
+      for (const f of first) {
+        const ph = [f].concat(toks.slice(i + 1, i + k)).join(' ');
+        // the longest names first, so «عبد الباسط» beats a lone word
+        const hit = keys.find((x) => x.k === ph);
+        if (hit) return { id: hit.id, i, used: k };
+      }
+    }
+  }
+  let best = null;
+  toks.forEach((t, i) => {
+    voiceTokVariants(t).forEach((f) => {
+      if (f.length < 5) return;
+      keys.forEach((x) => {
+        if (x.k.indexOf(' ') !== -1 || x.k.length < 5) return;
+        const d = voiceLev(f, x.k);
+        if (d <= 1 && (!best || d < best.d)) best = { id: x.id, i, used: 1, d };
+      });
+    });
+  });
+  return best;
+}
+const VOICE_FILLER = new Set(['الشيخ', 'للشيخ', 'القارئ', 'للقارئ', 'بصوت', 'صوت', 'مع', 'من', 'الى', 'في', 'على', 'يا', 'لو', 'سمحت']);
+const VOICE_KW = {
+  listen: ['استماع', 'الاستماع', 'استمع', 'اسمع', 'اسمعني', 'تلاوه', 'شغل', 'اقرا'],
+  surah: ['سوره', 'السوره', 'سورت'],
+  ayah: ['ايه', 'الايه', 'ايات', 'ايت'],
+  juz: ['جزء', 'الجزء', 'جز', 'جزو', 'الجزو'],
+  page: ['صفحه', 'الصفحه', 'صفحات'],
+  search: ['بحث', 'ابحث', 'البحث', 'ابحثي'],
+  stop: ['ايقاف', 'توقف', 'اوقف', 'قف', 'اسكت', 'وقف'],
+  duas: ['دعاء', 'ادعيه', 'الادعيه', 'الدعاء'],
+  saved: ['محفوظات', 'المحفوظات', 'المحفوظه'],
+  space: ['مسافه', 'فراغ'],
+};
+const VOICE_LEAD = new Set(['افتح', 'اعرض', 'اذهب', 'انتقل', 'روح', 'اظهر', 'الى', 'ل']);
+function voiceKw(t, kind) { return VOICE_KW[kind].indexOf(t) !== -1; }
+const VOICE_JUZ_NAMES = { 'عم': 30, 'تبارك': 29, 'قد سمع': 28, 'قدسمع': 28 };
+
+// Turns the spoken text into an action: {run(), label} or {error}
+function voiceParse(raw) {
+  let toks = voiceNorm(raw).split(' ').filter(Boolean);
+  while (toks.length && VOICE_LEAD.has(toks[0])) toks.shift();
+  while (toks.length > 1 && toks[1] === toks[0]) toks.shift(); // «صفحة صفحة ٣٠٠»
+  if (!toks.length) return { error: 'لم أسمع أمراً' };
+  const head = toks[0];
+  const rest = toks.slice(1);
+
+  // بحث [مسافة] … [مسافة]
+  if (voiceKw(head, 'search')) {
+    const original = String(raw).trim().split(/\s+/);
+    let words = original.slice(1);
+    const lead = words.length && voiceKw(voiceNorm(words[0]), 'space');
+    if (lead) words = words.slice(1);
+    const trail = words.length && voiceKw(voiceNorm(words[words.length - 1]), 'space');
+    if (trail) words = words.slice(0, -1);
+    const q = words.join(' ').trim();
+    if (!q) return { error: 'قل «بحث» ثم الكلمة أو العبارة' };
+    const query = (lead ? ' ' : '') + q + (trail ? ' ' : '');
+    return { label: 'بحث: ' + q, run: () => voiceRunSearch(query) };
+  }
+  // استماع [سورة …] [قارئ]
+  if (voiceKw(head, 'listen')) {
+    let r = rest.filter((t) => !VOICE_FILLER.has(t));
+    const rec = voiceFindReciter(r.filter((t) => !voiceKw(t, 'surah')));
+    if (rec) {
+      const rr = r.filter((t) => !voiceKw(t, 'surah'));
+      const removed = rr.slice(rec.i, rec.i + rec.used);
+      r = r.filter((t) => removed.indexOf(t) === -1);
+    }
+    let sid = 0;
+    const sToks = r.filter((t) => !voiceKw(t, 'surah'));
+    if (sToks.length) {
+      const sf = voiceFindSurah(sToks);
+      if (sf) sid = sf.s;
+      else {
+        const num = voiceParseNumber(sToks);
+        if (num && num.v >= 1 && num.v <= 114 && num.used === sToks.length) sid = num.v;
+        else return { error: 'لم أعرف السورة أو القارئ: ' + sToks.join(' ') };
+      }
+    }
+    if (!sid) sid = voiceDefaultSurah || (sidebarCurrent && sidebarCurrent.s) || surahAtPage(pageNum) || 1;
+    const rid = rec ? rec.id : currentReciter;
+    const rName = RECITERS[rid] ? RECITERS[rid].name : '';
+    return { label: 'استماع: سورة ' + SURAH_NAMES[sid] + (rName ? ' - ' + rName : ''), run: () => voiceRunListen(sid, rec ? rec.id : null) };
+  }
+  // سورة … [آية …]
+  if (voiceKw(head, 'surah')) {
+    const ai = rest.findIndex((t) => voiceKw(t, 'ayah'));
+    const sToks = ai === -1 ? rest : rest.slice(0, ai);
+    let sid = 0;
+    const sf = sToks.length ? voiceFindSurah(sToks) : null;
+    if (sf) sid = sf.s;
+    else {
+      const num = voiceParseNumber(sToks);
+      if (num && num.v >= 1 && num.v <= 114) sid = num.v;
+    }
+    if (!sid) return { error: 'لم أعرف السورة: ' + (sToks.join(' ') || '-') };
+    if (ai !== -1) {
+      const num = voiceParseNumber(rest.slice(ai + 1));
+      const max = SURAH_AYAH_COUNT[sid] || 0;
+      if (!num || num.v < 1) return { error: 'قل رقم الآية بعد كلمة «آية»' };
+      if (num.v > max) return { error: 'سورة ' + SURAH_NAMES[sid] + ' آياتها ' + toArabicDigits(max) + ' فقط' };
+      return { label: 'سورة ' + SURAH_NAMES[sid] + '، آية ' + toArabicDigits(num.v), run: () => goToAyahRef(sid, num.v) };
+    }
+    return { label: 'سورة ' + SURAH_NAMES[sid], run: () => { closeSidebar(); goToSurahStart(sid); } };
+  }
+  // آية … (in the surah on screen)
+  if (voiceKw(head, 'ayah')) {
+    const sid = (sidebarCurrent && sidebarCurrent.s) || surahAtPage(pageNum);
+    const num = voiceParseNumber(rest);
+    if (!sid || !num) return { error: 'قل: سورة … آية …' };
+    if (num.v < 1 || num.v > (SURAH_AYAH_COUNT[sid] || 0)) return { error: 'لا توجد آية ' + toArabicDigits(num.v) + ' في سورة ' + SURAH_NAMES[sid] };
+    return { label: 'سورة ' + SURAH_NAMES[sid] + '، آية ' + toArabicDigits(num.v), run: () => goToAyahRef(sid, num.v) };
+  }
+  // جزء …
+  if (voiceKw(head, 'juz')) {
+    let j = 0;
+    const named = VOICE_JUZ_NAMES[rest.slice(0, 2).join(' ')] || VOICE_JUZ_NAMES[rest[0]];
+    if (named) j = named;
+    else { const num = voiceParseNumber(rest); if (num) j = num.v; }
+    if (!j || j < 1 || j > 30) return { error: 'قل رقم الجزء من ١ إلى ٣٠' };
+    return { label: 'الجزء ' + toArabicDigits(j), run: () => voiceRunJuz(j) };
+  }
+  // صفحة …
+  if (voiceKw(head, 'page')) {
+    const num = voiceParseNumber(rest);
+    if (!num || num.v < 1 || num.v > 604) return { error: 'قل رقم الصفحة من ١ إلى ٦٠٤' };
+    return { label: 'صفحة ' + toArabicDigits(num.v), run: () => { closeSidebar(); centerOn(num.v); } };
+  }
+  if (voiceKw(head, 'stop')) return { label: 'إيقاف', run: voiceRunStop };
+  if (voiceKw(head, 'duas')) return { label: 'دعاء', run: () => openSidebar('duas') };
+  if (voiceKw(head, 'saved')) return { label: 'محفوظات', run: () => openSidebar('bookmarks') };
+  // a surah name on its own («الكهف») shows that surah
+  const lone = voiceFindSurah(toks);
+  if (lone && lone.used === toks.length) return { label: 'سورة ' + SURAH_NAMES[lone.s], run: () => { closeSidebar(); goToSurahStart(lone.s); } };
+  return { error: 'لم أفهم الأمر: ' + raw };
+}
+function voiceRunListen(sid, reciterId) {
+  if (reciterId && RECITERS[reciterId]) {
+    if (activeReciterIds.indexOf(reciterId) === -1) { activeReciterIds.push(reciterId); saveActiveReciterIds(); }
+    setCurrentReciter(reciterId);
+  }
+  closeSidebar();
+  goToSurahStart(sid);
+  openSurahReciteBar(sid);
+  startOrangePlan({ kind: 'surah', s: sid });
+}
+function voiceRunJuz(j) {
+  segHint = { j }; segStartId = null;
+  centerOn(JUZ_PAGES[j]);
+  setTimeout(() => { segHint = { j }; segStartId = null; segGuard(); }, 120);
+  closeSidebar();
+}
+function voiceRunSearch(query) {
+  closeSidebar();
+  const input = document.getElementById('headerSearch');
+  input.value = query;
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+}
+function voiceRunStop() {
+  if (reciting) { stopRecitation(); return; }
+  if (scrollEnabled()) { if (layoutMode === 'free') { freeTapPaused = false; pauseFreeAutoScroll(); } else if (autoPlaying) playPauseBtn.click(); }
+}
+
+// ---- the listening itself, and the microphone shown above the bar ----
+let voiceRec = null, voiceSession = 0;
+function voiceOverlayEl() {
+  let el = document.getElementById('voiceOverlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'voiceOverlay';
+    el.innerHTML = '<div id="voiceBubble"></div><div id="voiceMic" role="button" aria-label="إلغاء الأمر الصوتي">' + MIC_SVG + '</div>';
+    el.addEventListener('click', (e) => { e.stopPropagation(); voiceCancel(); });
+  }
+  const bar = layoutMode === 'free' ? document.getElementById('freeAutoFab') : document.getElementById('autoFab');
+  if (bar && el.parentElement !== bar) bar.appendChild(el);
+  // above the listening bar too, when it's showing
+  el.style.marginBottom = ((typeof reciteBarShowing === 'function' && reciteBarShowing()) ? (reciteModeBarEl.offsetHeight + 10) : 10) + 'px';
+  return el;
+}
+function voiceShow(text, opts) {
+  const el = voiceOverlayEl();
+  const b = el.querySelector('#voiceBubble');
+  b.classList.toggle('err', !!(opts && opts.err));
+  b.innerHTML = text + (opts && opts.hint ? '<span class="vb-hint">' + opts.hint + '</span>' : '');
+  el.querySelector('#voiceMic').classList.toggle('listening', !!(opts && opts.listening));
+  el.classList.add('show');
+}
+function voiceHide(delay) {
+  const sess = voiceSession;
+  setTimeout(() => {
+    if (sess !== voiceSession) return;
+    const el = document.getElementById('voiceOverlay');
+    if (el) el.classList.remove('show');
+  }, delay || 0);
+}
+function voiceCancel() {
+  voiceSession++;
+  if (voiceRec) { try { voiceRec.abort(); } catch (e) { /* ignore */ } voiceRec = null; }
+  const el = document.getElementById('voiceOverlay');
+  if (el) el.classList.remove('show');
+}
+function startVoiceCommand() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (voiceRec) { voiceCancel(); return; }
+  const sess = ++voiceSession;
+  if (!SR) { voiceShow('الأوامر الصوتية غير متاحة في هذا المتصفح', { err: true }); voiceHide(3500); return; }
+  if (navigator.onLine === false) { voiceShow('الأوامر الصوتية تحتاج إلى اتصال بالإنترنت', { err: true }); voiceHide(3500); return; }
+  try { if (navigator.vibrate) navigator.vibrate(35); } catch (e) { /* ignore */ }
+  const rec = new SR();
+  voiceRec = rec;
+  rec.lang = 'ar-SA';
+  rec.continuous = true;
+  rec.interimResults = true;
+  rec.maxAlternatives = 3;
+  let finals = [[]];   // alternatives of the final text so far
+  let interim = '';
+  let silenceT = null, done = false;
+  const maxT = setTimeout(() => { if (!finals[0].length && !interim) finish(); }, VOICE_MAX_WAIT_MS);
+  const texts = () => {
+    const base = finals[0].join(' ');
+    return [((base + ' ' + interim).trim())];
+  };
+  function finish() {
+    if (done || sess !== voiceSession) return;
+    done = true;
+    clearTimeout(silenceT); clearTimeout(maxT);
+    try { rec.stop(); } catch (e) { /* ignore */ }
+    voiceRec = null;
+    // the best text first, then the recognizer's other guesses
+    const cands = [];
+    const main = texts()[0];
+    if (main) cands.push(main);
+    if (finals.alts) finals.alts.forEach((a) => { if (a && cands.indexOf(a) === -1) cands.push(a); });
+    if (!cands.length) { voiceShow('لم أسمع شيئاً', { err: true, hint: 'اضغط مطوّلاً وتكلّم مرة أخرى' }); voiceHide(3000); return; }
+    let act = null, firstErr = null;
+    for (const c of cands) { const r = voiceParse(c); if (!r.error) { act = r; break; } if (!firstErr) firstErr = r.error; }
+    if (!act) { voiceShow(firstErr, { err: true }); voiceHide(4000); return; }
+    voiceShow('✓ ' + act.label);
+    voiceHide(1800);
+    try { act.run(); } catch (e) { voiceShow('تعذّر تنفيذ الأمر', { err: true }); voiceHide(3000); }
+  }
+  rec.onresult = (ev) => {
+    if (sess !== voiceSession) return;
+    interim = '';
+    const fin = [];
+    const alts = [];
+    for (let i = 0; i < ev.results.length; i++) {
+      const res = ev.results[i];
+      if (res.isFinal) {
+        // some phones repeat the earlier words in each new piece
+        // («سورة» then «سورة الملك»): keep the longer one only
+        const tx = res[0].transcript.trim();
+        const last = fin.length ? fin[fin.length - 1] : null;
+        if (last && tx.startsWith(last)) fin[fin.length - 1] = tx;
+        else if (last && last.startsWith(tx)) { /* already there */ }
+        else fin.push(tx);
+        for (let a = 1; a < res.length; a++) alts.push(res[a].transcript.trim());
+      } else interim += res[0].transcript;
+    }
+    finals = [fin];
+    // other guesses for a one-piece command (the usual case)
+    finals.alts = fin.length === 1 ? alts : [];
+    interim = interim.trim();
+    voiceShow(texts()[0] || '…', { listening: true });
+    clearTimeout(silenceT);
+    silenceT = setTimeout(finish, VOICE_SILENCE_MS);
+  };
+  rec.onerror = (ev) => {
+    if (sess !== voiceSession || done) return;
+    if (ev.error === 'no-speech' || ev.error === 'aborted') return; // onend follows
+    done = true; voiceRec = null;
+    clearTimeout(silenceT); clearTimeout(maxT);
+    const msg = ev.error === 'not-allowed' || ev.error === 'service-not-allowed'
+      ? 'اسمح للتطبيق باستعمال الميكروفون' : ev.error === 'network'
+      ? 'الأوامر الصوتية تحتاج إلى اتصال بالإنترنت' : 'تعذّر الاستماع (' + ev.error + ')';
+    voiceShow(msg, { err: true }); voiceHide(4000);
+  };
+  rec.onend = () => { if (sess === voiceSession && !done) finish(); };
+  voiceShow('تكلّم الآن…', { listening: true, hint: 'مثل: سورة الملك، جزء عشرة، استماع سورة يس' });
+  try { rec.start(); } catch (e) { voiceRec = null; voiceShow('تعذّر بدء الاستماع', { err: true }); voiceHide(3000); }
+}
+// A long press (no click after it) starts a voice command; a normal tap
+// keeps doing what the button always did.
+function attachVoiceLongPress(el) {
+  if (!el) return;
+  let t = null, sx = 0, sy = 0;
+  const clear = () => { if (t) { clearTimeout(t); t = null; } };
+  el.addEventListener('pointerdown', (e) => {
+    el._voiceFired = false; sx = e.clientX; sy = e.clientY; clear();
+    t = setTimeout(() => { t = null; el._voiceFired = true; startVoiceCommand(); }, 550);
+  });
+  el.addEventListener('pointermove', (e) => { if (t && Math.hypot(e.clientX - sx, e.clientY - sy) > 12) clear(); });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach((n) => el.addEventListener(n, clear));
+  el.addEventListener('contextmenu', (e) => e.preventDefault());
+  el.addEventListener('click', (e) => {
+    if (el._voiceFired) { el._voiceFired = false; e.preventDefault(); e.stopImmediatePropagation(); }
+  }, true);
+}
+attachVoiceLongPress(document.getElementById('segStopBtn'));
+attachVoiceLongPress(document.querySelector('#autoFab .fab-arrow-col'));
+
+// ---- the «أوامر صوتية» tab ----
+function renderVoiceTab() {
+  sidebarBody.innerHTML = '';
+  const start = document.createElement('button');
+  start.className = 'voice-start-btn';
+  start.innerHTML = MIC_SVG + '<span>ابدأ أمراً صوتياً</span>';
+  start.addEventListener('click', () => { closeSidebar(); setTimeout(startVoiceCommand, 250); });
+  sidebarBody.appendChild(start);
+
+  const intro = document.createElement('div');
+  intro.className = 'strong-note';
+  intro.style.cssText = 'font-family:sans-serif;font-size:16.5px;font-weight:700;padding:2px 4px 10px;line-height:1.7;';
+  intro.textContent = 'اضغط مطوّلاً على الزر الذي في وسط الشريط السفلي (زر التوقف، أو سهم التمرير في عرض الصفحات)، فيظهر الميكروفون فوقه. قل الأمر، ثم اسكت قليلاً، فيُنفَّذ. يحتاج إلى اتصال بالإنترنت، ويطلب الهاتف إذن الميكروفون أول مرة.';
+  sidebarBody.appendChild(intro);
+
+  // the preset surah for «استماع» (the reciter is the one chosen in «استماع»)
+  const pre = document.createElement('div');
+  pre.style.cssText = 'font-family:sans-serif;font-size:16px;font-weight:700;padding:4px;margin-bottom:10px;line-height:1.8;';
+  const rName = RECITERS[currentReciter] ? RECITERS[currentReciter].name : '';
+  let opts = '<option value="0">السورة المعروضة</option>';
+  for (let s = 1; s <= 114; s++) opts += '<option value="' + s + '"' + (s === voiceDefaultSurah ? ' selected' : '') + '>' + toArabicDigits(s) + ' - ' + SURAH_NAMES[s] + '</option>';
+  pre.innerHTML = '<div>السورة المحددة مسبقاً للأمر «استماع»:</div>' +
+    '<select id="voiceSurahSel" style="width:100%;box-sizing:border-box;font-family:sans-serif;font-size:16px;font-weight:700;padding:7px;border:1.5px solid #C9B98A;border-radius:10px;direction:rtl;margin:4px 0 8px;">' + opts + '</select>' +
+    '<div>القارئ المحدد مسبقاً: <span style="color:#7B2E2E;">' + (rName || '-') + '</span><br><span style="font-size:14.5px;">(يُغيَّر من عنوان «استماع»)</span></div>';
+  sidebarBody.appendChild(pre);
+  pre.querySelector('#voiceSurahSel').addEventListener('change', (e) => {
+    voiceDefaultSurah = parseInt(e.target.value, 10) || 0;
+    store.set('voice-surah', String(voiceDefaultSurah));
+  });
+
+  const L = [
+    ['استماع', 'تلاوة السورة المحددة مسبقاً بالقارئ المحدد مسبقاً.', 'استماع'],
+    ['استماع + سورة', 'تلاوة السورة التي تذكرها بالقارئ المحدد مسبقاً.', 'استماع سورة الملك، استماع الكهف'],
+    ['استماع + قارئ', 'تلاوة السورة المحددة مسبقاً بالقارئ الذي تذكره، باسمه الكامل أو المشهور.', 'استماع المنشاوي، استماع عبد الباسط'],
+    ['استماع + سورة + قارئ', 'تلاوة السورة والقارئ اللذين تذكرهما.', 'استماع سورة يس الحصري'],
+    ['سورة …', 'بداية السورة.', 'سورة البقرة'],
+    ['سورة … آية …', 'الآية من السورة.', 'سورة البقرة آية مئتين وخمسة وخمسين'],
+    ['آية …', 'الآية من السورة المعروضة.', 'آية عشرين'],
+    ['جزء …', 'بداية الجزء.', 'جزء عشرة، الجزء الثلاثون، جزء عم'],
+    ['صفحة …', 'الصفحة.', 'صفحة ثلاثمئة'],
+    ['بحث + كلمة أو عبارة', 'قائمة نتائج البحث في نص القرآن.', 'بحث الصابرين'],
+    ['بحث + مسافة + كلمة', 'البحث عن الكلمة غير متصلة بما قبلها (كأنك كتبت مسافة قبلها). وقل «مسافة» بعد الكلمة لتكون غير متصلة بما بعدها.', 'بحث مسافة رب'],
+    ['إيقاف', 'إيقاف التلاوة، أو التمرير.', 'إيقاف'],
+    ['دعاء', 'قائمة الأدعية.', 'دعاء'],
+    ['محفوظات', 'قائمة المحفوظات.', 'محفوظات'],
+  ];
+  const list = document.createElement('div');
+  list.className = 'voice-cmd-list';
+  list.innerHTML = '<div class="strong-note" style="font-weight:700;font-size:17px;padding:4px 0;">الأوامر:</div>' +
+    L.map((x) => '<div class="vc"><b>' + x[0] + '</b>: ' + x[1] + '<span class="ex">مثال: «' + x[2] + '»</span></div>').join('') +
+    '<div class="vc" style="border:none;font-size:15px;">الأرقام تُقال كلمات أو أرقاماً. وتكفي أسماء السور المشهورة (يس، طه، تبارك، عم…). والضغط على الميكروفون يلغي الأمر.</div>';
+  sidebarBody.appendChild(list);
+}
 setTimeout(() => setSegStop(segStopOn, true), 0);
 function segGuard() {
   if (layoutMode !== 'free' || !segStopOn) {
@@ -34482,6 +35039,7 @@ function renderTabContent() {
   else if (currentTab === 'font') renderFontTab();
   else if (currentTab === 'pagebg') renderPageBgTab();
   else if (currentTab === 'recitation') renderRecitationTab();
+  else if (currentTab === 'voice') renderVoiceTab();
   else if (currentTab === 'duas') renderDuasTab();
   else if (currentTab === 'hijri') renderHijriAdjustTab();
   else if (currentTab === 'fadl') renderFadlTab();
@@ -34564,6 +35122,7 @@ function renderGuideTab() {
       '<b>التوقف عند آخر السورة والجزء</b> (في الوضع الحر): يتوقف التمرير عند آخر السورة أو الجزء، وتظهر فوق الشريط السفلي ثلاثة أزرار: آخر السورة أو الجزء في الوسط، والسابق على اليمين، والتالي على اليسار. وسحبة خفيفة إلى أعلى تُكمل القراءة. ويُفعَّل هذا أو يُلغى بزر (' + badge(document.getElementById('segStopBtn').innerHTML) + ') في الشريط السفلي، أو من عنوان <b>التخطيط</b>.',
     ]},
     { title: '٤. شريط الأدوات السفلي', items: [
+      '<b>الأوامر الصوتية</b>: اضغط مطوّلاً على الزر الذي في وسط الشريط (زر التوقف، أو سهم التمرير في عرض الصفحات)، فيظهر الميكروفون، ثم قل الأمر واسكت قليلاً. والأوامر وشرحها في عنوان «أوامر صوتية».',
       'تكبير الخط وتصغيره (' + roundBadge('A', 19) + ' / ' + roundBadge('A', 12) + ').',
       '<b>التمرير التلقائي</b> (' + badge(PLAY_ARROW_SVG) + ' / ' + badge(PAUSE_SVG) + ') مع زري الإبطاء (' + roundBadge('−', 18) + ') والتسريع (' + roundBadge('+', 18) + '). النقر على النص يوقف الحركة، والنقر مرة أخرى يعيدها، والسحب بالإصبع يحرّك الصفحة يدوياً. ولا يُلغى التفعيل إلا بزره، أو بالرجوع مرتين (الأولى توقف الحركة، والثانية تلغي التفعيل).',
       '<b>تبديل الاتجاه</b> (' + badge(document.getElementById('rotateBtn').innerHTML) + '): النقرة الأولى للاتجاه الأفقي، والثانية للعودة إلى العمودي. والتنقّل بين الجهتين الأفقيتين بتدوير الجهاز.',
@@ -34577,7 +35136,7 @@ function renderGuideTab() {
       '<b>الاستماع</b>: اختيار القارئ وتنزيل تلاوته، و«سور وآيات مختارة» للاستماع أو للقراءة (الفقرة ٧).',
       '<b>الأدعية</b>: أدعية مأثورة خاصة بالتلاوة، منها ما يقال في سجود التلاوة.',
       '<b>السور</b> و<b>الأجزاء</b> و<b>الصفحات</b>: للانتقال المباشر، وفي أعلى قائمة السور حقل للبحث باسم السورة أو ترتيبها.',
-      '<b>المرجعيات</b>: الصفحات والآيات المحفوظة، و«سور وآيات مختارة» المحفوظة (للاستماع ▶ أو للقراءة 📖)، وتُفتح بالنقر عليها.',
+      '<b>المحفوظات</b>: الصفحات والآيات المحفوظة، و«سور وآيات مختارة» المحفوظة (للاستماع ▶ أو للقراءة 📖)، وتُفتح بالنقر عليها.',
       '<b>تعديل هجري</b>: تقديم التاريخ الهجري أو تأخيره يوماً أو يومين.',
       '<b>إحصائيات قرآنية</b>: أعداد ولطائف وترتيب النزول وغيرها، والإشارات إلى الآيات فيها تنقل إليها بالنقر.',
     ]},
@@ -34585,7 +35144,7 @@ function renderGuideTab() {
       'تُفتح بالنقر على أي كلمة من الآية أو على رقمها (عدا الكلمات الخضراء)، وتُغلق بالنقر على النص أو بالرجوع.',
       '<b>استماع</b>: يُظهر شريط استماع الآية (الفقرة ٧) لتبدأ التلاوة من هذه الآية.',
       '<b>نسخ الآية</b>: تُنسخ بصيغة [نص الآية رقمها] اسم السورة.',
-      '<b>حفظ الآية</b>: تُحفظ في المرجعيات.',
+      '<b>حفظ الآية</b>: تُحفظ في المحفوظات.',
       '<b>تفسير القرآن</b> و<b>اللغة</b> و<b>الإعراب</b>: تفتح صفحة الشرح على الآية نفسها (الفقرة ٨).',
     ]},
     { title: '٧. الاستماع إلى التلاوة', items: [
@@ -34600,7 +35159,7 @@ function renderGuideTab() {
       'ولكل سورة ولآياتها عدد مرات <b>تكرار</b> (يتفعّل بوضع العلامة في المربع).',
       '١- <b>للاستماع</b>: زر <b>▶ تشغيل</b> يتلوها على شريط استماع السورة، وتُكرَّر بالعدد المختار.',
       '٢- <b>للقراءة</b>: زر <b>قراءة</b> يعرض السور والآيات المختارة تباعاً بالترتيب نفسه، في صفحة مستقلة بتنسيق المصحف (الخط والألوان ومعاني الكلمات وأرقام الآيات) وبلا صوت، ويُكتب تحت اسم السورة عدد مرات قراءتها أو قراءة الآيات إن كان أكثر من مرة. وفي أعلاها زرا تكبير الخط وتصغيره وزر الإغلاق (✕).',
-      'وفي القسمين زر <b>حفظ</b> يحفظ الاختيار في المرجعيات بالاسم الذي تكتبه (أو بأسماء السور إن لم تكتب اسماً)، ويُفتح من هناك بالنقر عليه.',
+      'وفي القسمين زر <b>حفظ</b> يحفظ الاختيار في المحفوظات بالاسم الذي تكتبه (أو بأسماء السور إن لم تكتب اسماً)، ويُفتح من هناك بالنقر عليه.',
     ]},
     { title: '٨. التفسير واللغة والإعراب', items: [
       '<b>تفسير القرآن</b>: تفسير البرهان للسيد هاشم البحراني. و<b>اللغة</b> و<b>الإعراب</b>: من تفسير مجمع البيان للشيخ الطبرسي.',
@@ -36086,7 +36645,7 @@ function renderBookmarksTab() {
     const empty3 = document.createElement('div');
     empty3.className = 'strong-note';
     empty3.style.cssText = 'font-family:sans-serif;font-weight:700;padding:8px 4px 4px;font-size:17px;';
-    empty3.textContent = 'لا توجد سور وآيات محفوظة بعد (تُحفظ من عنوان «الاستماع»).';
+    empty3.textContent = 'لا توجد سور وآيات محفوظة بعد (تُحفظ من عنوان «استماع»).';
     sidebarBody.appendChild(empty3);
   } else {
     reciteBookmarks.forEach((bm) => {
