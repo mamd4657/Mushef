@@ -1197,6 +1197,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
     </div>
     <div class="fab-frame fab-frame-size">
       <button id="freeSizeDownBtn" class="fab-btn fab-btn-round" aria-label="تصغير حجم الخط" title="تصغير حجم الخط"><span style="font-family:sans-serif;font-size:12px;line-height:1;font-weight:700;">A</span></button>
+      <span id="freeSizeNum" class="speed-num" aria-label="حجم الخط"></span>
       <button id="freeSizeUpBtn" class="fab-btn fab-btn-round" aria-label="تكبير حجم الخط" title="تكبير حجم الخط"><span style="font-family:sans-serif;font-size:19px;line-height:1;font-weight:700;">A</span></button>
     </div>
     <div class="fab-frame" id="backFrameFree">
@@ -29011,9 +29012,14 @@ function applyLayoutMode(mode) {
   }
 }
 
+function updateFreeSizeLabel() {
+  const el = document.getElementById('freeSizeNum');
+  if (el) el.textContent = String(Math.round(freeFontPx));
+}
 function setFreeFontPx(px) {
   freeFontPx = Math.max(14, Math.min(48, px));
   store.set('free-font-px', String(freeFontPx));
+  updateFreeSizeLabel();
   if (layoutMode === 'free') {
     const wrap = document.getElementById('freeScrollWrap');
     const container = document.getElementById('freePagesContainer');
@@ -29143,8 +29149,8 @@ function initFreeSwipe() {
 
 // ---------------- free-mode auto-scroll (separate engine from the bound mode's - drives native scrollTop instead of a CSS transform, and auto-advances to the next page on reaching the bottom) ----------------
 let freeAutoScrolling = false;
-let freeSpeedPxPerSec = parseInt(store.get('free-auto-speed-px'), 10) || 40;
-const FREE_MIN_SPEED = 10, FREE_MAX_SPEED = 200, FREE_SPEED_STEP = 5; // finer steps (was 10): in-between speeds
+const FREE_MIN_SPEED = 5, FREE_MAX_SPEED = 100, FREE_SPEED_STEP = 5; // 5, 10, 15 ... 100 (was 10 ... 200)
+let freeSpeedPxPerSec = Math.max(FREE_MIN_SPEED, Math.min(FREE_MAX_SPEED, parseInt(store.get('free-auto-speed-px'), 10) || 40));
 let freeAutoRafId = null;
 let freeAutoLastTs = null;
 let freeAutoLastSet = null;
@@ -29153,9 +29159,11 @@ let freeAutoScrollAccum = null; // see autoScrollAccum above - avoids losing the
 
 // Shared up-pointing triple-chevron arrow icon for the auto-scroll play button (bound and free modes)
 // Drawn, not the ⏸/▶ characters: Samsung phones show those as blue emoji.
-const PAUSE_SVG = '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true" style="display:block;margin:auto"><rect x="5" y="3" width="5" height="18" rx="1.2"/><rect x="14" y="3" width="5" height="18" rx="1.2"/></svg>';
+// Pause (= running/playing) is a glowing blue square, like the blue emoji Samsung
+// used to show - drawn so it looks the same on every phone, iPhone included.
+const PAUSE_SVG = '<svg viewBox="0 0 24 24" width="23" height="23" aria-hidden="true" style="display:block;margin:auto;overflow:visible;filter:drop-shadow(0 0 3px rgba(90,175,255,.95)) drop-shadow(0 0 6px rgba(60,150,255,.6))"><rect x="1" y="1" width="22" height="22" rx="5.5" fill="#2F86E8"/><rect x="1" y="1" width="22" height="11" rx="5.5" fill="#6FB6FF" opacity=".55"/><rect x="7" y="6" width="3.6" height="12" rx="1" fill="#fff"/><rect x="13.4" y="6" width="3.6" height="12" rx="1" fill="#fff"/></svg>';
 const RECITE_PLAY_SVG = '<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true" style="display:block;margin:auto"><path d="M6 3.5v17a1 1 0 0 0 1.5.87l14-8.5a1 1 0 0 0 0-1.74l-14-8.5A1 1 0 0 0 6 3.5z"/></svg>';
-const RECITE_PAUSE_SVG = '<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true" style="display:block;margin:auto"><rect x="5" y="3" width="5" height="18" rx="1.2"/><rect x="14" y="3" width="5" height="18" rx="1.2"/></svg>';
+const RECITE_PAUSE_SVG = '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" style="display:block;margin:auto;overflow:visible;filter:drop-shadow(0 0 3px rgba(90,175,255,.95)) drop-shadow(0 0 6px rgba(60,150,255,.6))"><rect x="1" y="1" width="22" height="22" rx="5.5" fill="#2F86E8"/><rect x="1" y="1" width="22" height="11" rx="5.5" fill="#6FB6FF" opacity=".55"/><rect x="7" y="6" width="3.6" height="12" rx="1" fill="#fff"/><rect x="13.4" y="6" width="3.6" height="12" rx="1" fill="#fff"/></svg>';
 const PLAY_ARROW_SVG = '<svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3,21 12,14 21,21"></polyline><polyline points="3,15 12,8 21,15"></polyline><polyline points="3,9 12,2 21,9"></polyline></svg>';
 
 function freeAutoScrollStep(ts) {
@@ -34826,6 +34834,7 @@ const freeSizeDownBtn = document.getElementById('freeSizeDownBtn');
 const freeSizeUpBtn = document.getElementById('freeSizeUpBtn');
 if (freeSizeDownBtn) freeSizeDownBtn.addEventListener('click', () => setFreeFontPx(freeFontPx - 2));
 if (freeSizeUpBtn) freeSizeUpBtn.addEventListener('click', () => setFreeFontPx(freeFontPx + 2));
+updateFreeSizeLabel();
 
 
 
