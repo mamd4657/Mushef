@@ -579,6 +579,12 @@ body.dark-mode .fbNameGroup{color:#EFE8D6;}
 .fbNums .fbNum-count{text-align:right;}
 .fbNumSep{font-family:sans-serif;margin:0 .05em;}
 .fbNameZone .fbNameText{white-space:nowrap;}
+/* The surah's name in a gold box like the numbers' box beside it (same
+   border, raised look and height), its letters drawn thicker; the box's
+   inner width is reserved for the widest surah name (fitFloatingFrameBar),
+   the name centred in it. The Kaaba / Green Dome mark sits between the two boxes. */
+#floatingFrameBar .fbNameZone{border:var(--fbFrameW) solid var(--fbFrameC);border-radius:7px;box-sizing:border-box;background:var(--fbFrameBg);box-shadow:var(--fbFrameShadow);align-items:center;padding:0 .14em;overflow:visible;}
+#floatingFrameBar .fbNameZone .fbNameText{display:block;text-align:center;line-height:1;font-weight:700;-webkit-text-stroke:.045em currentColor;paint-order:stroke fill;}
 .fbNameGroup .surah-place-icon{vertical-align:middle;line-height:1;display:inline-flex;flex-shrink:0;}
 .fbNameGroup .surah-place-icon img{height:0.95em;width:auto;vertical-align:middle;display:block;}
 body.dark-mode .fbNameGroup .surah-place-icon-kaaba{background:#EFE8D6;border-radius:50%;padding:1.5px;}
@@ -28197,7 +28203,7 @@ function fitFloatingFrameBar(bar, scaleMul, depth) {
   // measurement below starts from the CSS base sizes rather than whatever
   // scale/width the previously-shown page happened to need.
   [fromTo, juz, hizb, rub, nameGroup].forEach((el) => { el.style.fontSize = ''; el.style.fontWeight = ''; });
-  [fromTo, orderNum, countNum, nameZone, juzNum, hizbNum, rubNum].forEach((el) => { if (el) el.style.minWidth = ''; });
+  [fromTo, orderNum, countNum, nameZone, nameText, juzNum, hizbNum, rubNum].forEach((el) => { if (el) el.style.minWidth = ''; });
   bookmarkSlot.style.right = ''; circleSlot.style.left = '';
   // On a narrow screen (a phone set to a larger "display size"/screen zoom
   // reports a much narrower width than its real one) the two round end
@@ -28208,7 +28214,7 @@ function fitFloatingFrameBar(bar, scaleMul, depth) {
   // the ج / ح boxes and the surah numbers' box are exactly as tall as the
   // page-number square, so all four line up at top and bottom
   const boxH = localRect(circleSlot).height;
-  [nameGroup.querySelector('.fbNums')].forEach((el) => { if (el && boxH) el.style.height = boxH + 'px'; });
+  [nameGroup.querySelector('.fbNums'), nameGroup.querySelector('.fbNameZone')].forEach((el) => { if (el && boxH) el.style.height = boxH + 'px'; });
 
   const baseFontPx = {
     fromTo: parseFloat(getComputedStyle(fromTo).fontSize),
@@ -28254,7 +28260,8 @@ function fitFloatingFrameBar(bar, scaleMul, depth) {
   fromTo.style.minWidth = fromToResW + 'px';
   if (orderNum) orderNum.style.minWidth = orderResW + 'px';
   if (countNum) countNum.style.minWidth = countResW + 'px';
-  if (nameZone) nameZone.style.minWidth = nameResW + 'px';
+  if (nameText) nameText.style.minWidth = (nameResW * 1.04 + 2) + 'px';
+  else if (nameZone) nameZone.style.minWidth = nameResW + 'px';
   if (juzNum) juzNum.style.minWidth = juzResW + 'px';
   if (hizbNum) hizbNum.style.minWidth = hizbResW + 'px';
   if (rubNum) rubNum.style.minWidth = rubResW + 'px';
@@ -28275,8 +28282,8 @@ function fitFloatingFrameBar(bar, scaleMul, depth) {
     fromToJuz: 1.2,  // from/to <-> the ج box
     juzRB: 1,        // the ج box <-> right bracket
     rbOrder: 0.6,    // right bracket <-> surah name
-    iconCount: 2.5,  // icon <-> the numbers' box
-    nameIcon: 0.6,   // the widest name's end <-> icon
+    iconCount: 1.2,  // icon <-> the numbers' box
+    nameIcon: 1.2,   // the name's box <-> icon (the same both sides)
     countLB: 0.6,    // the numbers' box <-> left bracket
     lbHizb: 1,       // left bracket <-> the ح box
     hizbRub: 1.2,    // the ح box <-> ر
@@ -28367,7 +28374,8 @@ function fitFloatingFrameBar(bar, scaleMul, depth) {
   fromTo.style.minWidth = (fromToResW * scale) + 'px';
   if (orderNum) orderNum.style.minWidth = (orderResW * scale) + 'px';
   if (countNum) countNum.style.minWidth = (countResW * scale) + 'px';
-  if (nameZone) nameZone.style.minWidth = (nameResW * scale) + 'px';
+  if (nameText) nameText.style.minWidth = ((nameResW * 1.04 + 2) * scale) + 'px';
+  else if (nameZone) nameZone.style.minWidth = (nameResW * scale) + 'px';
   if (juzNum) juzNum.style.minWidth = (juzResW * scale) + 'px';
   if (hizbNum) hizbNum.style.minWidth = (hizbResW * scale) + 'px';
   if (rubNum) rubNum.style.minWidth = (rubResW * scale) + 'px';
