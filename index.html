@@ -600,11 +600,13 @@ body.dark-mode .fbNameGroup{color:#EFE8D6;}
 /* which mushaf is open: a small «عام» / «ختمة» over the name, the name a
    little lower; the khatma's box light green */
 #floatingFrameBar .fbNameZone{position:relative;justify-content:center;}
-#floatingFrameBar .fbNameZone::before{content:'عام';position:absolute;top:.08em;left:0;right:0;text-align:center;font-family:sans-serif;font-size:.5em;font-weight:700;line-height:1;opacity:.9;-webkit-text-stroke:0;pointer-events:none;}
+#floatingFrameBar .fbNameZone::before{content:'عام';position:absolute;top:.1em;left:0;right:0;text-align:center;font-family:sans-serif;font-size:.66em;font-weight:700;line-height:1;opacity:.95;-webkit-text-stroke:0;pointer-events:none;}
 body.mushaf-khatma #floatingFrameBar .fbNameZone::before{content:'ختمة';}
 body.mushaf-khatma #floatingFrameBar .fbNameZone{background:linear-gradient(180deg,#E6F6DF,#BFE4B2);}
 body.dark-mode.mushaf-khatma #floatingFrameBar .fbNameZone{background:linear-gradient(180deg,#4F7F52,#36603B);}
-#floatingFrameBar .fbNameZone .fbNameText{padding-top:.5em;}
+#floatingFrameBar .fbNameZone{cursor:pointer;-webkit-tap-highlight-color:transparent;}
+#floatingFrameBar .fbNameZone:active{opacity:.7;}
+#floatingFrameBar .fbNameZone .fbNameText{padding-top:.62em;font-size:.86em;}
 #floatingFrameBar .fbNameZone .fbNameText{display:block;text-align:center;line-height:1;font-weight:700;-webkit-text-stroke:.045em currentColor;paint-order:stroke fill;}
 .fbNameGroup .surah-place-icon{vertical-align:middle;line-height:1;display:inline-flex;flex-shrink:0;}
 .fbNameGroup .surah-place-icon img{height:0.95em;width:auto;vertical-align:middle;display:block;}
@@ -30279,6 +30281,8 @@ document.getElementById('floatingFrameBar').addEventListener('click', (e) => {
   if (!e.target.closest) return;
   const circle = e.target.closest('.fbCircleSlot');
   if (circle) { e.stopPropagation(); setWbwOn(!wbwOn, true); return; }
+  // the surah name's box: over to the other mushaf (العام <-> الختمة)
+  if (e.target.closest('.fbNameZone')) { e.stopPropagation(); switchMushaf(mushafId === 'khatma' ? 'aam' : 'khatma'); return; }
   const nums = e.target.closest('.fbNums');
   if (nums) {
     e.stopPropagation();
