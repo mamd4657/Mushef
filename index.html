@@ -250,8 +250,10 @@ body.dark-mode .ayah-popup-title:active{background:#232922;}
 #sidebar.open{transform:translateX(0);}
 #overlay.show{display:block;}
 .sidebar-colheader{position:relative;display:flex;flex-shrink:0;border-bottom:2.5px solid #7B2E2E;min-height:34px;}
-#resumeBox{display:none;position:absolute;top:2px;bottom:2px;right:6px;z-index:2;align-items:center;justify-content:center;background:#7A5A00;color:#FFFFFF;border:2px solid #0E4433;border-radius:10px;font-family:sans-serif;font-size:18px;font-weight:800;letter-spacing:.2px;white-space:nowrap;overflow:hidden;padding:0 8px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25);}
-body.dark-mode #resumeBox{background:#7A5A00;color:#FFFFFF;border-color:#F6EFDC;}
+#resumeBox,#resumeBoxKhatma{display:none;position:absolute;top:2px;bottom:2px;right:6px;z-index:2;align-items:center;justify-content:center;background:#7A5A00;color:#FFFFFF;border:2px solid #0E4433;border-radius:10px;font-family:sans-serif;font-size:18px;font-weight:800;letter-spacing:.2px;white-space:nowrap;overflow:hidden;padding:0 8px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25);}
+body.dark-mode #resumeBox,body.dark-mode #resumeBoxKhatma{background:#7A5A00;color:#FFFFFF;border-color:#F6EFDC;}
+/* the mushaf that is open now: a bright gold rim */
+.mushafBox.mushaf-on{border-color:#F2CC5C !important;box-shadow:0 0 0 1.5px #F2CC5C,0 2px 8px rgba(0,0,0,.3) !important;}
 .sidebar-colheader-spacer{width:112px;flex-shrink:0;border-left:2.5px solid #7B2E2E;}
 .sidebar-colheader-labels{flex:1;min-width:0;display:flex;justify-content:flex-start;align-items:center;gap:8px;padding:6px 12px;font-family:sans-serif;font-size:16px;font-weight:700;color:#3D2E1C;}
 .sidebar-colheader-labels .rowName{flex:1;min-width:0;}
@@ -284,7 +286,18 @@ body.dark-mode .font-opt.active,body.dark-mode .font-opt.active:hover,body.dark-
 .tab.active{background:rgba(123,46,46,.17) !important;color:#7B2E2E;}
 body.dark-mode .tab.active{background:rgba(143,217,176,.16) !important;color:#8FD9B0;}
 .surah-row .rowName{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;}
-.surah-row b{color:#B98A2A;margin-left:6px;font-weight:600;}
+.surah-row b{color:#B98A2A;margin-left:2px;font-weight:600;display:inline-block;min-width:1.8em;text-align:center;}
+/* the column titles, under the surah search: ت over the numbers, سورة over
+   the names, then آيات / نزول / ص - laid out exactly like a row, with a
+   line under them dividing them from the list */
+.surah-col-labels{display:flex;justify-content:flex-start;align-items:center;gap:8px;margin:8px -12px -10px;padding:6px 16px 5px;border-bottom:2.5px solid #7B2E2E;font-family:sans-serif;font-size:16px;font-weight:700;color:#3D2E1C;}
+.surah-col-labels .rowName{flex:1;min-width:0;display:flex;align-items:center;}
+.surah-col-labels b{color:inherit;margin-left:2px;font-weight:700;display:inline-block;min-width:1.8em;text-align:center;font-size:19px;}
+.surah-col-labels .pg,.surah-col-labels .ayahCount{flex:0 0 34px;text-align:center;}
+.surah-col-labels .placeIcon{flex:0 0 22px;display:flex;justify-content:center;white-space:nowrap;}
+.surah-labels-only{padding-top:0;}
+.surah-labels-only .surah-col-labels{margin-top:0;}
+body.dark-mode .surah-col-labels{color:#D8CBAE;border-color:#E8B84B;}
 .surah-row .nm{font-family:sans-serif;font-size:20px;font-weight:700;}
 .surah-row .pg{font-family:sans-serif;font-size:18px;font-weight:700;color:#0E4433;flex:0 0 34px;text-align:center;}
 .surah-row .ayahCount{font-family:sans-serif;font-size:17px;font-weight:700;color:#0E4433;flex:0 0 34px;text-align:center;}
@@ -584,6 +597,14 @@ body.dark-mode .fbNameGroup{color:#EFE8D6;}
    inner width is reserved for the widest surah name (fitFloatingFrameBar),
    the name centred in it. The Kaaba / Green Dome mark sits between the two boxes. */
 #floatingFrameBar .fbNameZone{border:var(--fbFrameW) solid var(--fbFrameC);border-radius:7px;box-sizing:border-box;background:var(--fbFrameBg);box-shadow:var(--fbFrameShadow);align-items:center;padding:0 .14em;overflow:visible;}
+/* which mushaf is open: a small «عام» / «ختمة» over the name, the name a
+   little lower; the khatma's box light green */
+#floatingFrameBar .fbNameZone{position:relative;justify-content:center;}
+#floatingFrameBar .fbNameZone::before{content:'عام';position:absolute;top:.08em;left:0;right:0;text-align:center;font-family:sans-serif;font-size:.5em;font-weight:700;line-height:1;opacity:.9;-webkit-text-stroke:0;pointer-events:none;}
+body.mushaf-khatma #floatingFrameBar .fbNameZone::before{content:'ختمة';}
+body.mushaf-khatma #floatingFrameBar .fbNameZone{background:linear-gradient(180deg,#E6F6DF,#BFE4B2);}
+body.dark-mode.mushaf-khatma #floatingFrameBar .fbNameZone{background:linear-gradient(180deg,#4F7F52,#36603B);}
+#floatingFrameBar .fbNameZone .fbNameText{padding-top:.5em;}
 #floatingFrameBar .fbNameZone .fbNameText{display:block;text-align:center;line-height:1;font-weight:700;-webkit-text-stroke:.045em currentColor;paint-order:stroke fill;}
 .fbNameGroup .surah-place-icon{vertical-align:middle;line-height:1;display:inline-flex;flex-shrink:0;}
 .fbNameGroup .surah-place-icon img{height:0.95em;width:auto;vertical-align:middle;display:block;}
@@ -25725,6 +25746,15 @@ const store = {
   },
 };
 
+// ---- two mushafs: «العام» and «الختمة» ----
+// Each keeps its own place in the text and its own «رجوع» steps; everything
+// else (settings, reciter, bookmarks...) is shared. The general one keeps
+// the original keys, so nothing saved before is lost.
+let mushafId = store.get('mushaf') === 'khatma' ? 'khatma' : 'aam';
+const MUSHAF_NAMES = { aam: 'العام', khatma: 'الختمة' };
+function mkey(k) { return mushafId === 'khatma' ? k + '@khatma' : k; }
+document.body.classList.toggle('mushaf-khatma', mushafId === 'khatma');
+
 const toastEl = document.getElementById('toast');
 const sidebar = document.getElementById('sidebar');
 const overlay = document.getElementById('overlay');
@@ -28894,7 +28924,7 @@ function updateFreeCurrentPage() {
   if (bestPage && bestPage !== pageNum) {
     pageNum = bestPage;
     clearSearchMatchHighlightIfLeftItsPage();
-    store.set('last-page', String(bestPage));
+    store.set(mkey('last-page'), String(bestPage));
   }
   let surahOverride = bestSurah;
   // Same reasoning as the page-number fallback just above, but for the
@@ -32461,7 +32491,7 @@ function renderBoundWindow(centerPage, scrollToCenter) {
   }
   fixFirstLineRubClearance();
   schedulePrefetch();
-  store.set('last-page', String(centerPage));
+  store.set(mkey('last-page'), String(centerPage));
 }
 
 function growBoundWindowStart(newStart) {
@@ -32571,7 +32601,7 @@ function updateBoundCurrentPage() {
   if (bestPage && bestPage !== pageNum) {
     pageNum = bestPage;
     clearSearchMatchHighlightIfLeftItsPage();
-    store.set('last-page', String(bestPage));
+    store.set(mkey('last-page'), String(bestPage));
   }
   let surahOverride = bestSurah;
   if (atMaxScroll) {
@@ -32706,7 +32736,7 @@ function centerOn(n) {
     pageNum = n;
     updateFloatingFrameBar(n);
     renderFreeWindow(n);
-    store.set('last-page', String(n));
+    store.set(mkey('last-page'), String(n));
     return;
   }
   renderBoundWindow(n);
@@ -33230,6 +33260,7 @@ function voiceBase(t) {
 const VOICE_KIND_RES = [
   { k: 'back', re: /^(ا?رجع(ي|وا|و|ني|نا|ه)?|رجوع|رجعه|ترجع|نرجع|يرجع|تراجع|ارجعني|رجعني|عوده|عود(ي|وا|و|ني|نا)?|عد|نعود|تعود|ورا|لورا|للخلف)$/ },
   { k: 'close', re: /^(اغلاق|اغلق(ي|وا|و|ه)?|غلق|سكر(ي|وا|و|ه)?|تسكير|اقفل(ي|وا|و|ه)?|قفل(ي|وا|و|ه)?|صك|خروج|اخرج(ي|وا|و)?|اطلع(ي|وا|و)?|انهاء|اطفي|طفي|اطفاء)$/ },
+  { k: 'enter', re: /^(دخول|ا?دخل(ي|وا|و|ني|نا)?|ندخل|تدخل|يدخل)$/ },
   { k: 'stop', re: /^(ايقاف|اوقف(ي|وا|و|ه)?|وقف(ي|وا|و|ه)?|توقف(ي|وا|و)?|قف|اسكت(ي|وا|و)?|بس|خلاص|كفايه|كفي|ستوب)$/ },
   { k: 'search', re: /^(بحث|ا?بحث(ي|وا|و|لي)?|دور(ي|وا|و|لي|يلي)?|فتش(ي|وا|و|لي)?|تفتيش|دورلي)$/ },
   { k: 'listen', re: /^(ا?ستماع|سماع|ا?ستمع(ي|وا|و)?|ا?سمع(ي|وا|و|ني|نا|يني|ونا|لي)?|نسمع|تسمع|يسمع|سمعيني|تلاوه|اتل|اتلو|اتلي|تلو|شغل(ي|وا|و|لي|ها|يلي)?|تشغيل|اقرا(ي|وا|و|لي)?|قراءه|قرايه)$/ },
@@ -33281,6 +33312,12 @@ function voiceParse(raw) {
   const curS = () => (sidebarCurrent && sidebarCurrent.s) || surahAtPage(pageNum) || 1;
   const curJ = () => (sidebarCurrent && sidebarCurrent.j) || 1;
 
+  // «العودة إلى العام» / «الرجوع للختمة» / «الدخول إلى الختمة» / «الختمة»
+  const mushafOf = (t) => { const m = t.match(/^(?:و|ف)?(?:ال|لل|ل|بال)?(عام|ختمه)$/); return m ? (m[1] === 'عام' ? 'aam' : 'khatma') : null; };
+  if (kind === 'back' || kind === 'enter' || toks.length === 1) {
+    const mid = toks.map(mushafOf).find(Boolean);
+    if (mid) return { label: 'العودة إلى ' + MUSHAF_NAMES[mid], run: () => switchMushaf(mid), noSnap: true };
+  }
   if (kind === 'back') return { label: 'رجوع', run: voiceRunBack, noSnap: true };
   if (kind === 'close') return { label: 'إغلاق التطبيق', run: voiceRunClose, noSnap: true };
 
@@ -33428,7 +33465,7 @@ function voiceParse(raw) {
 // with its play button stopped at the ayah it had reached.
 const ACT_KEY = 'act-hist', ACT_MAX = 15, ACT_DWELL = 1500;
 let actHist = [];
-try { actHist = JSON.parse(store.get(ACT_KEY) || '[]') || []; } catch (e) { actHist = []; }
+try { actHist = JSON.parse(store.get(mkey(ACT_KEY)) || '[]') || []; } catch (e) { actHist = []; }
 if (!Array.isArray(actHist)) actHist = [];
 let actTopLive = false;   // the newest step is what is on screen right now
 let actPending = null;    // a new state waiting to stay put long enough to count
@@ -33488,7 +33525,7 @@ function actSig(s) {
     s.q == null ? '' : 'q', s.pop ? 'w' : '', s.book ? s.book[0] : '', s.sel ? 'r' : ''].join('|');
 }
 function actSave() {
-  try { store.set(ACT_KEY, JSON.stringify(actHist)); } catch (e) { /* full: keep going without saving */ }
+  try { store.set(mkey(ACT_KEY), JSON.stringify(actHist)); } catch (e) { /* full: keep going without saving */ }
 }
 function actCapture(force) {
   if (actRestoring || !initSucceeded) return;
@@ -33622,6 +33659,60 @@ async function actRestore(s) {
       actCapture(true); // what was brought back is the newest step again
     }, 500);
   }
+}
+// Into the other mushaf (or back into the text of this one): what is open
+// now is kept as this mushaf's latest step, then the other one comes back
+// as it was left - its place in the text, and its auto-scroll / listening
+// bar if they were on (stopped, as «رجوع» brings them).
+async function switchMushaf(id) {
+  if (id !== 'aam' && id !== 'khatma') return;
+  if (id === mushafId) {
+    if (sidebar.classList.contains('open')) closeSidebar();
+    else toast('أنت في ' + MUSHAF_NAMES[id]);
+    return;
+  }
+  if (sidebar.classList.contains('open')) {
+    // let the index's own Back step settle before anything else moves
+    const n = backLayerStack.length;
+    closeSidebar();
+    await voiceWaitLayers(n - 1);
+    await actWait(250);
+  }
+  actCapture(true);
+  store.set(mkey('last-page'), String(pageNum));
+  if (reciting) stopRecitation();
+  if (scrollEnabled()) scrollDisable();
+  mushafId = id;
+  store.set('mushaf', id);
+  try { actHist = JSON.parse(store.get(mkey(ACT_KEY)) || '[]') || []; } catch (e) { actHist = []; }
+  if (!Array.isArray(actHist)) actHist = [];
+  actTopLive = false; actPending = null; actSplitNext = false;
+  syncMushafMarks();
+  const top = actHist[actHist.length - 1];
+  if (top) {
+    // the text as it was left, without the index / search that were open around it
+    const t = Object.assign({}, top);
+    delete t.tab; delete t.dua; delete t.sbTop; delete t.q;
+    await actRestore(t);
+  } else {
+    actRestoring = true;
+    let guard = 12;
+    while (backLayerStack.length && guard-- > 0) {
+      const tl = backLayerStack[backLayerStack.length - 1];
+      if (tl === homeBackLayer || tl === exitLandscapeLayer) break;
+      const n = backLayerStack.length;
+      closeTopBackLayer();
+      await voiceWaitLayers(n - 1);
+    }
+    const n = parseInt(store.get(mkey('last-page')), 10);
+    centerOn(n >= 1 && n <= 604 ? n : 1);
+    setTimeout(() => { actRestoring = false; actCapture(true); }, 400);
+  }
+  toast(MUSHAF_NAMES[id]);
+}
+function syncMushafMarks() {
+  document.body.classList.toggle('mushaf-khatma', mushafId === 'khatma');
+  updateResumeBox();
 }
 async function voiceRunBack() {
   actCapture(true);
@@ -33955,6 +34046,7 @@ function renderVoiceTab() {
   });
 
   const L = [
+    ['العودة إلى العام / الختمة', 'الدخول إلى أحد المصحفين: العام أو الختمة. لكل منهما موضع قراءته وخطوات رجوعه، فيعود إليه كما تُرك.', 'العودة إلى العام، الرجوع للختمة، الدخول إلى الختمة، للعام'],
     ['عودة / رجوع', 'العودة إلى آخر ما كان مفتوحاً أو يعمل، بأمر صوتي كان أو بغيره، ولو بعد إغلاق التطبيق: الصفحة وموضع القراءة، والتمرير، وشريط الاستماع، والعرض الأفقي، ونافذة الآية، والتفسير، وصفحة القراءة، والبحث، وعناوين القائمة. ويعود كل شيء متوقفاً: التمرير مفعّلاً بلا حركة، وشريط الاستماع ظاهراً وزر التشغيل متوقفاً عند الآية التي بلغها. وتكراره يعود خطوة بعد خطوة.', 'رجوع، ارجع، عودة'],
     ['استماع', 'تلاوة السورة المحددة مسبقاً بالقارئ المحدد مسبقاً.', 'استماع، اسمع، سمّعني، شغّل'],
     ['استماع + سورة', 'تلاوة السورة التي تذكرها بالقارئ المحدد مسبقاً.', 'استماع سورة الملك، استماع الكهف'],
@@ -35401,27 +35493,46 @@ function homeBackLayer() { openSidebar('surah', true); }
 function updateResumeBox() {
   const head = document.querySelector('.sidebar-colheader');
   if (!head) return;
-  let box = document.getElementById('resumeBox');
-  if (!box) {
-    box = document.createElement('button');
-    box.id = 'resumeBox';
-    box.addEventListener('click', (e) => { e.stopPropagation(); closeSidebar(); });
-    head.appendChild(box);
-  }
+  const boxes = ['aam', 'khatma'].map((id) => {
+    let box = document.getElementById(id === 'aam' ? 'resumeBox' : 'resumeBoxKhatma');
+    if (!box) {
+      box = document.createElement('button');
+      box.id = id === 'aam' ? 'resumeBox' : 'resumeBoxKhatma';
+      box.className = 'mushafBox';
+      box.addEventListener('click', (e) => { e.stopPropagation(); switchMushaf(id); });
+      head.appendChild(box);
+    }
+    box.textContent = 'العودة إلى ' + MUSHAF_NAMES[id];
+    box.classList.toggle('mushaf-on', id === mushafId);
+    return box;
+  });
   const show = sidebar.classList.contains('open');
-  if (!show) { box.style.display = 'none'; return; }
-  box.textContent = 'العودة إلى آخر صفحة: ' + toArabicDigits(pageNum);
-  // only as wide as its words; its right edge in line with the floating bar's
-  box.style.left = 'auto';
+  if (!show) { boxes.forEach((b) => { b.style.display = 'none'; }); return; }
+  // the general one's right edge in line with the floating bar's; the
+  // khatma's to its left, as far from it as the surah-name box is from the
+  // numbers' box inside the bar's brackets
   const fb = document.querySelector('#floatingFrameBar .frame-bar');
-  let right = 6;
+  let right = 6, gap = 10;
   if (fb && fb.offsetWidth && !landscapeMode) {
     // the index sits flush with the screen's right edge once open (it may
     // still be sliding in right now, so its own position can't be used)
     right = Math.max(0, Math.round(document.documentElement.clientWidth - fb.getBoundingClientRect().right));
   }
-  box.style.right = right + 'px';
-  box.style.display = 'flex';
+  const nz = fb && fb.querySelector('.fbNameZone'), nb = fb && fb.querySelector('.fbNums');
+  if (nz && nb && nz.offsetWidth && nb.offsetWidth) {
+    const g = nz.getBoundingClientRect().left - nb.getBoundingClientRect().right;
+    if (g > 2 && g < 60) gap = g;
+  }
+  boxes.forEach((b) => { b.style.display = 'flex'; b.style.left = 'auto'; b.style.fontSize = ''; });
+  // both fit across the header: smaller letters on a narrow screen
+  const room = head.clientWidth - right - gap - 4;
+  const need = boxes[0].offsetWidth + boxes[1].offsetWidth;
+  if (need > room && need > 0) {
+    const f = parseFloat(getComputedStyle(boxes[0]).fontSize) * Math.max(0.6, room / need) * 0.97;
+    boxes.forEach((b) => { b.style.fontSize = f + 'px'; });
+  }
+  boxes[0].style.right = right + 'px';
+  boxes[1].style.right = (right + boxes[0].offsetWidth + gap) + 'px';
 }
 function closeSidebar() {
   // Picking something in a non-home tab (a juz, a page, a bookmark...)
@@ -35574,7 +35685,7 @@ function renderGuideTab() {
       'يتحدّث الإطار تلقائياً أثناء التمرير ليطابق ما تقرأه.',
     ]},
     { title: '٣. صفحة النص القرآني', items: [
-      'يفتح المصحف على القائمة الجانبية (عنوان السور)، وفي أعلاها إطار <b>العودة إلى آخر صفحة</b> للرجوع إلى الصفحة التي كانت مفتوحة.',
+      'يفتح المصحف على القائمة الجانبية (عنوان السور)، وفي أعلاها إطاران: <b>العودة إلى العام</b> و<b>العودة إلى الختمة</b>، وهما مصحفان يعمل كل منهما وحده: لكل منهما موضع قراءته وخطوات رجوعه، فالنقر على أحدهما يعود إليه كما تُرك. والمفتوح منهما الآن إطاره ذهبي.',
       '<b>شريط اسم السورة</b> في أول كل سورة: من اليمين ترتيبها، ثم اسمها في الوسط، ثم عدد آياتها.',
       '<b>النسخ</b>: اضغط مطوّلاً على النص واسحب لتحديد ما تريد، ثم انسخه. وعند لصقه يكون المنسوخ بين قوسين [ ] ورقم كل آية بعد نصها داخل القوسين، واسم السورة بعد القوس الأخير، مثل: [ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِينَ ٢] الفاتحة. وإن امتد المنسوخ من آخر آية إلى أول التي بعدها، كُتب رقم كل منهما بعد الجزء الخاص بها.',
       'خط أخضر داكن على أحد جانبي الصفحة يبيّن أنها يمنى أو يسرى.',
@@ -36188,10 +36299,11 @@ function setSidebarColumnLabels(html) {
 }
 function renderSurahTab() {
   sidebarBody.innerHTML = '';
-  setSidebarColumnLabels('<span class="rowName"></span><span class="ayahCount">آيات</span><span class="placeIcon">نزول</span><span class="pg">ص</span>');
+  setSidebarColumnLabels('');
   const searchWrap = document.createElement('div');
   searchWrap.className = 'surah-search-wrap';
-  searchWrap.innerHTML = '<input type="search" id="surahTabSearch" class="surah-search-input" placeholder="بحث عن سورة" autocomplete="off">';
+  searchWrap.innerHTML = '<input type="search" id="surahTabSearch" class="surah-search-input" placeholder="بحث عن سورة" autocomplete="off">' +
+    '<div class="surah-col-labels"><span class="rowName"><b>ت</b><span class="nm">سورة</span></span><span class="ayahCount">آيات</span><span class="placeIcon">نزول</span><span class="pg">ص</span></div>';
   sidebarBody.appendChild(searchWrap);
   const rowsWrap = document.createElement('div');
   rowsWrap.className = 'surah-rows-wrap';
@@ -36230,7 +36342,11 @@ function renderSurahTab() {
 
 function renderJuzTab() {
   sidebarBody.innerHTML = '';
-  setSidebarColumnLabels('<span class="rowName"></span><span class="pg">ص</span>');
+  setSidebarColumnLabels('');
+  const juzHead = document.createElement('div');
+  juzHead.className = 'surah-search-wrap surah-labels-only';
+  juzHead.innerHTML = '<div class="surah-col-labels"><span class="rowName"><span class="nm">جزء</span></span><span class="pg">ص</span></div>';
+  sidebarBody.appendChild(juzHead);
   for (let j = 1; j <= 30; j++) {
     const row = document.createElement('button');
     row.className = 'surah-row';
@@ -38604,7 +38720,7 @@ setTimeout(() => {
   updateSpeedLabel();
 
   let start = 1;
-  const last = store.get('last-page');
+  const last = store.get(mkey('last-page'));
   if (last) {
     const n = parseInt(last, 10);
     if (n >= 1 && n <= 604) start = n;
