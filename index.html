@@ -146,9 +146,9 @@ body.landscape-lock .rotateFabBtn{right:auto;left:8px;}
 /* the microphone and التوقف: each as big as the rotate / back buttons; the
    line between them is the middle of the bar (the frames either side share
    the remaining width equally) */
-#segStopFrame,#micFrame{flex:0 0 auto !important;width:var(--hdrDarkW);padding:0 !important;justify-content:center !important;}
-#micBtn{color:#F6EFDC;padding:0;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;}
-body.search-open #freeAutoFab>#micFrame{display:none !important;}
+#segStopFrame,#micFrame,#segStopFrameBound,#micFrameBound{flex:0 0 auto !important;width:var(--hdrDarkW);padding:0 !important;justify-content:center !important;}
+#micBtn,#micBtnBound{color:#F6EFDC;padding:0;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;}
+body.search-open #freeAutoFab>#micFrame,body.search-open #autoFab>#micFrameBound{display:none !important;}
 /* with four fixed buttons now, the two frames between them are narrower:
    tighter gaps, and their round buttons sized to fit the screen's width */
 #freeAutoFab{gap:4px !important;}
@@ -163,7 +163,7 @@ body.search-open #freeAutoFab>#micFrame{display:none !important;}
   #freeAutoFab .fab-arrow-col{padding:0 5px;}
 }
 /* long-press targets for the voice command: no text-selection / callout */
-#segStopBtn,#autoFab .fab-arrow-col{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;}
+#segStopBtn,#segStopBtnBound,#autoFab .fab-arrow-col{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;}
 /* the voice command's microphone, shown above the middle of the bottom bar */
 #voiceOverlay{position:absolute;left:50%;transform:translateX(-50%);bottom:100%;margin-bottom:10px;display:none;flex-direction:column;align-items:center;gap:8px;z-index:5;pointer-events:auto;width:max-content;max-width:92vw;}
 #voiceOverlay.show{display:flex;}
@@ -189,9 +189,9 @@ body.dark-mode .voice-cmd-list .vc .ex{color:#8FCB9E;}
 #autoFab .fab-btn-round,#freeAutoFab .fab-btn-round{width:clamp(27px, 8.4vw, 36px);height:clamp(27px, 8.4vw, 36px);}
 #freeAutoFab .fab-frame-size{gap:clamp(5px, 2.4vw, 12px);}
 #freeAutoFab .fab-frame-scroll,#autoFab .fab-frame-scroll{gap:clamp(2px, 1vw, 5px);}
-#segStopBtn{color:#E8B84B;padding:3px;}
-#segStopBtn.off{color:#F6EFDC;opacity:.4;}
-#segStopBtn.off svg{stroke-dasharray:none;}
+#segStopBtn,#segStopBtnBound{color:#E8B84B;padding:3px;}
+#segStopBtn.off,#segStopBtnBound.off{color:#F6EFDC;opacity:.4;}
+#segStopBtn.off svg,#segStopBtnBound.off svg{stroke-dasharray:none;}
 .fab-frame-scroll{gap:5px;padding:1px 7px;}
 /* the three-arrow play button sits flush against the frame's top edge, with the current scroll speed (a plain number) in the small space beneath it */
 .fab-arrow-col{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;height:100%;padding:0 7px;margin:0 -4px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
@@ -1188,6 +1188,12 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
       <span id="speedNum" class="speed-num" aria-label="سرعة التمرير"></span>
     </div>
     <button id="speedUpBtn" class="fab-btn fab-btn-round" aria-label="أسرع التمرير">+</button>
+  </div>
+  <div class="fab-frame" id="micFrameBound">
+    <button class="fab-btn" id="micBtnBound" aria-label="أمر صوتي" title="أمر صوتي"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><line x1="12" y1="17.5" x2="12" y2="21.5"/><line x1="8.5" y1="21.5" x2="15.5" y2="21.5"/></svg></button>
+  </div>
+  <div class="fab-frame" id="segStopFrameBound">
+    <button class="fab-btn" id="segStopBtnBound" aria-label="التوقف في أواخر السور والأجزاء (اضغط مطوّلاً للتفعيل أو الإلغاء)" title="التوقف في أواخر السور والأجزاء (اضغط مطوّلاً للتفعيل أو الإلغاء)"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="4" x2="20" y2="4"/><line x1="12" y1="21" x2="12" y2="9"/><polyline points="7,13 12,8 17,13"/></svg></button>
   </div>
   <div class="fab-frame" id="backFrameBound">
     <button class="fab-btn" id="backBtn" aria-label="رجوع" title="رجوع"><svg class="fab-icon" viewBox="0 0 24 24" width="1.2em" height="1.2em" aria-hidden="true"><path d="M19 12H5.8M10.6 6.6 5 12l5.6 5.4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -32908,7 +32914,7 @@ function collectSegBoundaries() {
     const prev = prevSegs[prevSegs.length - 1];
     const prevEnd = prev ? yInWrap(prev, wrap) + prev.offsetHeight : null;
     const y = prevEnd !== null && prevEnd > segY + 2 ? prevEnd : segY;
-    const pageEl = seg.closest('.page-frame[data-page]');
+    const pageEl = seg.closest(layoutMode === 'free' ? '.page-frame[data-page]' : '.vSlot[data-page]');
     const pg = pageEl ? parseInt(pageEl.dataset.page, 10) : JUZ_PAGES[j];
     const k = 'y' + Math.round(y);
     if (!map[k]) map[k] = { y, pageTop: pageEl ? yInWrap(pageEl, wrap) : y, atTop: false, page: pg, s: null, j: null };
@@ -33110,8 +33116,7 @@ let segStopOn = store.get('seg-stop') !== '0';
 function setSegStop(on, quiet) {
   segStopOn = !!on;
   store.set('seg-stop', segStopOn ? '1' : '0');
-  const btn = document.getElementById('segStopBtn');
-  if (btn) btn.classList.toggle('off', !segStopOn);
+  ['segStopBtn', 'segStopBtnBound'].forEach((id) => { const btn = document.getElementById(id); if (btn) btn.classList.toggle('off', !segStopOn); });
   if (!segStopOn) { if (segLock) segReleaseLock(); if (segEngaged) hideSegPanel(); segArmed = null; segPassFloor = false; }
   else { segStartId = null; segRenderCheck = true; }
   if (!quiet) toast(segStopOn ? 'التوقف مفعّل' : 'عدم التوقف', true);
@@ -33119,8 +33124,8 @@ function setSegStop(on, quiet) {
 // The microphone button starts a voice command; التوقف is turned on or off
 // by a long press (wired below, with the voice-command code) - a plain tap
 // on it only says so.
-document.getElementById('micBtn').addEventListener('click', () => startVoiceCommand());
-document.getElementById('segStopBtn').addEventListener('click', () => toast('اضغط مطوّلاً لتفعيل التوقف أو إلغائه', true));
+['micBtn', 'micBtnBound'].forEach((id) => document.getElementById(id).addEventListener('click', () => startVoiceCommand()));
+['segStopBtn', 'segStopBtnBound'].forEach((id) => document.getElementById(id).addEventListener('click', () => toast('اضغط مطوّلاً لتفعيل التوقف أو إلغائه', true)));
 
 // ---------------- أوامر صوتية (voice commands) ----------------
 // A long press on the middle button of the bottom bar (التوقف in the free
@@ -34054,10 +34059,10 @@ function attachVoiceLongPress(el, fn) {
   }, true);
 }
 // التوقف button: long press = التوقف on/off
-attachVoiceLongPress(document.getElementById('segStopBtn'), () => {
+['segStopBtn', 'segStopBtnBound'].forEach((id) => attachVoiceLongPress(document.getElementById(id), () => {
   try { if (navigator.vibrate) navigator.vibrate(35); } catch (e) { /* ignore */ }
   setSegStop(!segStopOn);
-});
+}));
 attachVoiceLongPress(document.querySelector('#autoFab .fab-arrow-col'));
 
 // ---- the «أوامر صوتية» tab ----
@@ -34145,7 +34150,41 @@ function renderVoiceTab() {
   sidebarBody.appendChild(list);
 }
 setTimeout(() => setSegStop(segStopOn, true), 0);
+// Standard (page) layout: only the auto-scroll stops. Moving on, it halts
+// where the page holding the end of the surah/juz is fully on screen, and
+// the boxes show over the top bars (the page fills the rest of the screen).
+// A tap on the page carries on from there (no second stop at that end);
+// finger scrolling is never held.
+let bSegPrevTop = null;
+function boundSegGuard() {
+  const wrap = vScrollWrap;
+  if (!segStopOn || reciting || !wrap || !wrap.clientHeight) {
+    if (segEngaged) hideSegPanel();
+    bSegPrevTop = null;
+    return;
+  }
+  const top = wrap.scrollTop;
+  if (segEngaged) { if (Math.abs(top - segEngaged.lim) > 30) hideSegPanel(); else positionSegPanel(); }
+  const prev = bSegPrevTop;
+  bSegPrevTop = top;
+  if (!autoPlaying || !autoRafId || prev === null || top <= prev || top - prev > wrap.clientHeight) return;
+  const list = collectSegBoundaries();
+  for (let i = 0; i < list.length; i++) {
+    const b = list[i];
+    if (b.s === 1) continue;
+    const lim = segPageFit() ? (b.atTop ? b.pageTop - (boundSlotH || wrap.clientHeight) : b.pageTop) : Math.max(0, b.y - wrap.clientHeight);
+    if (prev < lim - 0.5 && top >= lim - 0.5) {
+      pauseAutoScroll();
+      wrap.scrollTop = lim;
+      autoScrollAccum = lim;
+      bSegPrevTop = wrap.scrollTop;
+      showSegPanel('end', b, i > 0 ? list[i - 1] : null, wrap, wrap.scrollTop);
+      return;
+    }
+  }
+}
 function segGuard() {
+  if (layoutMode === 'bound') { boundSegGuard(); return; }
   if (layoutMode !== 'free' || !segStopOn) {
     if (segLock) segReleaseLock();
     if (segEngaged) hideSegPanel();
@@ -34269,7 +34308,7 @@ function showSegPanel(where, b, startB, wrap, lim) {
   // take the boxes' height off the bottom of the text area; the stop was
   // already placed so the end sits right above them - no scroll needed
   const h = segPanelEl.offsetHeight + 8;
-  if (h !== segShrink) {
+  if (layoutMode === 'free' && h !== segShrink) {
     segShrink = h;
     positionFreeScrollWrap();
     const nl = b.natural ? Math.max(0, wrap.scrollHeight - wrap.clientHeight)
@@ -34295,6 +34334,17 @@ function positionSegPanel() {
   if (!segPanelEl || !segEngaged) return;
   const wrap = segWrap();
   segPanelEl.style.display = segPanelCovered() ? 'none' : 'flex';
+  if (layoutMode !== 'free') {
+    // page layout: over the header and the gold bar, its bottom at the
+    // gold bar's bottom, so the whole page stays readable
+    const fb = document.getElementById('floatingFrameBar');
+    const fbH = fb && fb.offsetHeight ? fb.offsetHeight : 0;
+    segPanelEl.style.minHeight = fbH ? (fbH - 2) + 'px' : '';
+    const ph = segPanelEl.offsetHeight;
+    segPanelEl.style.top = Math.max(2, Math.round(wrap.offsetTop - 3 - ph)) + 'px';
+    return;
+  }
+  segPanelEl.style.minHeight = '';
   // directly under the (shortened) text area, i.e. just above the bottom toolbar
   segPanelEl.style.top = Math.round(wrap.offsetTop + wrap.offsetHeight + 4) + 'px';
 }
@@ -35755,7 +35805,7 @@ function renderGuideTab() {
       '<b>النسخ</b>: اضغط مطوّلاً على النص واسحب لتحديد ما تريد، ثم انسخه. وعند لصقه يكون المنسوخ بين قوسين [ ] ورقم كل آية بعد نصها داخل القوسين، واسم السورة بعد القوس الأخير، مثل: [ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِينَ ٢] الفاتحة. وإن امتد المنسوخ من آخر آية إلى أول التي بعدها، كُتب رقم كل منهما بعد الجزء الخاص بها.',
       'خط أخضر داكن على أحد جانبي الصفحة يبيّن أنها يمنى أو يسرى.',
       '<b>علامة الربع</b> ' + rubGridSvg(3) + ' ' + rubGridSvg(3, true) + ': مستطيل مقسّم إلى ثمانية مربعات تمثّل أرباع الجزء الحالي: العمود الأيمن لحزبه الأول، والأيسر لحزبه الثاني، ويُعدّ كل عمود من الأسفل إلى الأعلى، فمربعاته الأربعة هي أرباع حزبه من الأول إلى الرابع (فالأرباع تُعدّ من ١ إلى ٤ في كل حزب، ولا تُعدّ إلى ٨). تظهر العلامة في بداية كل ربع بعد رقم الآية التي قبله، وفي نهايته قبل رقم آيته الأخيرة. الأبيض أرباع تمّت، والرمادي أرباع لم تأتِ بعد، ومربع الربع الذي يبدأ رمادي في وسطه دائرة بيضاء. ففي المثالين المجاورين: بداية الربع الثالث من الحزب الأول، ثم نهايته.',
-      '<b>التوقف عند آخر السورة والجزء</b> (في الوضع الحر): يتوقف التمرير عند آخر السورة أو الجزء، وتظهر فوق الشريط السفلي ثلاثة أزرار: آخر السورة أو الجزء في الوسط، والسابق على اليمين، واللاحق على اليسار. وسحبة خفيفة إلى أعلى تُكمل القراءة. ويُفعَّل هذا أو يُلغى بالضغط المطوّل على زر (' + badge(document.getElementById('segStopBtn').innerHTML) + ') في الشريط السفلي، أو من عنوان <b>التخطيط</b>.',
+      '<b>التوقف عند آخر السورة والجزء</b> (في الوضعين): يتوقف التمرير عند آخر السورة أو الجزء، وتظهر ثلاثة أزرار (في الوضع الحر فوق الشريط السفلي، وفي الوضع القياسي فوق الإطار العائم بعد أن تظهر صفحة آخر السورة أو الجزء كاملة): آخر السورة أو الجزء في الوسط، والسابق على اليمين، واللاحق على اليسار. وسحبة خفيفة إلى أعلى (في الوضع الحر) أو نقرة على الصفحة (في الوضع القياسي) تُكمل القراءة. ويُفعَّل هذا أو يُلغى بالضغط المطوّل على زر (' + badge(document.getElementById('segStopBtn').innerHTML) + ') في الشريط السفلي، أو من عنوان <b>التخطيط</b>.',
     ]},
     { title: '٤. شريط الأدوات السفلي', items: [
       '<b>الأوامر الصوتية</b>: انقر على زر الميكروفون (' + badge(document.getElementById('micBtn').innerHTML) + ') في وسط الشريط (أو اضغط مطوّلاً على سهم التمرير في عرض الصفحات)، فيظهر الميكروفون فوق الشريط، ثم قل الأمر واسكت قليلاً. والأوامر وشرحها في عنوان «أوامر صوتية». وبجانبه زر <b>التوقف</b> (' + badge(document.getElementById('segStopBtn').innerHTML) + ')، ويُفعَّل أو يُلغى بالضغط المطوّل عليه (الفقرة ٣).',
@@ -36559,7 +36609,7 @@ function renderFontTab() {
   const stNote = document.createElement('div');
   stNote.className = 'strong-note';
   stNote.style.cssText = 'font-family:sans-serif;font-size:17px;font-weight:700;padding:8px 10px 10px;line-height:1.65;';
-  stNote.innerHTML = 'في الوضع الحر. ويمكن التبديل بسرعة بالضغط المطوّل على الزر ' + '<span style="display:inline-flex;vertical-align:middle;background:#0E4433;color:#E8B84B;border-radius:6px;padding:2px;">' + document.getElementById('segStopBtn').innerHTML.replace('width="24" height="24"', 'width="16" height="16"') + '</span>' + ' في الشريط السفلي: ذهبي عند التفعيل (وتظهر عبارة «التوقف مفعّل»)، وباهت عند الإلغاء (وتظهر عبارة «عدم التوقف»).';
+  stNote.innerHTML = 'في الوضعين الحر والقياسي. ويمكن التبديل بسرعة بالضغط المطوّل على الزر ' + '<span style="display:inline-flex;vertical-align:middle;background:#0E4433;color:#E8B84B;border-radius:6px;padding:2px;">' + document.getElementById('segStopBtn').innerHTML.replace('width="24" height="24"', 'width="16" height="16"') + '</span>' + ' في الشريط السفلي: ذهبي عند التفعيل (وتظهر عبارة «التوقف مفعّل»)، وباهت عند الإلغاء (وتظهر عبارة «عدم التوقف»).';
   card.appendChild(stNote);
 
   card = fontTabHeading('٥. قراءة الكلمات (كلمة كلمة)');
