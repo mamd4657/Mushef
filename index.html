@@ -197,6 +197,7 @@ body.dark-mode .voice-cmd-list .vc .ex{color:#8FCB9E;}
 .fab-arrow-col{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;height:100%;padding:0 7px;margin:0 -4px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .fab-arrow-col .fab-btn-arrow{padding:0;height:21px;}
 .speed-num{font-family:Arial,Helvetica,sans-serif;font-size:12.5px;line-height:13px;font-weight:700;color:#F6EFDC;margin-top:1px;min-width:21px;text-align:center;direction:ltr;font-variant-numeric:tabular-nums;pointer-events:none;}
+.speed-num.recite-speed{color:#E8C766;}
 .fab-frame-size{gap:12px;}
 .fab-btn{background:transparent;border:none;color:#F6EFDC;font-size:22px;cursor:pointer;line-height:1;padding:4px 5px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;}
 .fab-btn-round{border:1.5px solid #F6EFDC;border-radius:50%;width:36px;height:36px;font-size:20px;padding:0;overflow:hidden;}
@@ -29336,8 +29337,7 @@ function pauseFreeAutoScroll(keepPauseIcon) {
 }
 
 function updateFreeSpeedLabel() {
-  const el = document.getElementById('freeSpeedNum');
-  if (el) el.textContent = String(Math.round(freeSpeedPxPerSec));
+  paintSpeedNum(document.getElementById('freeSpeedNum'), freeSpeedPxPerSec);
 }
 function setFreeAutoSpeed(px) {
   freeSpeedPxPerSec = Math.max(FREE_MIN_SPEED, Math.min(FREE_MAX_SPEED, px));
@@ -29352,8 +29352,8 @@ function initFreeAutoScrollControls() {
   if (playBtn) playBtn.innerHTML = PLAY_ARROW_SVG;
   updateFreeSpeedLabel();
   if (playBtn) playBtn.addEventListener('click', () => { if (freeAutoScrolling || freeTapPaused) { freeTapPaused = false; pauseFreeAutoScroll(); } else startFreeAutoScroll(); });
-  if (downBtn) downBtn.addEventListener('click', () => setFreeAutoSpeed(freeSpeedPxPerSec - FREE_SPEED_STEP));
-  if (upBtn) upBtn.addEventListener('click', () => setFreeAutoSpeed(freeSpeedPxPerSec + FREE_SPEED_STEP));
+  if (downBtn) downBtn.addEventListener('click', () => { if (reciteSpeedControlsOn()) adjustReciteSpeed(-RECITE_SPEED_STEP); else setFreeAutoSpeed(freeSpeedPxPerSec - FREE_SPEED_STEP); });
+  if (upBtn) upBtn.addEventListener('click', () => { if (reciteSpeedControlsOn()) adjustReciteSpeed(RECITE_SPEED_STEP); else setFreeAutoSpeed(freeSpeedPxPerSec + FREE_SPEED_STEP); });
 }
 // The whole column - the arrow, the speed number under it and a little
 // space either side - works the auto-scroll on/off button.
@@ -31080,6 +31080,26 @@ function adjustReciteSpeed(delta) {
   reciteSpeed = Math.max(RECITE_SPEED_MIN, Math.min(RECITE_SPEED_MAX, Math.round((reciteSpeed + delta) * 10) / 10));
   reciteAudio.playbackRate = reciteSpeed;
   store.set('recite-speed', String(reciteSpeed));
+  refreshSpeedLabels();
+}
+// While a listening bar (the ayah's or the surah's) is showing, the bottom
+// bar's − / + buttons slow down / speed up the recitation (any reciter,
+// 0.5× to 2×, a tenth per tap) instead of the auto-scroll, and the number
+// under the arrow shows the recitation speed (in gold) until the bar is hidden.
+const RECITE_SPEED_STEP = 0.1;
+// (the try: the labels are first painted at start-up, before the bar exists)
+function reciteSpeedControlsOn() { try { return reciteBarShowing(); } catch (e) { return false; } }
+function refreshSpeedLabels() {
+  if (typeof updateSpeedLabel === 'function') updateSpeedLabel();
+  if (typeof updateFreeSpeedLabel === 'function') updateFreeSpeedLabel();
+}
+function reciteSpeedText() { return (Math.round(reciteSpeed * 10) / 10).toFixed(1); }
+function paintSpeedNum(el, scrollValue) {
+  if (!el) return;
+  const rs = reciteSpeedControlsOn();
+  el.textContent = rs ? reciteSpeedText() : String(Math.round(scrollValue));
+  el.classList.toggle('recite-speed', rs);
+  el.setAttribute('aria-label', rs ? 'سرعة التلاوة' : 'سرعة التمرير');
 }
 
 // ---------------- تلاوة mini control bar (مرة / تكرار / استمرار) ----------------
@@ -31148,6 +31168,7 @@ function sizeReciteBar() {
 // red while the surah's listening bar is showing
 function syncSurahBarMark() {
   document.body.classList.toggle('surah-bar-on', reciteModeBarEl.style.display !== 'none' && reciteBarVariant === 'surah');
+  refreshSpeedLabels();
 }
 function closeReciteModeBarLayer() {
   reciteModeBarEl.style.display = 'none';
@@ -35320,8 +35341,7 @@ let autoScrollAccum = null; // tracks the true fractional scroll position - scro
 // entirely at low speeds; accumulating separately avoids that.
 
 function updateSpeedLabel() {
-  const el = document.getElementById('speedNum');
-  if (el) el.textContent = String(Math.round(speedPxPerSec));
+  paintSpeedNum(document.getElementById('speedNum'), speedPxPerSec);
 }
 
 // Drives the native scrollTop directly (like free mode's auto-scroll engine)
@@ -35402,11 +35422,13 @@ playPauseBtn.addEventListener('click', () => {
 });
 
 document.getElementById('speedDownBtn').addEventListener('click', () => {
+  if (reciteSpeedControlsOn()) { adjustReciteSpeed(-RECITE_SPEED_STEP); return; }
   speedPxPerSec = Math.max(MIN_SPEED_PX, speedPxPerSec - SPEED_STEP_PX);
   updateSpeedLabel();
   store.set('auto-speed-px', String(speedPxPerSec));
 });
 document.getElementById('speedUpBtn').addEventListener('click', () => {
+  if (reciteSpeedControlsOn()) { adjustReciteSpeed(RECITE_SPEED_STEP); return; }
   speedPxPerSec = Math.min(MAX_SPEED_PX, speedPxPerSec + SPEED_STEP_PX);
   updateSpeedLabel();
   store.set('auto-speed-px', String(speedPxPerSec));
@@ -35897,6 +35919,7 @@ function renderGuideTab() {
       '<b>شريط استماع الآية</b> (أحمر فاتح): يظهر من زر «استماع» في نافذة الآية. فيه التشغيل والإيقاف، وثلاثة اختيارات: <b>مرة</b> (الآية وحدها)، و<b>تكرار</b> (الآية عدداً من المرات يُختار من مرتين إلى سبع، ويبقى محفوظاً)، و<b>استمرار</b> (الآية وما بعدها ومن سورة إلى سورة حتى تُوقف، وهو الاختيار عند فتح الشريط).',
       '<b>شريط استماع السورة</b> (أحمر غامق): يظهر بالنقر على إطار اسم السورة في الإطار العائم، وأنت في أي موضع منها. التشغيل وحده يتلو السورة كاملة، وزر <b>⏮</b> بجانبه يعيد التلاوة من أول السورة (أو الجزء أو التوقيت)، و<b>السورة</b> و<b>الجزء</b> يُظهران صفاً منزلقاً لاختيار سورة أو جزء، و<b>توقيت</b> يُظهر أوقاتاً (من خمس دقائق إلى خمس ساعات) تستمر التلاوة خلالها من أول السورة. وتبقى الإشارة على آخر اختيار.',
       'وفي الشريطين زر <b>⏮</b> للرجوع إلى بداية الاستماع: في شريط الآية إلى الآية التي بدأ منها، وفي شريط السورة إلى أول السورة أو الجزء أو التوقيت. ولا يعمل الشريطان معاً، ولا تعمل معهما قراءة الكلمات.',
+      '<b>سرعة التلاوة</b>: ما دام أحد الشريطين ظاهراً يصير زرا الإبطاء (' + roundBadge('−', 18) + ') والتسريع (' + roundBadge('+', 18) + ') في الشريط السفلي لسرعة التلاوة بدل التمرير، لأي قارئ، ويظهر تحت السهم رقمها باللون الذهبي (١٫٠ السرعة العادية، من ٠٫٥ إلى ٢٫٠، بعُشر في كل نقرة)، وتبقى محفوظة. وإذا أُخفي الشريط عاد الزران والرقم للتمرير.',
       'الشريط ثابت فوق الشريط السفلي، ويمكن سحبه من الشريط نفسه إلى الأسفل ليغطي الشريط السفلي، وإلى الأعلى ليعود. ويظهر في مكانه عند فتحه من جديد.',
       'أثناء التلاوة تبقى الآية المظللة في أعلى النص. وتبدأ تلاوة كل سورة بالبسملة بصوت القارئ نفسه (عدا التوبة). وإذا انتقلت إلى سورة أخرى أثناء التلاوة استمرت التلاوة، فإذا أوقفتها ثم شغّلتها بدأت من السورة الظاهرة.',
       '<b>الرجوع</b> (بالإيماءة أو بسهم الرجوع) يُغلق أولاً ما فُتح بعد الشريط، ثم يوقف التلاوة كزر الإيقاف ويبقى الشريط ظاهراً، ثم يُخفي الشريط في المرة التالية، ثم يعيد إلى القائمة الجانبية، وبعدها تُخرج إيماءة الرجوع من التطبيق.',
