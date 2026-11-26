@@ -623,12 +623,13 @@ body.dark-mode .fbNameGroup{color:#EFE8D6;}
 /* between the two boxes: the Kaaba / Green Dome at the top (level with the
    boxes' top edge) and, under it, which mushaf is open, level with their
    bottom edge */
-#floatingFrameBar .fbNameGroup .surah-place-icon{flex-direction:column;align-items:center;justify-content:space-between;align-self:center;box-sizing:border-box;padding:1px 0 2px;}
-#floatingFrameBar .fbNameGroup .surah-place-icon img{height:0.78em;}
-#floatingFrameBar .fbMushafMark{display:block;font-family:sans-serif;font-size:.46em;font-weight:800;line-height:1;white-space:nowrap;-webkit-text-stroke:0;}
+#floatingFrameBar .fbNameGroup .surah-place-icon{flex-direction:column;align-items:center;justify-content:space-between;align-self:center;box-sizing:border-box;padding:1px 0 1px;}
+/* the mark fills the top half (its bottom edge at the boxes' mid-height) */
+#floatingFrameBar .fbNameGroup .surah-place-icon img{height:calc(50% - 1px);width:auto;flex:0 0 auto;}
+#floatingFrameBar .fbMushafMark{display:block;font-family:sans-serif;font-size:.78em;font-weight:800;line-height:1;white-space:nowrap;-webkit-text-stroke:0;}
 #floatingFrameBar .fbMushafMark::before{content:'عام';}
 body.mushaf-khatma #floatingFrameBar .fbMushafMark::before{content:'ختمة';}
-body.dark-mode #floatingFrameBar .fbNameGroup .surah-place-icon-kaaba{background:none;padding:1px 0 2px;}
+body.dark-mode #floatingFrameBar .fbNameGroup .surah-place-icon-kaaba{background:none;padding:1px 0 1px;}
 body.dark-mode #floatingFrameBar .fbNameGroup .surah-place-icon-kaaba img{background:#EFE8D6;border-radius:50%;padding:1px;box-sizing:border-box;}
 body.dark-mode .fbNameGroup .surah-place-icon-kaaba{background:#EFE8D6;border-radius:50%;padding:1.5px;}
 .fbNameGroup.free-surahs{font-size:23.4px;}
@@ -29251,7 +29252,7 @@ function initFreeSwipe() {
 
 // ---------------- free-mode auto-scroll (separate engine from the bound mode's - drives native scrollTop instead of a CSS transform, and auto-advances to the next page on reaching the bottom) ----------------
 let freeAutoScrolling = false;
-const FREE_MIN_SPEED = 3, FREE_MAX_SPEED = 60, FREE_SPEED_STEP = 3; // 3, 6, 9 ... 60 (was 5 ... 100)
+const FREE_MIN_SPEED = 3, FREE_MAX_SPEED = 75, FREE_SPEED_STEP = 3; // 3, 6, 9 ... 75
 // a speed saved under the old steps lands on the nearest new one
 let freeSpeedPxPerSec = Math.max(FREE_MIN_SPEED, Math.min(FREE_MAX_SPEED, Math.round((parseInt(store.get('free-auto-speed-px'), 10) || 39) / FREE_SPEED_STEP) * FREE_SPEED_STEP));
 let freeAutoRafId = null;
@@ -35759,7 +35760,7 @@ function renderGuideTab() {
     { title: '٤. شريط الأدوات السفلي', items: [
       '<b>الأوامر الصوتية</b>: انقر على زر الميكروفون (' + badge(document.getElementById('micBtn').innerHTML) + ') في وسط الشريط (أو اضغط مطوّلاً على سهم التمرير في عرض الصفحات)، فيظهر الميكروفون فوق الشريط، ثم قل الأمر واسكت قليلاً. والأوامر وشرحها في عنوان «أوامر صوتية». وبجانبه زر <b>التوقف</b> (' + badge(document.getElementById('segStopBtn').innerHTML) + ')، ويُفعَّل أو يُلغى بالضغط المطوّل عليه (الفقرة ٣).',
       'تكبير الخط وتصغيره (' + roundBadge('A', 19) + ' / ' + roundBadge('A', 12) + ')، والرقم بينهما حجم الخط الحالي (من ١٤ إلى ٦٠). والبسملة في الوضع الحر بحجم خط النص، تكبر وتصغر معه.',
-      '<b>التمرير التلقائي</b> (' + badge(PLAY_ARROW_SVG) + ' / ' + badge(PAUSE_SVG) + ') مع زري الإبطاء (' + roundBadge('−', 18) + ') والتسريع (' + roundBadge('+', 18) + ')، والرقم تحت السهم سرعة التمرير (من ٣ إلى ٦٠، بثلاث درجات في كل نقرة). النقر على النص يوقف الحركة، والنقر مرة أخرى يعيدها، والسحب بالإصبع يحرّك الصفحة يدوياً. ولا يُلغى التفعيل إلا بزره، أو بالرجوع مرتين (الأولى توقف الحركة، والثانية تلغي التفعيل).',
+      '<b>التمرير التلقائي</b> (' + badge(PLAY_ARROW_SVG) + ' / ' + badge(PAUSE_SVG) + ') مع زري الإبطاء (' + roundBadge('−', 18) + ') والتسريع (' + roundBadge('+', 18) + ')، والرقم تحت السهم سرعة التمرير (من ٣ إلى ٧٥، بثلاث درجات في كل نقرة). النقر على النص يوقف الحركة، والنقر مرة أخرى يعيدها، والسحب بالإصبع يحرّك الصفحة يدوياً. ولا يُلغى التفعيل إلا بزره، أو بالرجوع مرتين (الأولى توقف الحركة، والثانية تلغي التفعيل).',
       '<b>تبديل الاتجاه</b> (' + badge(document.getElementById('rotateBtn').innerHTML) + '): النقرة الأولى للاتجاه الأفقي، والثانية للعودة إلى العمودي. والتنقّل بين الجهتين الأفقيتين بتدوير الجهاز.',
       '<b>الرجوع</b> (' + badge(document.getElementById('backBtn').innerHTML) + '): يعمل عمل إيماءة الرجوع، فيعود خطوة خطوة (يغلق النافذة أو القائمة المفتوحة، ويعيد من الاتجاه الأفقي إلى العمودي). وآخر خطوة تعيد إلى القائمة الجانبية. والخروج من التطبيق يكون بإيماءة الرجوع.',
     ]},
