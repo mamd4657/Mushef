@@ -31577,7 +31577,7 @@ function orangeDefaultPlan() {
   return { kind: 'surah', s: orangeSurah };
 }
 function syncOrangeRadios() {
-  const k = orangePlan ? (orangePlan.kind === 'list' ? null : orangePlan.kind) : orangeLastKind;
+  const k = orangePlan ? (orangePlan.kind === 'list' || orangePlan.kind === 'surahs' ? null : orangePlan.kind) : orangeLastKind;
   document.querySelectorAll('input[name="rbSurahKind"]').forEach((r) => { r.checked = r.value === k; });
 }
 function setReciteBarVariant(v) {
@@ -31621,6 +31621,12 @@ function juzAyahQueue(j) {
   }
   return q;
 }
+// several surahs one after the other (a voice command), each whole
+function surahsAyahQueue(list) {
+  const q = [];
+  (list || []).forEach((s) => { for (let a = 1; a <= (SURAH_AYAH_COUNT[s] || 0); a++) q.push([s, a]); });
+  return q;
+}
 function startOrangePlan(plan) {
   reciteBasmalaThen = null;
   reciteAudio.pause();
@@ -31631,6 +31637,8 @@ function startOrangePlan(plan) {
   let first;
   if (plan.kind === 'surah') {
     contQueue = []; for (let a = 1; a <= (SURAH_AYAH_COUNT[plan.s] || 0); a++) contQueue.push([plan.s, a]);
+  } else if (plan.kind === 'surahs') {
+    contQueue = surahsAyahQueue(plan.list);
   } else if (plan.kind === 'juz') {
     contQueue = juzAyahQueue(plan.j);
   } else if (plan.kind === 'list') {
@@ -31644,7 +31652,7 @@ function startOrangePlan(plan) {
   if (contQueue) { if (!contQueue.length) return; first = contQueue[0]; }
   contPlanBuiltFor = 'orange';
   orangePlan = plan; orangeSession = true;
-  if (plan.kind !== 'list') {
+  if (plan.kind !== 'list' && plan.kind !== 'surahs') {
     orangeLastKind = plan.kind; store.set('orange-kind', plan.kind);
     if (plan.kind === 'time') { orangeLastMin = plan.min; store.set('orange-min', String(plan.min)); }
   }
@@ -33368,6 +33376,41 @@ function voiceNameTok(t) {
   if ((t.startsWith('بال') || t.startsWith('وال') || t.startsWith('فال')) && t.length > 5) return t.slice(1);
   return t;
 }
+// every surah named, in the order said; «من … إلى/حتى …» between two of
+// them gives all the surahs from the first to the second
+const VOICE_RANGE_WORDS = new Set(['الي', 'لي', 'حتي', 'لغايه', 'لحد', 'للين', 'لين']);
+function voiceFindSurahs(toks, range) {
+  const forms = voiceSurahForms();
+  const isForm = (t) => forms.some((x) => x.f === t);
+  // «المعوذتين» = الفلق والناس
+  toks = [].concat(...toks.map((t) => (/^[وف]?(ال)?معوذت(ين|ان)$/.test(t) ? ['الفلق', 'الناس'] : [t])));
+  const work = toks.map((t) => {
+    const n = voiceNameTok(t);
+    if (!isForm(n) && (n.startsWith('و') || n.startsWith('ف') || n.startsWith('ثم')) && n.length > 2) {
+      const cut = n.startsWith('ثم') ? n.slice(2) : n.slice(1);
+      if (isForm(voiceNameTok(cut))) return voiceNameTok(cut);
+    }
+    return n;
+  });
+  const hits = [];
+  for (let guard = 0; guard < 40; guard++) {
+    const f = voiceFindSurah(work);
+    if (!f) break;
+    hits.push({ s: f.s, i: f.i });
+    for (let k = 0; k < f.used; k++) work[f.i + k] = '\u0000\u0000\u0000\u0000\u0000';
+  }
+  hits.sort((a, b) => a.i - b.i);
+  const list = hits.map((h) => h.s);
+  if (list.length === 2 && range) {
+    {
+      const [a, b] = list;
+      const out = [];
+      if (a <= b) for (let x = a; x <= b; x++) out.push(x); else for (let x = a; x >= b; x--) out.push(x);
+      return out;
+    }
+  }
+  return list.filter((x, i) => list.indexOf(x) === i || list[i - 1] !== x);
+}
 function voiceWhichDir(toks) {
   for (const t of toks) { const k = voiceKind(t); if (k === 'prev' || k === 'next') return k; }
   return null;
@@ -33423,6 +33466,16 @@ function voiceParse(raw) {
     const rec = voiceFindReciter(r);
     if (rec) r = r.slice(0, rec.i).concat(r.slice(rec.i + rec.used));
     let sid = 0;
+    // several surahs: «استماع الملك والقلم والحاقة», or a run of them:
+    // «استماع من سورة الملك إلى سورة الناس»
+    const multi = r.length > 1 ? voiceFindSurahs(r, all.some((t) => VOICE_RANGE_WORDS.has(t))) : [];
+    if (multi.length > 1) {
+      const rName2 = RECITERS[rec ? rec.id : currentReciter] ? RECITERS[rec ? rec.id : currentReciter].name : '';
+      const lbl = multi.length > 4
+        ? 'من سورة ' + SURAH_NAMES[multi[0]] + ' إلى سورة ' + SURAH_NAMES[multi[multi.length - 1]]
+        : 'سورة ' + multi.map((x) => SURAH_NAMES[x]).join('، ');
+      return { label: 'استماع: ' + lbl + (rName2 ? ' - ' + rName2 : ''), run: () => voiceRunListen(multi[0], rec ? rec.id : null, multi) };
+    }
     const dir = voiceWhichDir(r);
     if (dir) sid = Math.max(1, Math.min(114, curS() + (dir === 'next' ? 1 : -1)));
     else if (r.length) {
@@ -33664,6 +33717,7 @@ function actArmRecitePaused(rc) {
       reciteMode = 'continuous';
       contQueue = null; contQueuePos = 0; contStopAt = null; orangeTimeLeft = null;
       if (plan.kind === 'surah') { contQueue = []; for (let a = 1; a <= (SURAH_AYAH_COUNT[plan.s] || 0); a++) contQueue.push([plan.s, a]); }
+      else if (plan.kind === 'surahs') contQueue = surahsAyahQueue(plan.list);
       else if (plan.kind === 'juz') contQueue = juzAyahQueue(plan.j);
       else if (plan.kind === 'list') { const q = buildContListQueue(plan.items); contQueue = typeof q === 'string' ? null : q; }
       else contStopAt = Date.now() + plan.min * 60000;
@@ -33848,7 +33902,7 @@ function voiceGoToAyah(s, a) {
   };
   if (change) setTimeout(mark, 250); else mark();
 }
-function voiceRunListen(sid, reciterId) {
+function voiceRunListen(sid, reciterId, many) {
   if (reciterId && RECITERS[reciterId]) {
     if (activeReciterIds.indexOf(reciterId) === -1) { activeReciterIds.push(reciterId); saveActiveReciterIds(); }
     setCurrentReciter(reciterId);
@@ -33856,7 +33910,7 @@ function voiceRunListen(sid, reciterId) {
   closeSidebar();
   goToSurahStart(sid);
   openSurahReciteBar(sid);
-  startOrangePlan({ kind: 'surah', s: sid });
+  startOrangePlan(many && many.length > 1 ? { kind: 'surahs', list: many.slice() } : { kind: 'surah', s: sid });
 }
 function voiceRunJuz(j) {
   segHint = { j }; segStartId = null;
@@ -34127,6 +34181,7 @@ function renderVoiceTab() {
     ['استماع', 'تلاوة السورة المحددة مسبقاً بالقارئ المحدد مسبقاً.', 'استماع، اسمع، سمّعني، شغّل'],
     ['استماع + سورة', 'تلاوة السورة التي تذكرها بالقارئ المحدد مسبقاً.', 'استماع سورة الملك، استماع الكهف'],
     ['استماع + قارئ', 'تلاوة السورة المحددة مسبقاً بالقارئ الذي تذكره، باسمه الكامل أو المشهور.', 'استماع المنشاوي، استماع عبد الباسط'],
+    ['استماع + أكثر من سورة', 'تلاوة السور التي تذكرها واحدة بعد أخرى بالترتيب الذي قلته، أو كل السور من الأولى إلى الثانية إذا قلت «من … إلى …» أو «حتى»، ويمكن ذكر القارئ معها.', 'استماع الملك والقلم والحاقة، استماع يس ثم الرحمن، استماع من سورة الملك إلى سورة الناس، استماع الإخلاص والمعوذتين'],
     ['استماع + سورة + قارئ', 'تلاوة السورة والقارئ اللذين تذكرهما.', 'استماع سورة يس الحصري'],
     ['سورة …، أو اسم السورة وحده', 'بداية السورة.', 'سورة البقرة، البقرة، بقرة'],
     ['سورة سابقة / سورة لاحقة', 'بداية السورة التي قبل المعروضة أو بعدها.', 'سورة لاحقة، السورة السابقة'],
