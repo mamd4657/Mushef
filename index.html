@@ -64,7 +64,7 @@ body{--navInset:env(safe-area-inset-bottom,0px);--topInset:env(safe-area-inset-t
 body.landscape-lock{--navInset:0px;--topInset:0px;}
 header{background:#0E4433;color:#F6EFDC;padding:8px 16px;padding-top:calc(8px + var(--topInset));display:flex;align-items:center;gap:6px;position:fixed;top:0;left:0;right:0;z-index:30;box-shadow:0 2px 10px rgba(14,68,51,.25);box-sizing:border-box;}
 .header-frame{background:#0E4433;border:1.5px solid #F6EFDC;border-radius:10px;}
-#headerClockDate{display:flex;align-items:center;gap:0.5cm;flex:1;min-width:0;padding:2px 4px;background:#0E4433;border:1.5px solid #F6EFDC;border-radius:10px;height:42.8px;box-sizing:border-box;}
+#headerClockDate{display:flex;align-items:center;gap:0.5cm;flex:1;min-width:0;padding:2px 4px;background:#0E4433;border:1.5px solid #E8B84B;border-radius:10px;height:42.8px;box-sizing:border-box;}
 #headerClockCol{display:flex;flex-direction:column;line-height:1.15;gap:0;flex-shrink:0;}
 /* round-4: NOT display:flex - a flex container splits its children into
    separate flex items (one per element, but text nodes still get grouped
@@ -1101,6 +1101,9 @@ body.dark-mode .ayah-seg.tap-highlight{background:#66BB6A55;}
 body.dark-mode ::highlight(wbw){background-color:var(--hlSky);}
 body.dark-mode.wbw-on #floatingFrameBar .fbCircleSlot{background:#5A9DF0;border-color:#5A9DF0;}
 body.dark-mode .search-match-highlight{background:#FFCA2899;}
+/* gold: the rotate, mic, stop and back buttons with their frames */
+#rotateFrameBound,#rotateFrameFree,#micFrame,#micFrameBound,#segStopFrame,#segStopFrameBound,#backFrameBound,#backFrameFree{border-color:#E8B84B !important;}
+#rotateBtn,#freeRotateBtn,#rotateFrameFree .fab-btn,#micBtn,#micBtnBound,#backBtn,#backFrameFree .fab-btn{color:#E8B84B !important;}
 </style>
 </head>
 <body>
