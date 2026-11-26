@@ -1181,6 +1181,9 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
   <div class="fab-frame" id="rotateFrameBound">
     <button class="fab-btn" id="rotateBtn" aria-label="تبديل العرض الأفقي/العمودي" title="تبديل العرض"><svg class="fab-icon" viewBox="0 0 24 24" width="1.2em" height="1.2em" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.6 10.2A6 6 0 0 0 7.3 7.6"/><path d="M6.4 13.8a6 6 0 0 0 10.3 2.6"/><path d="M6.8 4.4v3.8h3.8"/><path d="M17.2 19.6v-3.8h-3.8"/></g></svg></button>
   </div>
+  <div class="fab-frame" id="micFrameBound">
+    <button class="fab-btn" id="micBtnBound" aria-label="أمر صوتي" title="أمر صوتي"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><line x1="12" y1="17.5" x2="12" y2="21.5"/><line x1="8.5" y1="21.5" x2="15.5" y2="21.5"/></svg></button>
+  </div>
   <div class="fab-frame fab-frame-scroll">
     <button id="speedDownBtn" class="fab-btn fab-btn-round" aria-label="أبطئ التمرير">−</button>
     <div class="fab-arrow-col">
@@ -1188,9 +1191,6 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
       <span id="speedNum" class="speed-num" aria-label="سرعة التمرير"></span>
     </div>
     <button id="speedUpBtn" class="fab-btn fab-btn-round" aria-label="أسرع التمرير">+</button>
-  </div>
-  <div class="fab-frame" id="micFrameBound">
-    <button class="fab-btn" id="micBtnBound" aria-label="أمر صوتي" title="أمر صوتي"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><line x1="12" y1="17.5" x2="12" y2="21.5"/><line x1="8.5" y1="21.5" x2="15.5" y2="21.5"/></svg></button>
   </div>
   <div class="fab-frame" id="segStopFrameBound">
     <button class="fab-btn" id="segStopBtnBound" aria-label="التوقف في أواخر السور والأجزاء (اضغط مطوّلاً للتفعيل أو الإلغاء)" title="التوقف في أواخر السور والأجزاء (اضغط مطوّلاً للتفعيل أو الإلغاء)"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="4" x2="20" y2="4"/><line x1="12" y1="21" x2="12" y2="9"/><polyline points="7,13 12,8 17,13"/></svg></button>
@@ -35808,7 +35808,7 @@ function renderGuideTab() {
       '<b>التوقف عند آخر السورة والجزء</b> (في الوضعين): يتوقف التمرير عند آخر السورة أو الجزء، وتظهر ثلاثة أزرار (في الوضع الحر فوق الشريط السفلي، وفي الوضع القياسي فوق الإطار العائم بعد أن تظهر صفحة آخر السورة أو الجزء كاملة): آخر السورة أو الجزء في الوسط، والسابق على اليمين، واللاحق على اليسار. وسحبة خفيفة إلى أعلى (في الوضع الحر) أو نقرة على الصفحة (في الوضع القياسي) تُكمل القراءة. ويُفعَّل هذا أو يُلغى بالضغط المطوّل على زر (' + badge(document.getElementById('segStopBtn').innerHTML) + ') في الشريط السفلي، أو من عنوان <b>التخطيط</b>.',
     ]},
     { title: '٤. شريط الأدوات السفلي', items: [
-      '<b>الأوامر الصوتية</b>: انقر على زر الميكروفون (' + badge(document.getElementById('micBtn').innerHTML) + ') في وسط الشريط (أو اضغط مطوّلاً على سهم التمرير في عرض الصفحات)، فيظهر الميكروفون فوق الشريط، ثم قل الأمر واسكت قليلاً. والأوامر وشرحها في عنوان «أوامر صوتية». وبجانبه زر <b>التوقف</b> (' + badge(document.getElementById('segStopBtn').innerHTML) + ')، ويُفعَّل أو يُلغى بالضغط المطوّل عليه (الفقرة ٣).',
+      '<b>الأوامر الصوتية</b>: انقر على زر الميكروفون (' + badge(document.getElementById('micBtn').innerHTML) + ') في وسط الشريط (وفي الوضع القياسي بجانب زر التدوير، أو اضغط مطوّلاً على سهم التمرير)، فيظهر الميكروفون فوق الشريط، ثم قل الأمر واسكت قليلاً. والأوامر وشرحها في عنوان «أوامر صوتية». وبجانبه زر <b>التوقف</b> (' + badge(document.getElementById('segStopBtn').innerHTML) + ')، ويُفعَّل أو يُلغى بالضغط المطوّل عليه (الفقرة ٣).',
       'تكبير الخط وتصغيره (' + roundBadge('A', 19) + ' / ' + roundBadge('A', 12) + ')، والرقم بينهما حجم الخط الحالي (من ١٤ إلى ٦٠). والبسملة في الوضع الحر بحجم خط النص، تكبر وتصغر معه.',
       '<b>التمرير التلقائي</b> (' + badge(PLAY_ARROW_SVG) + ' / ' + badge(PAUSE_SVG) + ') مع زري الإبطاء (' + roundBadge('−', 18) + ') والتسريع (' + roundBadge('+', 18) + ')، والرقم تحت السهم سرعة التمرير (من ٣ إلى ٧٥، بثلاث درجات في كل نقرة). النقر على النص يوقف الحركة، والنقر مرة أخرى يعيدها، والسحب بالإصبع يحرّك الصفحة يدوياً. ولا يُلغى التفعيل إلا بزره، أو بالرجوع مرتين (الأولى توقف الحركة، والثانية تلغي التفعيل).',
       '<b>تبديل الاتجاه</b> (' + badge(document.getElementById('rotateBtn').innerHTML) + '): النقرة الأولى للاتجاه الأفقي، والثانية للعودة إلى العمودي. والتنقّل بين الجهتين الأفقيتين بتدوير الجهاز.',
