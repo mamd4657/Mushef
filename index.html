@@ -636,7 +636,7 @@ body.dark-mode .fbNameGroup{color:#EFE8D6;}
 #floatingFrameBar .fbNameGroup .surah-place-icon{flex-direction:column;align-items:center;justify-content:space-between;align-self:center;box-sizing:border-box;padding:1px 0 1px;}
 /* the mark fills the top half (its bottom edge at the boxes' mid-height) */
 #floatingFrameBar .fbNameGroup .surah-place-icon img{height:calc(50% - 1px);width:auto;flex:0 0 auto;}
-#floatingFrameBar .fbMushafMark{display:block;font-family:sans-serif;font-size:.78em;font-weight:800;line-height:1;white-space:nowrap;-webkit-text-stroke:0;}
+#floatingFrameBar .fbMushafMark{display:block;font-family:sans-serif;font-size:1em;font-weight:900;line-height:1;white-space:nowrap;-webkit-text-stroke:.35px currentColor;transform:translateY(-.1em);}
 #floatingFrameBar .fbMushafMark::before{content:'عام';}
 body.mushaf-khatma #floatingFrameBar .fbMushafMark::before{content:'ختمة';}
 body.dark-mode #floatingFrameBar .fbNameGroup .surah-place-icon-kaaba{background:none;padding:1px 0 1px;}
@@ -884,6 +884,7 @@ body.dark-mode .ayahnum-badge.ayahnum-100{border-top-color:#FF6B5B;}
    orange dot in its middle. See rubGridSvg(). */
 .rubgrid8-done{fill:#FFA53A;}
 .rubgrid8-todo{fill:#9A9A9A;}
+.rubgrid8-dot{stroke:#000;}
 .rubgrid8-line{fill:none;stroke:#000;stroke-width:0.45;}
 .rubgrid8-frame{fill:none;stroke:#000;stroke-width:0.9;}
 body.dark-mode .rubgrid8-frame{stroke:#D8CBAE;} /* black would vanish on the dark page */
@@ -27043,7 +27044,10 @@ function rubGridSvg(globalRub, isEnd) {
       const cx = x + CW / 2, cy = (top + bottom) / 2;
       const rad = Math.min(CW, bottom - top) * 0.3;
       fills.push('<rect class="rubgrid8-todo" x="' + x + '" y="' + y + '" width="' + CW + '" height="4.5"/>');
-      fills.push('<circle class="rubgrid8-done" cx="' + cx + '" cy="' + cy.toFixed(3) + '" r="' + rad.toFixed(3) + '"/>');
+      // a thin black ring round the dot, drawn inside the dot's own area
+      // (the radius less half the ring), so the gray round it stays as it was
+      const ring = 0.3;
+      fills.push('<circle class="rubgrid8-done rubgrid8-dot" stroke-width="' + ring + '" cx="' + cx + '" cy="' + cy.toFixed(3) + '" r="' + (rad - ring / 2).toFixed(3) + '"/>');
     } else {
       fills.push('<rect class="rubgrid8-todo" x="' + x + '" y="' + y + '" width="' + CW + '" height="4.5"/>');
     }
@@ -28397,8 +28401,8 @@ function fitFloatingFrameBar(bar, scaleMul, depth) {
     fromToJuz: 1.2,  // from/to <-> the ج box
     juzRB: 1,        // the ج box <-> right bracket
     rbOrder: 0.6,    // right bracket <-> surah name
-    iconCount: 2.2,  // icon <-> the numbers' box
-    nameIcon: 2.2,   // the name's box <-> icon (the same both sides)
+    iconCount: 0.7,  // icon (and «عام»/«ختمة» under it) <-> the numbers' box
+    nameIcon: 0.7,   // the name's box <-> icon (the same both sides)
     countLB: 0.6,    // the numbers' box <-> left bracket
     lbHizb: 1,       // left bracket <-> the ح box
     hizbRub: 1.2,    // the ح box <-> ر
