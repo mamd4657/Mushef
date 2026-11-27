@@ -264,11 +264,11 @@ body.dark-mode .ayah-popup-title:active{background:#232922;}
 .sidebar-colheader{position:relative;display:flex;flex-shrink:0;border-bottom:2.5px solid #7B2E2E;min-height:34px;}
 #resumeBox,#resumeBoxKhatma{display:none;position:absolute;top:2px;bottom:2px;right:6px;z-index:2;align-items:center;justify-content:center;background:#7A5A00;color:#FFFFFF;border:2px solid #0E4433;border-radius:10px;font-family:sans-serif;font-size:18px;font-weight:800;letter-spacing:.2px;white-space:nowrap;overflow:hidden;padding:0 8px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25);}
 body.dark-mode #resumeBox,body.dark-mode #resumeBoxKhatma{background:#7A5A00;color:#FFFFFF;border-color:#F6EFDC;}
-/* «العودة إلى العام»: the same light gold as the numbers' frame in the
+/* «العودة إلى العام»: the same light green as the numbers' frame in the
    general mushaf; «العودة إلى الختمة»: light violet, like the numbers' frame
    in the khatma mushaf - clearly apart from the gold of the bar */
-#resumeBox{background:linear-gradient(180deg,#FFF5D2,#F1DC98);color:#3A2A08;border-color:#8C6414;}
-body.dark-mode #resumeBox{background:linear-gradient(180deg,#977A3C,#7A6128);color:#FFFFFF;border-color:#F2CC5C;}
+#resumeBox{background:linear-gradient(180deg,#DDF3D3,#B4E0A4);color:#0E4433;border-color:#2E7D3E;}
+body.dark-mode #resumeBox{background:linear-gradient(180deg,#4F7F52,#36603B);color:#FFFFFF;border-color:#B4E0A4;}
 #resumeBoxKhatma{background:linear-gradient(180deg,#EADDFF,#C9AEF5);color:#3C1E6E;border-color:#6A44A8;}
 body.dark-mode #resumeBoxKhatma{background:linear-gradient(180deg,#7E62B0,#5F4592);color:#FFFFFF;border-color:#D4C0F7;}
 
@@ -590,9 +590,11 @@ body.dark-mode .fbFromTo{color:#EFE8D6;}
 #floatingFrameBar .fbNums .frame-num{display:flex;align-items:center;justify-content:center;text-align:center;padding:0 .1em;}
 #floatingFrameBar .fbNumSep{display:block;align-self:stretch;flex-shrink:0;width:var(--fbFrameW);margin:1mm 0;font-size:0;line-height:0;background:var(--fbFrameC);}
 /* the surah's listening bar showing: the name's box turns light red;
-   the khatma mushaf open: the numbers' box is light violet all over */
+   the numbers' box is light green in the general mushaf, light violet in the khatma */
 body.surah-bar-on #floatingFrameBar .fbNameZone{background:linear-gradient(180deg,#FBD0D0,#F29A9A);}
 body.dark-mode.surah-bar-on #floatingFrameBar .fbNameZone{background:linear-gradient(180deg,#A65252,#8A3A3A);}
+#floatingFrameBar .fbNums{background:linear-gradient(180deg,#DDF3D3,#B4E0A4);}
+body.dark-mode #floatingFrameBar .fbNums{background:linear-gradient(180deg,#4F7F52,#36603B);}
 body.mushaf-khatma #floatingFrameBar .fbNums{background:linear-gradient(180deg,#EADDFF,#C9AEF5);}
 body.dark-mode.mushaf-khatma #floatingFrameBar .fbNums{background:linear-gradient(180deg,#7E62B0,#5F4592);}
 #floatingFrameBar .fbNavArrow-r::before{left:0;right:0.25em;}
@@ -877,15 +879,15 @@ body.dark-mode .ayahnum-badge.ayahnum-100{border-top-color:#FF6B5B;}
 .rubgrid8{position:relative;display:inline-block;width:0.8539em;height:1.325em;vertical-align:-0.275em;margin:0 2mm;}
 .rubgrid8 svg{display:block;width:100%;height:100%;}
 /* One upright rectangle divided by thin black lines into 8 squares (2 x 4).
-   White = quarters of the juz already completed; gray = quarters not yet
+   Orange = quarters of the juz already completed; gray = quarters not yet
    reached; the square of the quarter that is just starting is gray with a
-   white dot in its middle. See rubGridSvg(). */
-.rubgrid8-done{fill:#FFFFFF;}
+   orange dot in its middle. See rubGridSvg(). */
+.rubgrid8-done{fill:#FFA53A;}
 .rubgrid8-todo{fill:#9A9A9A;}
 .rubgrid8-line{fill:none;stroke:#000;stroke-width:0.45;}
 .rubgrid8-frame{fill:none;stroke:#000;stroke-width:0.9;}
 body.dark-mode .rubgrid8-frame{stroke:#D8CBAE;} /* black would vanish on the dark page */
-body.dark-mode .rubgrid8-done{fill:#F4EEDD;}
+body.dark-mode .rubgrid8-done{fill:#FFB257;}
 body.dark-mode .rubgrid8-todo{fill:#8C8C8C;}
 .rubgrid8.rubgrid8-abs{position:absolute;top:50%;right:-7px;transform:translateY(-50%);margin:0;vertical-align:baseline;}
 /* A mark landing on a bound-mode page's very first line never shrinks -
@@ -1112,7 +1114,7 @@ body.dark-mode .search-match-highlight{background:#FFCA2899;}
 /* gold: the rotate, mic, stop and back buttons with their frames */
 #rotateFrameBound,#rotateFrameFree,#micFrame,#micFrameBound,#segStopFrame,#segStopFrameBound,#backFrameBound,#backFrameFree{border-color:#E8B84B !important;}
 #rotateBtn,#freeRotateBtn,#rotateFrameFree .fab-btn,#micBtn,#micBtnBound,#backBtn,#backFrameFree .fab-btn{color:#E8B84B !important;}
-#headerClockDate,#headerClockDate #headerClock,#headerClockDate .clock-period,#headerClockDate #headerDayName,#headerClockDate #headerHijriDate,#headerClockDate #headerGregDate,#headerClockDate span{color:#E8B84B !important;}
+#headerClockDate,#headerClockDate #headerClock,#headerClockDate .clock-period,#headerClockDate #headerDayName,#headerClockDate #headerHijriDate,#headerClockDate #headerGregDate,#headerClockDate span{color:#F7DC8C !important;}
 </style>
 </head>
 <body>
@@ -33176,6 +33178,9 @@ function setSegStop(on, quiet) {
 // Speech API) turns the speech into text, so it needs the internet.
 const MIC_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.5" width="6" height="12" rx="3" fill="currentColor"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21.5M8.5 21.5h7"/></svg>';
 const VOICE_SILENCE_MS = 1800;   // this long without new words = the command is complete
+// ... but sooner once what was heard already reads as a whole command:
+const VOICE_DONE_FINAL_MS = 550;   // the phone has closed the phrase (final text)
+const VOICE_DONE_INTERIM_MS = 1000; // the phone is still guessing (interim text)
 const VOICE_MAX_WAIT_MS = 9000;  // nothing heard at all by then: give up
 let voiceDefaultSurah = parseInt(store.get('voice-surah') || '0', 10) || 0; // 0 = the surah on screen
 
@@ -34082,8 +34087,11 @@ function startVoiceCommand() {
     if (!act) { voiceShow(firstErr, { err: true }); voiceHide(4000); return; }
     voiceShow('✓ ' + act.label);
     voiceHide(1800);
-    if (!act.noSnap) actBeforeCommand();
-    try { act.run(); } catch (e) { voiceShow('تعذّر تنفيذ الأمر', { err: true }); voiceHide(3000); }
+    // let the «✓» show on screen first, then do the (sometimes heavy) work
+    requestAnimationFrame(() => setTimeout(() => {
+      if (!act.noSnap) actBeforeCommand();
+      try { act.run(); } catch (e) { voiceShow('تعذّر تنفيذ الأمر', { err: true }); voiceHide(3000); }
+    }, 0));
   }
   rec.onresult = (ev) => {
     if (sess !== voiceSession) return;
@@ -34109,7 +34117,17 @@ function startVoiceCommand() {
     interim = interim.trim();
     voiceShow(texts()[0] || '…', { listening: true });
     clearTimeout(silenceT);
-    silenceT = setTimeout(finish, VOICE_SILENCE_MS);
+    // a complete command needn't wait the full silence: carry it out as soon
+    // as the phone stops adding to it (the longer wait stays for half a
+    // command, like «سورة» alone, so the rest of it can still come)
+    let wait = VOICE_SILENCE_MS;
+    const heard = texts()[0];
+    if (heard) {
+      let ok = false;
+      try { ok = !voiceParse(heard).error; } catch (e) { ok = false; }
+      if (ok) wait = interim ? VOICE_DONE_INTERIM_MS : VOICE_DONE_FINAL_MS;
+    }
+    silenceT = setTimeout(finish, wait);
   };
   rec.onerror = (ev) => {
     if (sess !== voiceSession || done) return;
@@ -35884,7 +35902,7 @@ function renderGuideTab() {
       'في أقصى اليمين علامة المرجعية ' + bookmarkIcon + ' لحفظ الصفحة، وبجانبها «من … إلى …»: صفحتا بداية السورة ونهايتها. وفي أقصى اليسار دائرة رقم الصفحة.',
       'وبين ذلك: الجزء (ج) والحزب (ح) والربع (ر). وفي الاتجاه الأفقي تُكتب الكلمات كاملة (جزء، حزب، ربع).',
       '<b>السورة السابقة واللاحقة</b>: النقر على إطار «ج» (وفيه السهم فوقها ورقم الجزء) <span style="white-space:nowrap">(' + navArrow(true) + ')</span> ينقل إلى بداية السورة السابقة، والنقر على إطار «ح» <span style="white-space:nowrap">(' + navArrow(false) + ')</span> ينقل إلى بداية السورة اللاحقة. والتمرير التلقائي يبقى على حاله، لكنه يتوقف عند بداية السورة إن كان مفعّلاً.',
-      'النقر على أي موضع من <b>إطار اسم السورة</b> يُظهر <b>شريط استماع السورة</b> (الفقرة ٧) ويتلوّن الإطار بالأحمر الفاتح ما دام الشريط ظاهراً، والنقر عليه مرة أخرى يوقف التلاوة ويُخفي الشريط. والنقر على <b>إطار الرقمين</b> (ترتيبها وعدد آياتها) ينقل بين المصحفين <b>العام</b> و<b>الختمة</b>، ويتلوّن الإطار كله بالبنفسجي الفاتح ما دامت الختمة مفتوحة. والنقر على <b>دائرة رقم الصفحة</b> يفعّل <b>قراءة الكلمات</b> أو يوقفها، ويظهر حولها مربع أزرق ما دامت مفعّلة (الفقرة ١١).',
+      'النقر على أي موضع من <b>إطار اسم السورة</b> يُظهر <b>شريط استماع السورة</b> (الفقرة ٧) ويتلوّن الإطار بالأحمر الفاتح ما دام الشريط ظاهراً، والنقر عليه مرة أخرى يوقف التلاوة ويُخفي الشريط. والنقر على <b>إطار الرقمين</b> (ترتيبها وعدد آياتها) ينقل بين المصحفين <b>العام</b> و<b>الختمة</b>، ويكون الإطار أخضر فاتحاً في العام، وبنفسجياً فاتحاً ما دامت الختمة مفتوحة. والنقر على <b>دائرة رقم الصفحة</b> يفعّل <b>قراءة الكلمات</b> أو يوقفها، ويظهر حولها مربع أزرق ما دامت مفعّلة (الفقرة ١١).',
       'يتحدّث الإطار تلقائياً أثناء التمرير ليطابق ما تقرأه.',
     ]},
     { title: '٣. صفحة النص القرآني', items: [
@@ -35892,7 +35910,7 @@ function renderGuideTab() {
       '<b>شريط اسم السورة</b> في أول كل سورة: من اليمين ترتيبها، ثم اسمها في الوسط، ثم عدد آياتها.',
       '<b>النسخ</b>: اضغط مطوّلاً على النص واسحب لتحديد ما تريد، ثم انسخه. وعند لصقه يكون المنسوخ بين قوسين [ ] ورقم كل آية بعد نصها داخل القوسين، واسم السورة بعد القوس الأخير، مثل: [ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِينَ ٢] الفاتحة. وإن امتد المنسوخ من آخر آية إلى أول التي بعدها، كُتب رقم كل منهما بعد الجزء الخاص بها.',
       'خط أخضر داكن على أحد جانبي الصفحة يبيّن أنها يمنى أو يسرى.',
-      '<b>علامة الربع</b> ' + rubGridSvg(3) + ' ' + rubGridSvg(3, true) + ': مستطيل مقسّم إلى ثمانية مربعات تمثّل أرباع الجزء الحالي: العمود الأيمن لحزبه الأول، والأيسر لحزبه الثاني، ويُعدّ كل عمود من الأسفل إلى الأعلى، فمربعاته الأربعة هي أرباع حزبه من الأول إلى الرابع (فالأرباع تُعدّ من ١ إلى ٤ في كل حزب، ولا تُعدّ إلى ٨). تظهر العلامة في بداية كل ربع بعد رقم الآية التي قبله، وفي نهايته قبل رقم آيته الأخيرة. الأبيض أرباع تمّت، والرمادي أرباع لم تأتِ بعد، ومربع الربع الذي يبدأ رمادي في وسطه دائرة بيضاء. ففي المثالين المجاورين: بداية الربع الثالث من الحزب الأول، ثم نهايته.',
+      '<b>علامة الربع</b> ' + rubGridSvg(3) + ' ' + rubGridSvg(3, true) + ': مستطيل مقسّم إلى ثمانية مربعات تمثّل أرباع الجزء الحالي: العمود الأيمن لحزبه الأول، والأيسر لحزبه الثاني، ويُعدّ كل عمود من الأسفل إلى الأعلى، فمربعاته الأربعة هي أرباع حزبه من الأول إلى الرابع (فالأرباع تُعدّ من ١ إلى ٤ في كل حزب، ولا تُعدّ إلى ٨). تظهر العلامة في بداية كل ربع بعد رقم الآية التي قبله، وفي نهايته قبل رقم آيته الأخيرة. البرتقالي أرباع تمّت، والرمادي أرباع لم تأتِ بعد، ومربع الربع الذي يبدأ رمادي في وسطه دائرة برتقالية. ففي المثالين المجاورين: بداية الربع الثالث من الحزب الأول، ثم نهايته.',
       '<b>التوقف عند آخر السورة والجزء</b> (في الوضعين): يتوقف التمرير عند آخر السورة أو الجزء، وتظهر ثلاثة أزرار (في الوضع الحر فوق الشريط السفلي، وفي الوضع القياسي فوق الإطار العائم بعد أن تظهر صفحة آخر السورة أو الجزء كاملة): آخر السورة أو الجزء في الوسط، والسابق على اليمين، واللاحق على اليسار. وسحبة خفيفة إلى أعلى (في الوضع الحر) أو نقرة على الصفحة (في الوضع القياسي) تُكمل القراءة. ويُفعَّل هذا أو يُلغى بالضغط المطوّل على زر (' + badge(document.getElementById('segStopBtn').innerHTML) + ') في الشريط السفلي، أو من عنوان <b>التخطيط</b>.',
     ]},
     { title: '٤. شريط الأدوات السفلي', items: [
