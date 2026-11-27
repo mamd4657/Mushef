@@ -637,7 +637,7 @@ body.dark-mode .fbNameGroup{color:#EFE8D6;}
 /* the mark fills the top half (its bottom edge at the boxes' mid-height) */
 #floatingFrameBar .fbNameGroup .surah-place-icon img{height:calc(50% - 1px);width:auto;flex:0 0 auto;}
 #floatingFrameBar .fbMushafMark{display:block;font-family:sans-serif;font-size:1em;font-weight:900;line-height:1;white-space:nowrap;-webkit-text-stroke:.35px currentColor;transform:translateY(-.1em);}
-#floatingFrameBar .fbMushafMark::before{content:'عام';}
+#floatingFrameBar .fbMushafMark::before{content:var(--aamMark,'عــام');}
 body.mushaf-khatma #floatingFrameBar .fbMushafMark::before{content:'ختمة';}
 body.dark-mode #floatingFrameBar .fbNameGroup .surah-place-icon-kaaba{background:none;padding:1px 0 1px;}
 body.dark-mode #floatingFrameBar .fbNameGroup .surah-place-icon-kaaba img{background:#EFE8D6;border-radius:50%;padding:1px;box-sizing:border-box;}
@@ -28287,8 +28287,36 @@ function measureWidestSurahNameWidth(el) {
   return width;
 }
 
+// «عام» under the Kaaba / Green Dome is drawn out with kashida between its
+// ع and ا, as many as bring it nearest the width of «ختمة» in the phone's
+// own font (measured once per font size), so both words look the same length.
+let aamMarkFor = '';
+function syncAamMark() {
+  const mark = document.querySelector('#floatingFrameBar .fbMushafMark');
+  const host = document.getElementById('floatingFrameBar');
+  if (!mark || !host) return;
+  const cs = getComputedStyle(mark);
+  const key = cs.fontFamily + '|' + cs.fontSize + '|' + cs.fontWeight;
+  if (key === aamMarkFor) return;
+  const probe = document.createElement('span');
+  probe.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font:inherit;-webkit-text-stroke:inherit;';
+  mark.appendChild(probe);
+  probe.textContent = 'ختمة';
+  const target = probe.getBoundingClientRect().width;
+  if (!target) { probe.remove(); return; }
+  let best = 2, bestD = Infinity;
+  for (let n = 0; n <= 5; n++) {
+    probe.textContent = 'ع' + 'ـ'.repeat(n) + 'ام';
+    const d = Math.abs(probe.getBoundingClientRect().width - target);
+    if (d < bestD) { bestD = d; best = n; }
+  }
+  probe.remove();
+  host.style.setProperty('--aamMark', '"ع' + 'ـ'.repeat(best) + 'ام"');
+  aamMarkFor = key;
+}
 function fitFloatingFrameBar(bar, scaleMul, depth) {
   scaleMul = scaleMul || 1; depth = depth || 0;
+  if (!depth) { try { syncAamMark(); } catch (e) { /* keep the default */ } }
   // Callers pass either the outer #floatingFrameBar positioning wrapper or
   // the inner .frame-bar element itself; every box-model measurement below
   // (padding, border, content edges) must use the actual .frame-bar box -
