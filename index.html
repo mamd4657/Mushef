@@ -264,6 +264,13 @@ body.dark-mode .ayah-popup-title:active{background:#232922;}
 .sidebar-colheader{position:relative;display:flex;flex-shrink:0;border-bottom:2.5px solid #7B2E2E;min-height:34px;}
 #resumeBox,#resumeBoxKhatma{display:none;position:absolute;top:2px;bottom:2px;right:6px;z-index:2;align-items:center;justify-content:center;background:#7A5A00;color:#FFFFFF;border:2px solid #0E4433;border-radius:10px;font-family:sans-serif;font-size:18px;font-weight:800;letter-spacing:.2px;white-space:nowrap;overflow:hidden;padding:0 8px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25);}
 body.dark-mode #resumeBox,body.dark-mode #resumeBoxKhatma{background:#7A5A00;color:#FFFFFF;border-color:#F6EFDC;}
+/* «العودة إلى العام»: the same light gold as the numbers' frame in the
+   general mushaf; «العودة إلى الختمة»: light violet, like the numbers' frame
+   in the khatma mushaf - clearly apart from the gold of the bar */
+#resumeBox{background:linear-gradient(180deg,#FFF5D2,#F1DC98);color:#3A2A08;border-color:#8C6414;}
+body.dark-mode #resumeBox{background:linear-gradient(180deg,#977A3C,#7A6128);color:#FFFFFF;border-color:#F2CC5C;}
+#resumeBoxKhatma{background:linear-gradient(180deg,#EADDFF,#C9AEF5);color:#3C1E6E;border-color:#6A44A8;}
+body.dark-mode #resumeBoxKhatma{background:linear-gradient(180deg,#7E62B0,#5F4592);color:#FFFFFF;border-color:#D4C0F7;}
 
 .sidebar-colheader-spacer{width:112px;flex-shrink:0;border-left:2.5px solid #7B2E2E;display:flex;align-items:center;justify-content:center;font-family:sans-serif;font-size:15px;font-weight:800;color:#3D2E1C;white-space:nowrap;overflow:hidden;}
 body.dark-mode .sidebar-colheader-spacer{color:#D8CBAE;}
@@ -583,11 +590,11 @@ body.dark-mode .fbFromTo{color:#EFE8D6;}
 #floatingFrameBar .fbNums .frame-num{display:flex;align-items:center;justify-content:center;text-align:center;padding:0 .1em;}
 #floatingFrameBar .fbNumSep{display:block;align-self:stretch;flex-shrink:0;width:var(--fbFrameW);margin:1mm 0;font-size:0;line-height:0;background:var(--fbFrameC);}
 /* the surah's listening bar showing: the name's box turns light red;
-   the khatma mushaf open: the numbers' box is light green all over */
+   the khatma mushaf open: the numbers' box is light violet all over */
 body.surah-bar-on #floatingFrameBar .fbNameZone{background:linear-gradient(180deg,#FBD0D0,#F29A9A);}
 body.dark-mode.surah-bar-on #floatingFrameBar .fbNameZone{background:linear-gradient(180deg,#A65252,#8A3A3A);}
-body.mushaf-khatma #floatingFrameBar .fbNums{background:linear-gradient(180deg,#DDF3D3,#B4E0A4);}
-body.dark-mode.mushaf-khatma #floatingFrameBar .fbNums{background:linear-gradient(180deg,#4F7F52,#36603B);}
+body.mushaf-khatma #floatingFrameBar .fbNums{background:linear-gradient(180deg,#EADDFF,#C9AEF5);}
+body.dark-mode.mushaf-khatma #floatingFrameBar .fbNums{background:linear-gradient(180deg,#7E62B0,#5F4592);}
 #floatingFrameBar .fbNavArrow-r::before{left:0;right:0.25em;}
 #floatingFrameBar .fbNavArrow-r::after{right:0;clip-path:polygon(0 0,100% 50%,0 100%);}
 #floatingFrameBar .fbNavArrow-l::before{right:0;left:0.25em;}
@@ -35877,7 +35884,7 @@ function renderGuideTab() {
       'في أقصى اليمين علامة المرجعية ' + bookmarkIcon + ' لحفظ الصفحة، وبجانبها «من … إلى …»: صفحتا بداية السورة ونهايتها. وفي أقصى اليسار دائرة رقم الصفحة.',
       'وبين ذلك: الجزء (ج) والحزب (ح) والربع (ر). وفي الاتجاه الأفقي تُكتب الكلمات كاملة (جزء، حزب، ربع).',
       '<b>السورة السابقة واللاحقة</b>: النقر على إطار «ج» (وفيه السهم فوقها ورقم الجزء) <span style="white-space:nowrap">(' + navArrow(true) + ')</span> ينقل إلى بداية السورة السابقة، والنقر على إطار «ح» <span style="white-space:nowrap">(' + navArrow(false) + ')</span> ينقل إلى بداية السورة اللاحقة. والتمرير التلقائي يبقى على حاله، لكنه يتوقف عند بداية السورة إن كان مفعّلاً.',
-      'النقر على أي موضع من <b>إطار اسم السورة</b> يُظهر <b>شريط استماع السورة</b> (الفقرة ٧) ويتلوّن الإطار بالأحمر الفاتح ما دام الشريط ظاهراً، والنقر عليه مرة أخرى يوقف التلاوة ويُخفي الشريط. والنقر على <b>إطار الرقمين</b> (ترتيبها وعدد آياتها) ينقل بين المصحفين <b>العام</b> و<b>الختمة</b>، ويتلوّن الإطار كله بالأخضر الفاتح ما دامت الختمة مفتوحة. والنقر على <b>دائرة رقم الصفحة</b> يفعّل <b>قراءة الكلمات</b> أو يوقفها، ويظهر حولها مربع أزرق ما دامت مفعّلة (الفقرة ١١).',
+      'النقر على أي موضع من <b>إطار اسم السورة</b> يُظهر <b>شريط استماع السورة</b> (الفقرة ٧) ويتلوّن الإطار بالأحمر الفاتح ما دام الشريط ظاهراً، والنقر عليه مرة أخرى يوقف التلاوة ويُخفي الشريط. والنقر على <b>إطار الرقمين</b> (ترتيبها وعدد آياتها) ينقل بين المصحفين <b>العام</b> و<b>الختمة</b>، ويتلوّن الإطار كله بالبنفسجي الفاتح ما دامت الختمة مفتوحة. والنقر على <b>دائرة رقم الصفحة</b> يفعّل <b>قراءة الكلمات</b> أو يوقفها، ويظهر حولها مربع أزرق ما دامت مفعّلة (الفقرة ١١).',
       'يتحدّث الإطار تلقائياً أثناء التمرير ليطابق ما تقرأه.',
     ]},
     { title: '٣. صفحة النص القرآني', items: [
