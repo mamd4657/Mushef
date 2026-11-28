@@ -889,13 +889,14 @@ body.dark-mode .ayahnum-badge.ayahnum-100{border-top-color:#FF6B5B;}
    reached; the square of the quarter that is just starting is gray with a
    orange dot in its middle. See rubGridSvg(). */
 .rubgrid8-done{fill:#FFD400;} /* bright golden yellow: far brighter than the gray, so it stands out clearly */
-.rubgrid8-todo{fill:#8A8A8A;}
-.rubgrid8-dot{stroke:#5A3D00;}
-.rubgrid8-line{fill:none;stroke:#5A3D00;stroke-width:0.45;}
-.rubgrid8-frame{fill:none;stroke:#5A3D00;stroke-width:0.9;}
+.rubgrid8-todo{fill:#9A9A9A;}
+.rubgrid8-dot{stroke:#3D2800;}
+.rubgrid8-line{fill:none;stroke:#3D2800;stroke-width:0.65;}
+.rubgrid8-frame{fill:none;stroke:#3D2800;stroke-width:0.9;}
 body.dark-mode .rubgrid8-frame{stroke:#D8CBAE;} /* black would vanish on the dark page */
 body.dark-mode .rubgrid8-done{fill:#FFD400;}
-body.dark-mode .rubgrid8-todo{fill:#6E6E6E;}
+body.dark-mode .rubgrid8-todo{fill:#7A7A7A;}
+body.dark-mode .rubgrid8-line,body.dark-mode .rubgrid8-dot{stroke:#000;} /* dark lines so the divisions show on the yellow too */
 .rubgrid8.rubgrid8-abs{position:absolute;top:50%;right:-7px;transform:translateY(-50%);margin:0;vertical-align:baseline;}
 /* A mark landing on a bound-mode page's very first line never shrinks -
    see fixFirstLineRubClearance(), which instead pushes that one line down
@@ -27032,7 +27033,7 @@ function rubGridSvg(globalRub, isEnd) {
   // lines splitting it into its 4 squares. A column is CW wide - a square's
   // inside stays about as wide as it is tall - and the whole mark is
   // VB_W x 18 (see the .rubgrid8 width).
-  const FR = 0.9, LN = 0.45; // frame / inner-line thickness (viewBox units)
+  const FR = 0.9, LN = 0.65; // frame / inner-line thickness (viewBox units)
   const CW = 5.2, GAP = 1.2, VB_W = CW * 2 + GAP;
   const fills = [];
   for (let c = 1; c <= 8; c++) {
@@ -27048,7 +27049,7 @@ function rubGridSvg(globalRub, isEnd) {
       const top = y + (y === 0 ? FR : LN / 2);
       const bottom = y + 4.5 - (y + 4.5 === 18 ? FR : LN / 2);
       const cx = x + CW / 2, cy = (top + bottom) / 2;
-      const rad = Math.min(CW, bottom - top) * 0.3;
+      const rad = Math.min(CW, bottom - top) * 0.4;
       fills.push('<rect class="rubgrid8-todo" x="' + x + '" y="' + y + '" width="' + CW + '" height="4.5"/>');
       // a thin black ring round the dot, drawn inside the dot's own area
       // (the radius less half the ring), so the gray round it stays as it was
