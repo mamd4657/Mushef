@@ -888,14 +888,14 @@ body.dark-mode .ayahnum-badge.ayahnum-100{border-top-color:#FF6B5B;}
    Orange = quarters of the juz already completed; gray = quarters not yet
    reached; the square of the quarter that is just starting is gray with a
    orange dot in its middle. See rubGridSvg(). */
-.rubgrid8-done{fill:#FFA53A;}
-.rubgrid8-todo{fill:#9A9A9A;}
-.rubgrid8-dot{stroke:#000;}
-.rubgrid8-line{fill:none;stroke:#000;stroke-width:0.45;}
-.rubgrid8-frame{fill:none;stroke:#000;stroke-width:0.9;}
+.rubgrid8-done{fill:#FFD400;} /* bright golden yellow: far brighter than the gray, so it stands out clearly */
+.rubgrid8-todo{fill:#8A8A8A;}
+.rubgrid8-dot{stroke:#5A3D00;}
+.rubgrid8-line{fill:none;stroke:#5A3D00;stroke-width:0.45;}
+.rubgrid8-frame{fill:none;stroke:#5A3D00;stroke-width:0.9;}
 body.dark-mode .rubgrid8-frame{stroke:#D8CBAE;} /* black would vanish on the dark page */
-body.dark-mode .rubgrid8-done{fill:#FFB257;}
-body.dark-mode .rubgrid8-todo{fill:#8C8C8C;}
+body.dark-mode .rubgrid8-done{fill:#FFD400;}
+body.dark-mode .rubgrid8-todo{fill:#6E6E6E;}
 .rubgrid8.rubgrid8-abs{position:absolute;top:50%;right:-7px;transform:translateY(-50%);margin:0;vertical-align:baseline;}
 /* A mark landing on a bound-mode page's very first line never shrinks -
    see fixFirstLineRubClearance(), which instead pushes that one line down
@@ -35976,7 +35976,7 @@ function renderGuideTab() {
       'أثناء التلاوة تُظلَّل الآية المقروءة وتبقى في أعلى النص. ولا يعمل الشريطان معاً. ويمكن سحب الشريط إلى الأسفل ليغطي الشريط السفلي، وإلى الأعلى ليعود. والرجوع يوقف التلاوة أولاً، ثم يُخفي الشريط في المرة التالية.',
       { i: ['fab_scroll_recite'], t: '<b>سرعة التلاوة</b>: ما دام أحد الشريطين ظاهراً يصير زرا (−) و(+) في الشريط السفلي لإبطاء التلاوة وتسريعها، لأي قارئ، ويظهر تحت السهم رقم سرعتها باللون الذهبي (١٫٠ العادية، من ٠٫٥ إلى ٢٫٠). وإذا أُخفي الشريط عادا للتمرير.' },
       { i: ['g_circle_on'], t: '<b>قراءة الكلمات كلمة كلمة</b> (للتعلّم): تُفعَّل بالنقر على دائرة رقم الصفحة. وهي مفعّلة: انقر أي كلمة فتتلوّن وتُقرأ بصوت القارئ، والكلمات المنقورة متتابعة تُقرأ معاً. ولا يفتح النقر على الكلمات نافذة الآية أثناءها، أما رقم الآية فيفتحها. وإعداداتها في «التخطيط».' },
-      { t: '<b>علامة الربع</b> ' + rubGridSvg(3) + ' ' + rubGridSvg(3, true) + ': مستطيل فيه ثمانية مربعات هي أرباع الجزء: العمود الأيمن للحزب الأول من الجزء، والأيسر للحزب الثاني، ويُعدّ كل عمود من الأسفل إلى الأعلى (الربع الأول ثم الثاني ثم الثالث ثم الرابع). البرتقالي أرباع تمّت، والرمادي أرباع لم تأتِ بعد، ومربع الربع الذي يبدأ رمادي في وسطه دائرة برتقالية.' },
+      { t: '<b>علامة الربع</b> ' + rubGridSvg(3) + ' ' + rubGridSvg(3, true) + ': مستطيل فيه ثمانية مربعات هي أرباع الجزء: العمود الأيمن للحزب الأول من الجزء، والأيسر للحزب الثاني، ويُعدّ كل عمود من الأسفل إلى الأعلى (الربع الأول ثم الثاني ثم الثالث ثم الرابع). الأصفر أرباع تمّت، والرمادي أرباع لم تأتِ بعد، ومربع الربع الذي يبدأ رمادي في وسطه دائرة صفراء.' },
       'تظهر العلامة في بداية كل ربع بعد رقم الآية التي قبله، وفي نهايته قبل رقم آيته الأخيرة. ففي المثالين السابقين: بداية الربع الثالث من الحزب الأول (يمين)، ثم نهايته (يسار).',
       { i: ['t_50', 't_100'], t: '<b>الخمسينات والمئات</b>: الآية التي ترتيبها من أول المصحف خمسون أو مضاعفاتها تحت رقمها خط أحمر، وما كان مئة أو مضاعفاتها فوق رقمه خط ثانٍ؛ ليسهل على من يقرأ ورداً يومياً بمقدار خمسين آية أو مئة.' },
       { t: '<b>سجدات العزائم</b> ' + SAJDAH_MARK_SVG + ': في أربع آيات سجدة تلاوة واجبة، عليها خط فوق ذكر السجود وهذه العلامة قبل رقم الآية: السجدة ١٥، وفصلت ٣٧، والنجم ٦٢، والعلق ١٩. وفي المصحف أحد عشر موضعاً آخر للسجود مستحب غير واجب. وفي عنوان «دعاء» ما يقال في سجود التلاوة.' },
